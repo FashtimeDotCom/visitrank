@@ -1,6 +1,7 @@
 package com.m3958.visitrank;
 
 import java.util.Date;
+import java.util.Map;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.vertx.java.core.AsyncResult;
@@ -18,8 +19,8 @@ import com.m3958.visitrank.rediscmd.INCR;
 
 public class CounterVerticle extends Verticle {
 
-  public static String counterRedisAddress = "visit_counter.redis";
-  public static String counterMongoDbAddress = "visit_counter.mongodb";
+  public static String MOD_REDIS_ADDRESS = "visit_counter.redis";
+  public static String MOD_MONGO_PERSIST_ADDRESS = "visit_counter.mongodb";
 
   public JsonObject getParamsOb(HttpServerRequest req) {
     MultiMap mm = req.params();
@@ -30,12 +31,25 @@ public class CounterVerticle extends Verticle {
     }
 
     String catid = mm.get("catid");
+
     String ip = getClientIpAddr(req);
 
     JsonObject jo = new JsonObject();
+    
+    JsonObject headerJo = new JsonObject();
+    
+    for (Map.Entry<String, String> header: req.headers().entries()) {
+      String key = header.getKey();
+      String value = header.getValue();
+      if("referer".equalsIgnoreCase(key)){
+        
+      }else{
+        headerJo.putString(key, value);
+      }
+  }
 
-    jo.putString("siteid", siteid).putString("catid", catid).putString("ip", ip)
-        .putNumber("ts", new Date().getTime()).putString("title", mm.get("title"));
+    jo.putString("siteid", siteid).putString("catid", catid).putNumber("ts", new Date().getTime())
+        .putString("title", mm.get("title")).putString("ip", ip).putObject("headers", headerJo);
 
     return jo;
   }
@@ -88,17 +102,16 @@ public class CounterVerticle extends Verticle {
             resp.end(callback(req, "0"));
           } else {
             String referermd5 = DigestUtils.md5Hex(referer);
-            log.info(referermd5);
-            vertx.eventBus().send(SaveToMongoVerticle.RECEIVER_ADDR, pjo);
             log.info(SaveToMongoVerticle.RECEIVER_ADDR + " sended.");
             JsonObject msg = new INCR(referermd5).getCmd();
-            log.info(msg);
-            vertx.eventBus().send(counterRedisAddress, msg, new Handler<Message<JsonObject>>() {
+            vertx.eventBus().send(MOD_REDIS_ADDRESS, msg, new Handler<Message<JsonObject>>() {
               public void handle(Message<JsonObject> message) {
-                if ("ok".equals(message.body().getString("status"))) {
-                  String value = String.valueOf(message.body().getLong("value"));
+                JsonObject body = message.body();
+                if ("ok".equals(body.getString("status"))) {
+                  String value = String.valueOf(body.getLong("value"));
                   System.out.println(value);
                   // use publish pattern,no wait.
+                  vertx.eventBus().send(SaveToMongoVerticle.RECEIVER_ADDR, pjo);
                   resp.end(callback(req, value));
                 } else {
                   System.out.println(message.body().getString("message"));
@@ -112,11 +125,11 @@ public class CounterVerticle extends Verticle {
     }).listen(8333);
 
     // deploy redis
-    JsonObject counterRedisCfg = new JsonObject();
-    counterRedisCfg.putString("address", counterRedisAddress).putString("host", "127.0.0.1")
+    JsonObject redisCfg = new JsonObject();
+    redisCfg.putString("address", MOD_REDIS_ADDRESS).putString("host", "127.0.0.1")
         .putString("encodeing", "UTF-8").putNumber("port", 6379);
 
-    container.deployModule("io.vertx~mod-redis~1.1.3", counterRedisCfg, 1,
+    container.deployModule("io.vertx~mod-redis~1.1.3", redisCfg, 1,
         new AsyncResultHandler<String>() {
           @Override
           public void handle(AsyncResult<String> asyncResult) {
@@ -129,11 +142,11 @@ public class CounterVerticle extends Verticle {
         });
 
     // deploy mongodb
-    JsonObject counterMongodbCfg = new JsonObject();
-    counterRedisCfg.putString("address", counterMongoDbAddress).putString("host", "localhost")
+    JsonObject mongodbCfg = new JsonObject();
+    mongodbCfg.putString("address", MOD_MONGO_PERSIST_ADDRESS).putString("host", "localhost")
         .putString("db_name", "visitrank").putNumber("port", 27017);
 
-    container.deployModule("io.vertx~mod-mongo-persistor~2.1.1", counterMongodbCfg, 1,
+    container.deployModule("io.vertx~mod-mongo-persistor~2.1.1", mongodbCfg, 1,
         new AsyncResultHandler<String>() {
           @Override
           public void handle(AsyncResult<String> asyncResult) {
@@ -147,8 +160,11 @@ public class CounterVerticle extends Verticle {
         });
 
     container.deployVerticle("com.m3958.visitrank.SaveToMongoVerticle", 1);
+
+    container.deployVerticle("mapreduce_verticle.js", 1);
   }
 }
 
 // vertx runmod com.m3958~visitrank~0.0.1-SNAPSHOT
 // curl --referer http://www.example.com http://localhost:8333?siteid=xxx
+// vertx runzip target/visitrank-0.0.1-SNAPSHOT-mod.zip
