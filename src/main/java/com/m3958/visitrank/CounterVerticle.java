@@ -7,7 +7,6 @@ import org.vertx.java.core.AsyncResult;
 import org.vertx.java.core.AsyncResultHandler;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.MultiMap;
-import org.vertx.java.core.eventbus.EventBus;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.http.HttpServerRequest;
 import org.vertx.java.core.http.HttpServerResponse;
@@ -73,7 +72,6 @@ public class CounterVerticle extends Verticle {
 
   public void start() {
     final Logger log = container.logger();
-    final EventBus eb = vertx.eventBus();
     vertx.createHttpServer().requestHandler(new Handler<HttpServerRequest>() {
 
       public void handle(final HttpServerRequest req) {
@@ -91,24 +89,23 @@ public class CounterVerticle extends Verticle {
           } else {
             String referermd5 = DigestUtils.md5Hex(referer);
             log.info(referermd5);
-            // eb.send(SaveToMongoVerticle.RECEIVER_ADDR, pjo);
-            // log.info(SaveToMongoVerticle.RECEIVER_ADDR + " sended.");
+            vertx.eventBus().send(SaveToMongoVerticle.RECEIVER_ADDR, pjo);
+            log.info(SaveToMongoVerticle.RECEIVER_ADDR + " sended.");
             JsonObject msg = new INCR(referermd5).getCmd();
             log.info(msg);
-            eb.send(counterRedisAddress, msg,
-                new Handler<Message<JsonObject>>() {
-                  public void handle(Message<JsonObject> message) {
-                    if ("ok".equals(message.body().getString("status"))) {
-                      String value = String.valueOf(message.body().getLong("value"));
-                      System.out.println(value);
-                      // use publish pattern,no wait.
-                      resp.end(callback(req, value));
-                    } else {
-                      System.out.println(message.body().getString("message"));
-                      resp.end(callback(req, "0"));
-                    }
-                  }
-                });
+            vertx.eventBus().send(counterRedisAddress, msg, new Handler<Message<JsonObject>>() {
+              public void handle(Message<JsonObject> message) {
+                if ("ok".equals(message.body().getString("status"))) {
+                  String value = String.valueOf(message.body().getLong("value"));
+                  System.out.println(value);
+                  // use publish pattern,no wait.
+                  resp.end(callback(req, value));
+                } else {
+                  System.out.println(message.body().getString("message"));
+                  resp.end(callback(req, "0"));
+                }
+              }
+            });
           }
         }
       }
@@ -116,7 +113,7 @@ public class CounterVerticle extends Verticle {
 
     // deploy redis
     JsonObject counterRedisCfg = new JsonObject();
-    counterRedisCfg.putString("address", counterRedisAddress).putString("host", "10.74.111.20")
+    counterRedisCfg.putString("address", counterRedisAddress).putString("host", "127.0.0.1")
         .putString("encodeing", "UTF-8").putNumber("port", 6379);
 
     container.deployModule("io.vertx~mod-redis~1.1.3", counterRedisCfg, 1,
