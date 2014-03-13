@@ -32,48 +32,49 @@ public class CounterVerticle extends Verticle {
 
     String catid = mm.get("catid");
 
-    String ip = getClientIpAddr(req);
+    // String ip = getClientIpAddr(req);
 
     JsonObject jo = new JsonObject();
-    
+
     JsonObject headerJo = new JsonObject();
-    
-    for (Map.Entry<String, String> header: req.headers().entries()) {
+
+    for (Map.Entry<String, String> header : req.headers().entries()) {
       String key = header.getKey();
       String value = header.getValue();
-      if("referer".equalsIgnoreCase(key)){
-        
-      }else{
+      if ("referer".equalsIgnoreCase(key)) {
+        jo.putString("url", value);
+      } else {
         headerJo.putString(key, value);
       }
-  }
+    }
+    headerJo.putString("ip", req.remoteAddress().getAddress().getHostAddress());
 
     jo.putString("siteid", siteid).putString("catid", catid).putNumber("ts", new Date().getTime())
-        .putString("title", mm.get("title")).putString("ip", ip).putObject("headers", headerJo);
+        .putString("title", mm.get("title")).putObject("headers", headerJo);
 
     return jo;
   }
 
-  public String getClientIpAddr(HttpServerRequest req) {
-    MultiMap mm = req.headers();
-    String ip = mm.get("X-Forwarded-For");
-    if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
-      ip = mm.get("Proxy-Client-IP");
-    }
-    if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
-      ip = mm.get("WL-Proxy-Client-IP");
-    }
-    if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
-      ip = mm.get("HTTP_CLIENT_IP");
-    }
-    if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
-      ip = mm.get("HTTP_X_FORWARDED_FOR");
-    }
-    if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
-      ip = req.remoteAddress().getAddress().getHostAddress();
-    }
-    return ip;
-  }
+  // public String getClientIpAddr(HttpServerRequest req) {
+  // MultiMap mm = req.headers();
+  // String ip = mm.get("X-Forwarded-For");
+  // if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
+  // ip = mm.get("Proxy-Client-IP");
+  // }
+  // if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
+  // ip = mm.get("WL-Proxy-Client-IP");
+  // }
+  // if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
+  // ip = mm.get("HTTP_CLIENT_IP");
+  // }
+  // if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
+  // ip = mm.get("HTTP_X_FORWARDED_FOR");
+  // }
+  // if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
+  // ip = req.remoteAddress().getAddress().getHostAddress();
+  // }
+  // return ip;
+  // }
 
   public String callback(HttpServerRequest req, String v) {
     String cb = req.params().get("callback");
@@ -92,8 +93,6 @@ public class CounterVerticle extends Verticle {
         String referer = req.headers().get("referer");
         final HttpServerResponse resp = req.response();
 
-
-        System.out.println(referer);
         if (referer == null || referer.isEmpty()) {
           resp.end(callback(req, "0"));
         } else {
@@ -102,19 +101,18 @@ public class CounterVerticle extends Verticle {
             resp.end(callback(req, "0"));
           } else {
             String referermd5 = DigestUtils.md5Hex(referer);
-            log.info(SaveToMongoVerticle.RECEIVER_ADDR + " sended.");
+
             JsonObject msg = new INCR(referermd5).getCmd();
             vertx.eventBus().send(MOD_REDIS_ADDRESS, msg, new Handler<Message<JsonObject>>() {
               public void handle(Message<JsonObject> message) {
-                JsonObject body = message.body();
-                if ("ok".equals(body.getString("status"))) {
-                  String value = String.valueOf(body.getLong("value"));
-                  System.out.println(value);
+                JsonObject redisResultBody = message.body();
+                if ("ok".equals(redisResultBody.getString("status"))) {
+                  String value = String.valueOf(redisResultBody.getLong("value"));
                   // use publish pattern,no wait.
                   vertx.eventBus().send(SaveToMongoVerticle.RECEIVER_ADDR, pjo);
                   resp.end(callback(req, value));
                 } else {
-                  System.out.println(message.body().getString("message"));
+                  log.info(redisResultBody.getString("message"));
                   resp.end(callback(req, "0"));
                 }
               }
@@ -166,5 +164,7 @@ public class CounterVerticle extends Verticle {
 }
 
 // vertx runmod com.m3958~visitrank~0.0.1-SNAPSHOT
-// curl --referer http://www.example.com http://localhost:8333?siteid=xxx
+// office fa5f2e1d-092a-4c8c-9518-f5b7600f8f80
+// curl --referer http://www.example.com
+// http://localhost:8333?siteid=fa5f2e1d-092a-4c8c-9518-f5b7600f8f80
 // vertx runzip target/visitrank-0.0.1-SNAPSHOT-mod.zip

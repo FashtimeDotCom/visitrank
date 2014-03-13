@@ -11,7 +11,7 @@ var count = 0;
 vertx.setPeriodic(1000, function(id) {
     console.log('In event handler ' + count); 
     count++;
-    if (count === 10) {
+    if (count === 1) {
         vertx.cancelTimer(id);
     }
 });

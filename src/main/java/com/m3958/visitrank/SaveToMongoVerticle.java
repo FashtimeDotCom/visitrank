@@ -16,15 +16,14 @@ package com.m3958.visitrank;
  * @author <a href="http://tfox.org">Tim Fox</a>
  */
 
-import java.util.Date;
-
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.eventbus.EventBus;
 import org.vertx.java.core.eventbus.Message;
-import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.core.logging.Logger;
 import org.vertx.java.platform.Verticle;
+
+import com.m3958.visitrank.mongocmd.SiteMongoCmd;
 
 /*
  * This is a simple Java verticle which receives `ping` messages on the event bus and sends back
@@ -34,55 +33,30 @@ public class SaveToMongoVerticle extends Verticle {
 
   public static String RECEIVER_ADDR = "visitrank-mongo-receiver";
 
+
   public void start() {
     final EventBus eb = vertx.eventBus();
     final Logger log = container.logger();
-    
-//    jo.putString("siteid", siteid).putString("catid", catid).putNumber("ts", new Date().getTime())
-//    .putString("title", mm.get("title")).putString("ip", ip).putObject("headers", headerJo);
-    
+
+    // jo.putString("siteid", siteid).putString("catid", catid).putNumber("ts", new
+    // Date().getTime())
+    // .putString("title", mm.get("title")).putString("ip", ip).putObject("headers", headerJo);
+    // db.pageurl.ensureIndex( { "url": 1 }, { unique: true } )
+    // db.test.getIndexes()
+    // db.pageurl.remove({})
     eb.registerHandler(RECEIVER_ADDR, new Handler<Message<JsonObject>>() {
       @Override
       public void handle(Message<JsonObject> message) {
         JsonObject body = message.body();
-        //find site
-        JsonObject findSiteCmd = new SiteFinder(body.getString("siteid")).getCmd();
-        
-        eb.send(CounterVerticle.MOD_MONGO_PERSIST_ADDRESS, findSiteCmd, new Handler<Message<JsonObject>>() {
-          public void handle(Message<JsonObject> message) {
-            JsonObject body = message.body();
-            if ("ok".equals(body.getString("status"))) {
-              JsonArray ja = body.getArray("results");
-              if(ja.size() > 0){
-                JsonObject siteJo = ja.get(0);
-                log.info(siteJo);
-              }
-            } else {
-              System.out.println(body.getString("message"));
-            }
-          }
-        });
+        // find site
+        JsonObject findSiteCmd = new SiteMongoCmd(body.getString("siteid")).findOneCmd();
+
+        eb.send(CounterVerticle.MOD_MONGO_PERSIST_ADDRESS, findSiteCmd, new UrlPersistHandler(eb,
+            log, body));
       }
     });
     container.logger().info("SaveToMongoVerticle started");
 
   }
-  
-  public static class SiteFinder{
-    
-    private String siteid;
-    public SiteFinder(String siteid){
-      this.siteid = siteid;
-    }
-    
-    public JsonObject getCmd(){
-      JsonObject jo = new JsonObject();
-      JsonObject matcherJo = new JsonObject();
-      matcherJo.putString("_id", this.siteid);
-      jo.putString("action", "find");
-      jo.putString("collection", "site");
-      jo.putObject("matcher", matcherJo);
-      return jo;
-    }
-  }
+
 }
