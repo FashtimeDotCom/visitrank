@@ -31,4 +31,15 @@ public class SiteMongoCmd {
     jo.putValue("matcher", matcher);
     return jo;
   }
+
+  public JsonObject countCmd() {
+    JsonObject jo = new JsonObject();
+    jo.putString("action", "count");
+    jo.putString("collection", "pagevisit");
+
+    JsonObject matcher = new JsonObject();
+    matcher.putString("siteid", this.siteid);
+    jo.putValue("matcher", matcher);
+    return jo;
+  }
 }

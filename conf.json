@@ -1,0 +1,6 @@
+{
+    "httpport" : 8333,
+    "redisport" : 6379,
+    "mongodbport" : 27017,
+    "charset" : "UTF-8"
+}
