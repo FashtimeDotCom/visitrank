@@ -28,10 +28,9 @@ public class UrlPersistHandler implements Handler<Message<JsonObject>> {
     JsonObject siteFindResultBody = message.body();
     if ("ok".equals(siteFindResultBody.getString("status"))) {
       JsonObject msite = siteFindResultBody.getObject("result");
-
       if (msite != null) {
         JsonObject findUrlCmd = new UrlMongoCmd(UrlPersistHandler.this.rqJso).findOneCmd();
-        increaseSiteCounter(eb, msite);
+        increaseSiteCounter(msite);
         eb.send(MainVerticle.MOD_MONGO_PERSIST_ADDRESS, findUrlCmd,
             new Handler<Message<JsonObject>>() {
               @Override
@@ -71,8 +70,8 @@ public class UrlPersistHandler implements Handler<Message<JsonObject>> {
     }
   }
 
-  private void increaseSiteCounter(EventBus eb2, JsonObject msite) {
-    String siteid = msite.getString("siteid");
+  private void increaseSiteCounter(JsonObject msite) {
+    String siteid = msite.getString("_id");
     eb.send(MainVerticle.MOD_REDIS_ADDRESS, new INCR(siteid).getCmd());
     String catid = msite.getString("catid", "");
     if (!catid.isEmpty()) {

@@ -46,13 +46,16 @@ public class ResponseGenerator {
       resp.headers().set("Expires", "0"); // Proxies.
     }
 
-    String tobesend;
-    String cb = mm.get("callback");
-    if (!(cb == null || cb.isEmpty())) {
-      tobesend = cb + "(" + result + ");";
-    } else {
-      tobesend = result;
+    String tobesend = "";
+    if (!"none".equals(out)) {
+      String cb = mm.get("callback");
+      if (!(cb == null || cb.isEmpty())) {
+        tobesend = cb + "(" + result + ");";
+      } else {
+        tobesend = result;
+      }
     }
+
     resp.end(tobesend);
   }
 
