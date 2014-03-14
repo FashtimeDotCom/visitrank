@@ -12,7 +12,6 @@ import org.vertx.java.core.http.HttpServerRequest;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.core.logging.Logger;
 
-import com.m3958.visitrank.CounterVerticle;
 import com.m3958.visitrank.MainVerticle;
 import com.m3958.visitrank.ResponseGenerator;
 import com.m3958.visitrank.SaveToMongoVerticle;

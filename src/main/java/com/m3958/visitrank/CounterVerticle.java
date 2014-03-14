@@ -19,7 +19,7 @@ public class CounterVerticle extends Verticle {
 
   public void start() {
     JsonObject config = container.config();
-//    final Logger log = container.logger();
+    // final Logger log = container.logger();
     vertx.createHttpServer().requestHandler(new Handler<HttpServerRequest>() {
       public void handle(final HttpServerRequest req) {
         MultiMap mm = req.params();
@@ -41,7 +41,7 @@ public class CounterVerticle extends Verticle {
         }
       }
     }).listen(config.getInteger("port"));
-    
+
     container.logger().info("CounterVerticle started");
   }
 }
