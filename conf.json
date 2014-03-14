@@ -1,4 +1,5 @@
 {
+	"httpinstance": 10,
     "httpport" : 8333,
     "redisport" : 6379,
     "mongodbport" : 27017,

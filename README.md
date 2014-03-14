@@ -1,6 +1,6 @@
 # Web site visit statictics
 
-This app can record page visit record,get page visit count for page,for category and for site.
+This app can record page visit,get visit count for page,for category and for site.
 
 It's very fast. on my local machine test,can handle 5000+ request per second. If add rabbitmq,it will even more fast.
 

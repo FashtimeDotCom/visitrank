@@ -1,0 +1,14 @@
+1,only use redis to record count. comment out vertx.eventBus().send(SaveToMongoVerticle.RECEIVER_ADDR, pjo);
+
+
+5 http instance,1000,84.5/sec
+10 http instance,1000,102/sec
+20 http instance,1000,97/sec
+
+10 http instance,5000,99/sec
+20 http instance,5000,94/sec
+
+PageCountProceesorStatic 10 http,1000,121/sec
+PageCountProceesorStatic 10 http,5000,132/sec
+
+PageCountProceesor 10 http,5000,128/sec

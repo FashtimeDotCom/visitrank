@@ -51,7 +51,7 @@ public class SaveToMongoVerticle extends Verticle {
         // find site
         JsonObject findSiteCmd = new SiteMongoCmd(body.getString("siteid")).findOneCmd();
 
-        eb.send(CounterVerticle.MOD_MONGO_PERSIST_ADDRESS, findSiteCmd, new UrlPersistHandler(eb,
+        eb.send(MainVerticle.MOD_MONGO_PERSIST_ADDRESS, findSiteCmd, new UrlPersistHandler(eb,
             log, body));
       }
     });

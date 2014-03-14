@@ -8,6 +8,7 @@ import org.vertx.java.core.logging.Logger;
 
 import com.m3958.visitrank.mongocmd.UrlMongoCmd;
 import com.m3958.visitrank.mongocmd.VisitMongoCmd;
+import com.m3958.visitrank.rediscmd.INCR;
 
 
 public class UrlPersistHandler implements Handler<Message<JsonObject>> {
@@ -30,8 +31,8 @@ public class UrlPersistHandler implements Handler<Message<JsonObject>> {
 
       if (msite != null) {
         JsonObject findUrlCmd = new UrlMongoCmd(UrlPersistHandler.this.rqJso).findOneCmd();
-
-        eb.send(CounterVerticle.MOD_MONGO_PERSIST_ADDRESS, findUrlCmd,
+        increaseSiteCounter(eb, msite);
+        eb.send(MainVerticle.MOD_MONGO_PERSIST_ADDRESS, findUrlCmd,
             new Handler<Message<JsonObject>>() {
               @Override
               public void handle(Message<JsonObject> urlresult) {
@@ -39,10 +40,10 @@ public class UrlPersistHandler implements Handler<Message<JsonObject>> {
                 if ("ok".equals(urlFindResultBody.getString("status"))) {
                   JsonObject murl = urlFindResultBody.getObject("result");
                   if (murl != null) {
-                    eb.send(CounterVerticle.MOD_MONGO_PERSIST_ADDRESS, new VisitMongoCmd(
+                    eb.send(MainVerticle.MOD_MONGO_PERSIST_ADDRESS, new VisitMongoCmd(
                         UrlPersistHandler.this.rqJso, murl.getString("_id")).saveCmd());
                   } else {
-                    eb.send(CounterVerticle.MOD_MONGO_PERSIST_ADDRESS, new UrlMongoCmd(
+                    eb.send(MainVerticle.MOD_MONGO_PERSIST_ADDRESS, new UrlMongoCmd(
                         UrlPersistHandler.this.rqJso).saveCmd(),
                         new Handler<Message<JsonObject>>() {
 
@@ -50,7 +51,7 @@ public class UrlPersistHandler implements Handler<Message<JsonObject>> {
                           public void handle(Message<JsonObject> saveResultMessage) {
                             JsonObject saveUrlResultBody = saveResultMessage.body();
                             if ("ok".equals(saveUrlResultBody.getString("status"))) {
-                              eb.send(CounterVerticle.MOD_MONGO_PERSIST_ADDRESS, new VisitMongoCmd(
+                              eb.send(MainVerticle.MOD_MONGO_PERSIST_ADDRESS, new VisitMongoCmd(
                                   UrlPersistHandler.this.rqJso, saveUrlResultBody.getString("_id"))
                                   .saveCmd());
                             } else {
@@ -67,6 +68,15 @@ public class UrlPersistHandler implements Handler<Message<JsonObject>> {
       }
     } else {
       log.error(siteFindResultBody.getString("message"));
+    }
+  }
+
+  private void increaseSiteCounter(EventBus eb2, JsonObject msite) {
+    String siteid = msite.getString("siteid");
+    eb.send(MainVerticle.MOD_REDIS_ADDRESS, new INCR(siteid).getCmd());
+    String catid = msite.getString("catid", "");
+    if (!catid.isEmpty()) {
+      eb.send(MainVerticle.MOD_REDIS_ADDRESS, new INCR(siteid + catid).getCmd());
     }
   }
 
