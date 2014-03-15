@@ -5,7 +5,7 @@
   <groupId>com.m3958</groupId>
   <artifactId>visitrank</artifactId>
   <packaging>jar</packaging>
-  <version>0.0.1</version>
+  <version>0.0.1-SNAPSHOT</version>
   <name>Project - visitrank</name>
   <url>https://github.com/jianglibo/visitrank</url>
   <description>
@@ -25,9 +25,9 @@
   </parent>
 
 	  <scm>
-    <connection>scm:git:git@github.com:jianglibo/vertxcombo.git</connection>
-    <developerConnection>scm:git:git@github.com:jianglibo/vertxcombo.git</developerConnection>
-    <url>git@github.com:jianglibo/vertxcombo.git</url>
+    <connection>scm:git:git@github.com:jianglibo/visitrank.git</connection>
+    <developerConnection>scm:git:git@github.com:jianglibo/visitrank.git</developerConnection>
+    <url>git@github.com:jianglibo/visitrank.git</url>
   </scm>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
