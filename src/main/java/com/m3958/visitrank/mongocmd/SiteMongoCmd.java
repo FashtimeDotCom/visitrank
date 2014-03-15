@@ -42,4 +42,14 @@ public class SiteMongoCmd {
     jo.putValue("matcher", matcher);
     return jo;
   }
+  
+  public JsonObject saveCmd(JsonObject siteJo) {
+    JsonObject jo = new JsonObject();
+    jo.putString("action", "save");
+    jo.putString("collection", "site");
+    
+   
+    jo.putObject("document", siteJo);
+    return jo;
+  }
 }

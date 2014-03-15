@@ -1,7 +1,8 @@
 package com.m3958.visitrank.unit;
 
-import com.m3958.visitrank.PingVerticle;
 import org.junit.Test;
+
+import com.m3958.visitrank.PingVerticle;
 
 /*
  * Copyright 2013 Red Hat, Inc.
@@ -24,7 +25,7 @@ public class ExampleUnitTest {
 
   @Test
   public void testVerticle() {
-    PingVerticle vert = new PingVerticle();
+//    PingVerticle vert = new PingVerticle();
 
     // do something with verticle
   }

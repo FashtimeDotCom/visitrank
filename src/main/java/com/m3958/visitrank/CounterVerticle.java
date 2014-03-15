@@ -8,8 +8,11 @@ import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.core.logging.Logger;
 import org.vertx.java.platform.Verticle;
 
+import com.m3958.visitrank.httpentry.CatCountProceesor;
+import com.m3958.visitrank.httpentry.CatHotestProceesor;
 import com.m3958.visitrank.httpentry.PageCountProceesor;
 import com.m3958.visitrank.httpentry.SiteCountProceesor;
+import com.m3958.visitrank.httpentry.SiteHotestProceesor;
 
 /**
  * 
@@ -32,11 +35,11 @@ public class CounterVerticle extends Verticle {
         if ("sitecount".equals(out)) {
           new SiteCountProceesor(eb, req, log).process();
         } else if ("catcount".equals(out)) {
-
+          new CatCountProceesor(eb, req, log).process();
         } else if ("sitehotest".equals(out)) {
-
+          new SiteHotestProceesor(eb, req, log).process();
         } else if ("cathotest".equals(out)) {
-
+          new CatHotestProceesor(eb, req, log).process();
         } else {
           new PageCountProceesor(eb, req, log).process();
         }
@@ -72,7 +75,7 @@ public class CounterVerticle extends Verticle {
 // vertx runmod com.m3958~visitrank~0.0.1-SNAPSHOT
 // office fa5f2e1d-092a-4c8c-9518-f5b7600f8f80
 // curl --referer http://www.example.com
-// http://localhost:8333?siteid=fa5f2e1d-092a-4c8c-9518-f5b7600f8f80&out=sitecount
+// http://localhost:8333?siteid=c0f36d3e-00a4-4139-882c-022c8034f58d
 // vertx runzip target/visitrank-0.0.1-SNAPSHOT-mod.zip
 // vertx runmod com.m3958~visitrank~0.0.1-SNAPSHOT -conf conf.json
-
+//  -Dmaven.test.skip=true

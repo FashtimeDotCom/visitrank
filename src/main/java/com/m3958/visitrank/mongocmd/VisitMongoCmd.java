@@ -13,22 +13,34 @@ package com.m3958.visitrank.mongocmd;
 import org.vertx.java.core.json.JsonObject;
 
 public class VisitMongoCmd {
-  private JsonObject counterUrl;
+  private JsonObject requestJso;
   private String pageUrl;
 
-  public VisitMongoCmd(JsonObject counterUrl, String pageUrl) {
-    this.counterUrl = counterUrl;
+  public VisitMongoCmd(JsonObject requestJso, String pageUrl) {
+    this.requestJso = requestJso;
     this.pageUrl = pageUrl;
   }
+
+  public VisitMongoCmd() {}
 
   public JsonObject saveCmd() {
     JsonObject jo = new JsonObject();
     jo.putString("action", "save");
     jo.putString("collection", "pagevisit");
-    this.counterUrl.removeField("url");
-    this.counterUrl.removeField("title");
-    this.counterUrl.putString("urlid", this.pageUrl);
-    jo.putObject("document", this.counterUrl);
+    this.requestJso.removeField("url");
+    this.requestJso.removeField("title");
+    this.requestJso.putString("urlid", this.pageUrl);
+    jo.putObject("document", this.requestJso);
+    return jo;
+  }
+
+  public JsonObject getSiteAllCmd(String siteid) {
+    JsonObject jo = new JsonObject();
+    jo.putString("action", "count");
+    jo.putString("collection", "pagevisit");
+    JsonObject matcher = new JsonObject().putString("siteid", siteid);
+
+    jo.putObject("matcher", matcher);
     return jo;
   }
 }

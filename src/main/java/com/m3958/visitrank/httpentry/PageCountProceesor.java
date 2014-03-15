@@ -12,7 +12,7 @@ import org.vertx.java.core.http.HttpServerRequest;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.core.logging.Logger;
 
-import com.m3958.visitrank.MainVerticle;
+import com.m3958.visitrank.AppConstants;
 import com.m3958.visitrank.ResponseGenerator;
 import com.m3958.visitrank.SaveToMongoVerticle;
 import com.m3958.visitrank.rediscmd.INCR;
@@ -44,7 +44,7 @@ public class PageCountProceesor {
         String referermd5 = DigestUtils.md5Hex(referer);
 
         JsonObject msg = new INCR(referermd5).getCmd();
-        this.eb.send(MainVerticle.MOD_REDIS_ADDRESS, msg,
+        this.eb.send(AppConstants.MOD_REDIS_ADDRESS, msg,
             new Handler<Message<JsonObject>>() {
               public void handle(Message<JsonObject> message) {
                 JsonObject redisResultBody = message.body();
