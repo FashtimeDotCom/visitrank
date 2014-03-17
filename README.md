@@ -4,7 +4,7 @@ This app can record page visit,get visit count for page,for category and for sit
 
 ## url参数约定如下：
 
-* siteid，必须参数，如果没有这个参数，服务器不做任何动作，直接返回。必须先在http://sites.fh.gov.cn/vrapp/index.html注册站点
+* siteid，必须参数，如果没有这个参数，服务器不做任何动作，直接返回。必须先在 http://sites.fh.gov.cn/vrapp/index.html 注册站点，获取siteid值。
 * record=true，就会记录此次访问的referer
 * out=wholesite || thispage
 * 如果有domid参数，就会输出一段js代码，用访问次数替换dom里面的内容。
