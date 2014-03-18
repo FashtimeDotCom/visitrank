@@ -12,7 +12,7 @@ import com.m3958.visitrank.AppConstants;
 import com.m3958.visitrank.ResponseGenerator;
 import com.m3958.visitrank.rediscmd.GET;
 
-public class SiteCountProceesor {
+public class WholeSiteCountProceesor {
 
   private HttpServerRequest req;
 
@@ -20,7 +20,7 @@ public class SiteCountProceesor {
 
   private EventBus eb;
 
-  public SiteCountProceesor(EventBus eb, HttpServerRequest req, Logger log) {
+  public WholeSiteCountProceesor(EventBus eb, HttpServerRequest req, Logger log) {
     this.eb = eb;
     this.req = req;
     this.log = log;
@@ -35,8 +35,8 @@ public class SiteCountProceesor {
       return;
     }
     
-    JsonObject msg = new GET(siteid).getCmd();
-    this.eb.send(AppConstants.MOD_REDIS_ADDRESS, msg,
+    JsonObject wholeSiteCountCmd = new GET(siteid).getCmd();
+    this.eb.send(AppConstants.MOD_REDIS_ADDRESS, wholeSiteCountCmd,
       new Handler<Message<JsonObject>>() {
         public void handle(Message<JsonObject> message) {
           JsonObject redisResultBody = message.body();

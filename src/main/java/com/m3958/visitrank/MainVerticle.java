@@ -15,7 +15,7 @@ public class MainVerticle extends Verticle {
   public void start() {
 
     JsonObject config = container.config();
-    
+
     final Logger log = container.logger();
 
     int http_port = config.getInteger("httpport", 0);
@@ -39,15 +39,16 @@ public class MainVerticle extends Verticle {
     JsonObject httpCfg = new JsonObject();
     httpCfg.putNumber("port", http_port);
 
-    container.deployVerticle("com.m3958.visitrank.CounterVerticle", httpCfg, config.getInteger("httpinstance",5));
+    container.deployVerticle("com.m3958.visitrank.CounterVerticle", httpCfg,
+        config.getInteger("httpinstance", 1));
 
     // deploy redis
     JsonObject redisCfg = new JsonObject();
     redisCfg.putString("address", AppConstants.MOD_REDIS_ADDRESS).putString("host", "127.0.0.1")
         .putString("encodeing", "UTF-8").putNumber("port", redis_port);
 
-    container.deployModule("io.vertx~mod-redis~1.1.3", redisCfg, 1,
-        new AsyncResultHandler<String>() {
+    container.deployModule("io.vertx~mod-redis~1.1.3", redisCfg,
+        config.getInteger("redisinstance", 1), new AsyncResultHandler<String>() {
           @Override
           public void handle(AsyncResult<String> asyncResult) {
             if (asyncResult.succeeded()) {
@@ -60,23 +61,24 @@ public class MainVerticle extends Verticle {
 
     // deploy mongodb
     JsonObject mongodbCfg = new JsonObject();
-    mongodbCfg.putString("address", AppConstants.MOD_MONGO_PERSIST_ADDRESS).putString("host", "localhost")
-        .putString("db_name", "visitrank").putNumber("port", mongodb_port);
+    mongodbCfg.putString("address", AppConstants.MOD_MONGO_PERSIST_ADDRESS)
+        .putString("host", "localhost").putString("db_name", "visitrank")
+        .putNumber("port", mongodb_port);
 
-    container.deployModule("io.vertx~mod-mongo-persistor~2.1.1", mongodbCfg, 1,
-        new AsyncResultHandler<String>() {
+    container.deployModule("io.vertx~mod-mongo-persistor~2.1.1", mongodbCfg,
+        config.getInteger("mongodbinstance", 1), new AsyncResultHandler<String>() {
           @Override
           public void handle(AsyncResult<String> asyncResult) {
             if (asyncResult.succeeded()) {
-              log.info("mongo-persistor module has successly deployed:"
-                  + asyncResult.result());
+              log.info("mongo-persistor module has successly deployed:" + asyncResult.result());
             } else {
               log.info("mongo-persistor module deploy failure.");
             }
           }
         });
 
-    container.deployVerticle("com.m3958.visitrank.SaveToMongoVerticle", 1);
+    container.deployVerticle("com.m3958.visitrank.SaveToMongoVerticle",
+        config.getInteger("savetomongoverticleinstance",1));
 
     container.deployVerticle("mapreduce_verticle.js", 1);
   }

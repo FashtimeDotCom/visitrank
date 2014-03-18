@@ -1,5 +1,8 @@
 {
-	"httpinstance": 10,
+	"httpinstance": 20,
+	"redisinstance": 1,
+	"mongodbinstance":1,
+	"savetomongoverticleinstance": 1,
     "httpport" : 8333,
     "redisport" : 6379,
     "mongodbport" : 27017,

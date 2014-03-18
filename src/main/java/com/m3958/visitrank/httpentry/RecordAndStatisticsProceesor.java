@@ -17,7 +17,12 @@ import com.m3958.visitrank.ResponseGenerator;
 import com.m3958.visitrank.SaveToMongoVerticle;
 import com.m3958.visitrank.rediscmd.INCR;
 
-public class PageCountProceesor {
+/**
+ * This class handle persiste record to mongodb and return proper content to client. referer head is a must.
+ * @author jianglibo@gmail.com
+ *
+ */
+public class RecordAndStatisticsProceesor {
 
   private HttpServerRequest req;
 
@@ -25,7 +30,7 @@ public class PageCountProceesor {
 
   private EventBus eb;
 
-  public PageCountProceesor(EventBus eb, HttpServerRequest req, Logger log) {
+  public RecordAndStatisticsProceesor(EventBus eb, HttpServerRequest req, Logger log) {
     this.eb = eb;
     this.req = req;
     this.log = log;
@@ -43,22 +48,29 @@ public class PageCountProceesor {
       } else {
         String referermd5 = DigestUtils.md5Hex(referer);
 
-        JsonObject msg = new INCR(referermd5).getCmd();
-        this.eb.send(AppConstants.MOD_REDIS_ADDRESS, msg,
-            new Handler<Message<JsonObject>>() {
-              public void handle(Message<JsonObject> message) {
-                JsonObject redisResultBody = message.body();
-                if ("ok".equals(redisResultBody.getString("status"))) {
-                  String value = String.valueOf(redisResultBody.getLong("value"));
-                  // use publish pattern,no wait.
-                  PageCountProceesor.this.eb.send(SaveToMongoVerticle.RECEIVER_ADDR, pjo);
-                  new ResponseGenerator(req, value).sendResponse();
-                } else {
-                  log.info(redisResultBody.getString("message"));
-                  new ResponseGenerator(req, "0").sendResponse();
-                }
+        JsonObject incrCmd = new INCR(referermd5).getCmd();
+        //redis incr
+        this.eb.send(AppConstants.MOD_REDIS_ADDRESS, incrCmd, new Handler<Message<JsonObject>>() {
+          public void handle(Message<JsonObject> message) {
+            JsonObject redisResultBody = message.body();
+            if ("ok".equals(redisResultBody.getString("status"))) {
+              
+              //save to mongodb
+              RecordAndStatisticsProceesor.this.eb.send(SaveToMongoVerticle.RECEIVER_ADDR, pjo);
+              String out = req.params().get("out");
+              
+              if("wholesite".equals(out)){
+                new WholeSiteCountProceesor(eb, req, log).process();
+              }else{ //default return this referer's count
+                String value = String.valueOf(redisResultBody.getLong("value"));
+                new ResponseGenerator(req, value).sendResponse();
               }
-            });
+            } else {
+              log.info(redisResultBody.getString("message"));
+              new ResponseGenerator(req, "0").sendResponse();
+            }
+          }
+        });
       }
     }
   }
@@ -91,7 +103,7 @@ public class PageCountProceesor {
       jo.putString(key, value);
     }
     headerJo.putString("ip", req.remoteAddress().getAddress().getHostAddress());
-
+    jo.putString("siteid", siteid);
     jo.putNumber("ts", new Date().getTime()).putObject("headers", headerJo);
 
     return jo;

@@ -14,11 +14,9 @@ import org.vertx.java.core.json.JsonObject;
 
 public class VisitMongoCmd {
   private JsonObject requestJso;
-  private String pageUrl;
 
-  public VisitMongoCmd(JsonObject requestJso, String pageUrl) {
+  public VisitMongoCmd(JsonObject requestJso) {
     this.requestJso = requestJso;
-    this.pageUrl = pageUrl;
   }
 
   public VisitMongoCmd() {}
@@ -27,9 +25,7 @@ public class VisitMongoCmd {
     JsonObject jo = new JsonObject();
     jo.putString("action", "save");
     jo.putString("collection", "pagevisit");
-    this.requestJso.removeField("url");
-    this.requestJso.removeField("title");
-    this.requestJso.putString("urlid", this.pageUrl);
+    this.requestJso.removeField("record");
     jo.putObject("document", this.requestJso);
     return jo;
   }

@@ -20,43 +20,30 @@ import org.vertx.java.core.Handler;
 import org.vertx.java.core.eventbus.EventBus;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonObject;
-import org.vertx.java.core.logging.Logger;
 import org.vertx.java.platform.Verticle;
 
-import com.m3958.visitrank.mongocmd.SiteMongoCmd;
+import com.m3958.visitrank.mongocmd.VisitMongoCmd;
+import com.m3958.visitrank.rediscmd.INCR;
 
-/*
- * This is a simple Java verticle which receives `ping` messages on the event bus and sends back
- * `pong` replies
- */
 public class SaveToMongoVerticle extends Verticle {
 
   public static String RECEIVER_ADDR = "visitrank-mongo-receiver";
 
-
   public void start() {
     final EventBus eb = vertx.eventBus();
-    final Logger log = container.logger();
+//    final Logger log = container.logger();
 
-    // jo.putString("siteid", siteid).putString("catid", catid).putNumber("ts", new
-    // Date().getTime())
-    // .putString("title", mm.get("title")).putString("ip", ip).putObject("headers", headerJo);
-    // db.pageurl.ensureIndex( { "url": 1 }, { unique: true } )
-    // db.test.getIndexes()
-    // db.pageurl.remove({})
     eb.registerHandler(RECEIVER_ADDR, new Handler<Message<JsonObject>>() {
       @Override
       public void handle(Message<JsonObject> message) {
         JsonObject body = message.body();
-        // find site
-        JsonObject findSiteCmd = new SiteMongoCmd(body.getString("siteid")).findOneCmd();
-
-        eb.send(AppConstants.MOD_MONGO_PERSIST_ADDRESS, findSiteCmd, new UrlPersistHandler(eb,
-            log, body));
+        String siteid = body.getString("siteid");
+//        log.info(body);
+        eb.send(AppConstants.MOD_MONGO_PERSIST_ADDRESS, new VisitMongoCmd(body).saveCmd());
+        eb.send(AppConstants.MOD_REDIS_ADDRESS, new INCR(siteid).getCmd());
       }
     });
     container.logger().info("SaveToMongoVerticle started");
 
   }
-
 }

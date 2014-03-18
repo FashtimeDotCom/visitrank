@@ -27,7 +27,7 @@ public class UrlPersistHandler implements Handler<Message<JsonObject>> {
   public void handle(Message<JsonObject> message) {
     JsonObject siteFindResultBody = message.body();
     if ("ok".equals(siteFindResultBody.getString("status"))) {
-      JsonObject msite = siteFindResultBody.getObject("result");
+      final JsonObject msite = siteFindResultBody.getObject("result");
       if (msite != null) {
         JsonObject findUrlCmd = new UrlMongoCmd(UrlPersistHandler.this.rqJso).findOneCmd();
         increaseSiteCounter(msite);
@@ -40,7 +40,7 @@ public class UrlPersistHandler implements Handler<Message<JsonObject>> {
                   JsonObject murl = urlFindResultBody.getObject("result");
                   if (murl != null) {
                     eb.send(AppConstants.MOD_MONGO_PERSIST_ADDRESS, new VisitMongoCmd(
-                        UrlPersistHandler.this.rqJso, murl.getString("_id")).saveCmd());
+                        UrlPersistHandler.this.rqJso).saveCmd());
                   } else {
                     eb.send(AppConstants.MOD_MONGO_PERSIST_ADDRESS, new UrlMongoCmd(
                         UrlPersistHandler.this.rqJso).saveCmd(),
@@ -51,7 +51,7 @@ public class UrlPersistHandler implements Handler<Message<JsonObject>> {
                             JsonObject saveUrlResultBody = saveResultMessage.body();
                             if ("ok".equals(saveUrlResultBody.getString("status"))) {
                               eb.send(AppConstants.MOD_MONGO_PERSIST_ADDRESS, new VisitMongoCmd(
-                                  UrlPersistHandler.this.rqJso, saveUrlResultBody.getString("_id"))
+                                  UrlPersistHandler.this.rqJso)
                                   .saveCmd());
                             } else {
                               log.error(saveUrlResultBody.getString("message"));
@@ -73,10 +73,6 @@ public class UrlPersistHandler implements Handler<Message<JsonObject>> {
   private void increaseSiteCounter(JsonObject msite) {
     String siteid = msite.getString("_id");
     eb.send(AppConstants.MOD_REDIS_ADDRESS, new INCR(siteid).getCmd());
-    String catid = msite.getString("catid", "");
-    if (!catid.isEmpty()) {
-      eb.send(AppConstants.MOD_REDIS_ADDRESS, new INCR(siteid + catid).getCmd());
-    }
   }
 
 }
