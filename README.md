@@ -22,7 +22,7 @@ This app can record page visit,get visit count for page,for category and for sit
 2、在文章页面显示访问次数，因为已经在公共尾部参与了记录，文章页的record参数不要再加上，否则会造成重复计数。
 
 ```
-<script src="http://vr.fh.gov.cn?siteid=some-uuid&out=thispage&domid=site-counter"></script>
+<script src="http://vr.fh.gov.cn?siteid=some-uuid&out=thispage&domid=page-counter"></script>
 ```
 
 用来统计站点的文章访问数，同时记录详细的客户端信息，包括ip，ua。引入的数据可以在后台通过mongodb的MapReduce或者hadoop分析处理。
