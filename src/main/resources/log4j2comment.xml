@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="debug" name="RoutingTest" packages="org.apache.logging.log4j.test">
+  <Properties>
+    <Property name="filename">target/rolling1/rollingtest-$${sd:type}.log</Property>
+    可以用${filename}引用，sd：StructuredDataMessage
+  </Properties>
+  <ThresholdFilter level="debug"/>
+ 
+  <Appenders>
+    <File name="MyFile" fileName="logs/app.log">
+      <PatternLayout>
+        <Pattern>%d %p %c{1.} [%t] %m%n</pattern>
+      </PatternLayout>
+    </File>
+    <Async name="Async">
+      <AppenderRef ref="MyFile"/>
+    </Async>
+    
+    <Routing name="Routing">
+      <Routes pattern="$${sd:type}">
+        <Route>
+          <RollingFile name="Rolling-${sd:type}" fileName="${filename}"
+                       filePattern="target/rolling1/test1-${sd:type}.%i.log.gz">
+            <PatternLayout>
+              <pattern>%d %p %c{1.} [%t] %m%n</pattern> %d日期， %p level，%t thread，%c logger，%m logger‘s message，%n newline
+            </PatternLayout>
+            <SizeBasedTriggeringPolicy size="500" />
+          </RollingFile>
+        </Route>
+        <Route AppenderRef="Async" key="Audit"/>
+        <Route AppenderRef="List" key="Service"/>
+      </Routes>
+    </Routing>
+  </Appenders>
+ 
+  <Loggers>
+    <Logger name="EventLogger" level="info" additivity="false">
+      <AppenderRef ref="Routing"/>
+    </Logger>
+ 
+    <Root level="error">
+      <AppenderRef ref="STDOUT"/>
+    </Root>
+  </Loggers>
+ 
+</Configuration>
+
+DateLookup：
+<RollingFile name="Rolling-${map:type}" fileName="${filename}" filePattern="target/rolling1/test1-$${date:MM-dd-yyyy}.%i.log.gz">
+  <PatternLayout>
+    <pattern>%d %p %c{1.} [%t] %m%n</pattern>
+  </PatternLayout>
+  <SizeBasedTriggeringPolicy size="500" />
+</RollingFile>
+

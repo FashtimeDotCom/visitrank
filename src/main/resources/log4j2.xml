@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="debug" name="UrlPersistor">
+
+	<Appenders>
+		<Appender type="Console" name="STDOUT">
+			<Layout type="PatternLayout" pattern="%m MDC%X%n" />
+		</Appender>
+		<File name="MyFile" fileName="logs/app.log">
+			<PatternLayout>
+				<Pattern>
+					%d %p %c{1.} [%t] %m%n
+				</Pattern>
+			</PatternLayout>
+		</File>
+		<Async name="Async">
+			<AppenderRef ref="MyFile" />
+		</Async>
+	</Appenders>
+
+	<Loggers>
+		<Logger name="EventLogger" level="info" additivity="false">
+			<AppenderRef ref="Async" />
+		</Logger>
+
+		<Root level="error">
+			<AppenderRef ref="STDOUT" />
+		</Root>
+	</Loggers>
+
+</Configuration>
