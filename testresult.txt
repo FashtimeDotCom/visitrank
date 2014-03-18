@@ -1,0 +1,41 @@
+1.http listen just return one charset
+
+c: 5000,
+http instance: 100,
+throughput: 98.15469179
+
+c: 5000,
+http instance: 10,
+throughput: 103.25458450355197
+
+c: 5000,
+http instance: 5,
+throughput: 95
+
+
+1.http listen just return 1k charset
+
+c: 5000,
+http instance: 100,
+throughput: 98.15469179
+
+c: 5000,
+http instance: 10,
+throughput: 103.25458450355197
+
+c: 5000,
+http instance: 5,
+throughput: 95.20182787
+
+
+2.ResponseGenerator, 1k
+
+c: 5000,
+http instance: 5,
+throughput: 100.5146349
+
+3. add redis incr
+
+4.redis and mongodb
+
+so mongodb is bottleneck.

@@ -57,6 +57,7 @@ public class StatisticsProceesor {
               }catch(Exception e){
                 value = String.valueOf(redisResultBody.getLong("value"));
               }
+              log.info(value);
               new ResponseGenerator(req, value).sendResponse();
             } else {
               log.info(redisResultBody.getString("message"));

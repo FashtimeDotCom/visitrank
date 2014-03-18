@@ -17,11 +17,25 @@ import com.m3958.visitrank.httpentry.StatisticsProceesor;
  * 
  */
 public class CounterVerticle extends Verticle {
+  
+  
+  public static String resstr;
+  
+  static {
+    StringBuilder sb = new StringBuilder();
+    for(int i=0;i<1001;i++){
+      sb.append("a");
+    }
+    resstr = sb.toString();
+  }
 
   public void start() {
     JsonObject config = container.config();
     vertx.createHttpServer().requestHandler(new Handler<HttpServerRequest>() {
       public void handle(final HttpServerRequest req) {
+//        req.response().end(resstr);
+//        new ResponseGenerator(req, resstr).sendResponse();
+        
         MultiMap mm = req.params();
         //see record parameter exists.
         String record = mm.get("record");
@@ -67,6 +81,6 @@ public class CounterVerticle extends Verticle {
 // curl --referer http://www.example.com
 // http://localhost:8333?siteid=c0f36d3e-00a4-4139-882c-022c8034f58d
 // vertx runzip target/visitrank-0.0.1-SNAPSHOT-mod.zip
-// vertx runmod com.m3958~visitrank~0.0.1-SNAPSHOT -conf conf.json
+// vertx runmod com.m3958~visitrank~0.0.3-SNAPSHOT -conf conf.json
 //  -Dmaven.test.skip=true
 //db.collection.getIndexes()

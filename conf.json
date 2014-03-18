@@ -1,5 +1,5 @@
 {
-	"httpinstance": 20,
+	"httpinstance": 5,
 	"redisinstance": 1,
 	"mongodbinstance":1,
 	"savetomongoverticleinstance": 1,
