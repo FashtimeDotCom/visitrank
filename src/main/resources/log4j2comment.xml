@@ -53,3 +53,16 @@ DateLookup：
   <SizeBasedTriggeringPolicy size="500" />
 </RollingFile>
 
+注意下面的filepattern，最小的时间单位是小时HH，后缀名是log.gz说明需要压缩。
+
+    <RollingFile name="RollingFile" fileName="logs/app.log"
+                 filePattern="logs/$${date:yyyy-MM}/app-%d{yyyy-MM-dd-HH}-%i.log.gz">
+      <PatternLayout>
+        <Pattern>%d %p %c{1.} [%t] %m%n</Pattern>
+      </PatternLayout>
+      <Policies>
+        <TimeBasedTriggeringPolicy interval="6" modulate="true"/>
+        <SizeBasedTriggeringPolicy size="250 MB"/>
+      </Policies>
+    </RollingFile>
+    

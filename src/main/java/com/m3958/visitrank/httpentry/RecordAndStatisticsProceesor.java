@@ -15,12 +15,15 @@ import org.vertx.java.core.logging.Logger;
 import com.m3958.visitrank.AppConstants;
 import com.m3958.visitrank.ResponseGenerator;
 import com.m3958.visitrank.SaveToMongoVerticle;
+import com.m3958.visitrank.logger.UrlPersistorLogger;
 import com.m3958.visitrank.rediscmd.INCR;
 
 /**
- * This class handle persiste record to mongodb and return proper content to client. referer head is a must.
+ * This class handle persiste record to mongodb and return proper content to client. referer head is
+ * a must.
+ * 
  * @author jianglibo@gmail.com
- *
+ * 
  */
 public class RecordAndStatisticsProceesor {
 
@@ -49,19 +52,21 @@ public class RecordAndStatisticsProceesor {
         String referermd5 = DigestUtils.md5Hex(referer);
 
         JsonObject incrCmd = new INCR(referermd5).getCmd();
-        //redis incr
+        // redis incr
         this.eb.send(AppConstants.MOD_REDIS_ADDRESS, incrCmd, new Handler<Message<JsonObject>>() {
           public void handle(Message<JsonObject> message) {
             JsonObject redisResultBody = message.body();
             if ("ok".equals(redisResultBody.getString("status"))) {
-              
-              //save to mongodb
-              RecordAndStatisticsProceesor.this.eb.send(SaveToMongoVerticle.RECEIVER_ADDR, pjo);
+
+              // save to mongodb
+              // RecordAndStatisticsProceesor.this.eb.send(SaveToMongoVerticle.RECEIVER_ADDR, pjo);
+              UrlPersistorLogger.urlPersistor.info(pjo);
+              pjo.removeField("record");
               String out = req.params().get("out");
-              
-              if("wholesite".equals(out)){
+
+              if ("wholesite".equals(out)) {
                 new WholeSiteCountProceesor(eb, req, log).process();
-              }else{ //default return this referer's count
+              } else { // default return this referer's count
                 String value = String.valueOf(redisResultBody.getLong("value"));
                 new ResponseGenerator(req, value).sendResponse();
               }

@@ -5,18 +5,25 @@
 		<Console name="STDOUT" target="SYSTEM_OUT">
 			<Layout type="PatternLayout" pattern="%m MDC%X%n" />
 		</Console>
-		<File name="MyFile" fileName="logs/app.log">
+
+		<RollingFile name="RollingFile" fileName="logs/app.log"
+			filePattern="logs/$${date:yyyy-MM-dd}/%d{HH}.log"> <!-- -%i的作用是在周期内，另一個triggering產生作用的時候計數 -->
 			<PatternLayout>
-				<Pattern>
-					%m%n
-				</Pattern>
+				<Pattern>%m%n</Pattern>
 			</PatternLayout>
-		</File>
+			<Policies>
+				<TimeBasedTriggeringPolicy interval="1"
+					modulate="true" />
+<!-- 				<SizeBasedTriggeringPolicy size="250 MB" />  -->
+			</Policies>
+		</RollingFile>
+		<!-- <File name="MyFile" fileName="logs/app.log"> <PatternLayout> <Pattern> 
+			%m%n </Pattern> </PatternLayout> </File> -->
 	</Appenders>
 
 	<Loggers>
-		<Logger name="UrlPersistor" level="warn" additivity="false">
-			<AppenderRef ref="MyFile" />
+		<Logger name="UrlPersistor" level="info" additivity="false">
+			<AppenderRef ref="RollingFile" />
 		</Logger>
 
 		<Root level="error">

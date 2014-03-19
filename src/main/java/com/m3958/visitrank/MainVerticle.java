@@ -10,11 +10,15 @@ import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.core.logging.Logger;
 import org.vertx.java.platform.Verticle;
 
+import com.m3958.visitrank.logger.UrlPersistorLogger;
+
 public class MainVerticle extends Verticle {
 
   public void start() {
 
     JsonObject config = container.config();
+    
+    UrlPersistorLogger.urlPersistor.trace("loger started");
 
     final Logger log = container.logger();
 

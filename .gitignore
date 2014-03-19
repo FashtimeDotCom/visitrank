@@ -12,3 +12,4 @@ target/
 
 mods/
 logs/
+logs/app.log

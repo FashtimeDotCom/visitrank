@@ -6,7 +6,7 @@ import org.vertx.java.core.json.JsonObject;
 
 public class UrlPersistorLogger {
 
-  static final Logger urlPersistor = LogManager.getLogger("UrlPersistor");
+  public static final Logger urlPersistor = LogManager.getLogger("UrlPersistor");
 
 
   // Set up a simple configuration that logs on the console.
