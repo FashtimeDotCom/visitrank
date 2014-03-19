@@ -2,24 +2,21 @@
 <Configuration status="debug" name="UrlPersistor">
 
 	<Appenders>
-		<Appender type="Console" name="STDOUT">
+		<Console name="STDOUT" target="SYSTEM_OUT">
 			<Layout type="PatternLayout" pattern="%m MDC%X%n" />
-		</Appender>
+		</Console>
 		<File name="MyFile" fileName="logs/app.log">
 			<PatternLayout>
 				<Pattern>
-					%d %p %c{1.} [%t] %m%n
+					%m%n
 				</Pattern>
 			</PatternLayout>
 		</File>
-		<Async name="Async">
-			<AppenderRef ref="MyFile" />
-		</Async>
 	</Appenders>
 
 	<Loggers>
-		<Logger name="EventLogger" level="info" additivity="false">
-			<AppenderRef ref="Async" />
+		<Logger name="UrlPersistor" level="warn" additivity="false">
+			<AppenderRef ref="MyFile" />
 		</Logger>
 
 		<Root level="error">
