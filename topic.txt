@@ -2,3 +2,17 @@
 
 数据库名称预定：
 visitrank-2014-03-20
+
+这个verticle应该在自己的模块中执行任务。
+
+定时verticle每5分钟检查一次log，如果存在就启动一个logprocessVertice。
+logprocessVerticle根据文件名的新启动一个mongodb verticle，当verticle启动完成之后，开始导入数据。
+导入结束之后，销毁mongodbverticle，然后销毁自己。
+
+用另一个计时器，每30分钟一次，如果是半夜，将数据将一天的数据，导入到总表。
+
+这里有几个点：
+
+日志文件处理成功，需要一个标志
+日数据库成功生成，需要一个标志，成功导入到主表，需要一个标志（也许不需要，删除）。
+
