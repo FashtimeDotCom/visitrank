@@ -16,43 +16,26 @@ public class MainVerticle extends Verticle {
 
   public void start() {
 
-    JsonObject config = container.config();
-    
+    AppConstants.initConfigConstants(container.config());
+
     UrlPersistorLogger.urlPersistor.trace("loger started");
 
     final Logger log = container.logger();
 
-    int http_port = config.getInteger("httpport", 0);
-
-    if (http_port == 0) {
-      http_port = AppConstants.HTTP_PORT;
-    }
-
-    int redis_port = config.getInteger("redisport", 0);
-
-    if (redis_port == 0) {
-      redis_port = AppConstants.REDIS_PORT;
-    }
-
-    int mongodb_port = config.getInteger("mongodbport", 0);
-
-    if (mongodb_port == 0) {
-      mongodb_port = AppConstants.MONGODB_PORT;
-    }
-
     JsonObject httpCfg = new JsonObject();
-    httpCfg.putNumber("port", http_port);
+    httpCfg.putNumber("port", AppConstants.HTTP_PORT);
 
     container.deployVerticle("com.m3958.visitrank.CounterVerticle", httpCfg,
-        config.getInteger("httpinstance", 1));
+        AppConstants.HTTP_INSTANCE);
 
     // deploy redis
     JsonObject redisCfg = new JsonObject();
-    redisCfg.putString("address", AppConstants.MOD_REDIS_ADDRESS).putString("host", "127.0.0.1")
-        .putString("encodeing", "UTF-8").putNumber("port", redis_port);
+    redisCfg.putString("address", AppConstants.MOD_REDIS_ADDRESS)
+        .putString("host", AppConstants.REDIS_HOST).putString("encodeing", "UTF-8")
+        .putNumber("port", AppConstants.REDIS_PORT);
 
-    container.deployModule("io.vertx~mod-redis~1.1.3", redisCfg,
-        config.getInteger("redisinstance", 1), new AsyncResultHandler<String>() {
+    container.deployModule(AppConstants.REDIS_MODULE_NAME, redisCfg, AppConstants.REDIS_INSTANCE,
+        new AsyncResultHandler<String>() {
           @Override
           public void handle(AsyncResult<String> asyncResult) {
             if (asyncResult.succeeded()) {
@@ -67,10 +50,10 @@ public class MainVerticle extends Verticle {
     JsonObject mongodbCfg = new JsonObject();
     mongodbCfg.putString("address", AppConstants.MOD_MONGO_PERSIST_ADDRESS)
         .putString("host", "localhost").putString("db_name", "visitrank")
-        .putNumber("port", mongodb_port);
+        .putNumber("port", AppConstants.MONGODB_PORT);
 
-    container.deployModule("io.vertx~mod-mongo-persistor~2.1.1", mongodbCfg,
-        config.getInteger("mongodbinstance", 1), new AsyncResultHandler<String>() {
+    container.deployModule(AppConstants.MONGODB_MODULE_NAME, mongodbCfg,
+        AppConstants.MONGODB_INSTANCE, new AsyncResultHandler<String>() {
           @Override
           public void handle(AsyncResult<String> asyncResult) {
             if (asyncResult.succeeded()) {
@@ -82,7 +65,7 @@ public class MainVerticle extends Verticle {
         });
 
     container.deployVerticle("com.m3958.visitrank.SaveToMongoVerticle",
-        config.getInteger("savetomongoverticleinstance",1));
+        AppConstants.SAVETO_MONGO_INSTANCE);
 
     container.deployVerticle("mapreduce_verticle.js", 1);
   }

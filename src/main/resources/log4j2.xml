@@ -7,7 +7,7 @@
 		</Console>
 
 		<RollingFile name="RollingFile" fileName="logs/app.log"
-			filePattern="logs/$${date:yyyy-MM-dd}/%d{HH}.log"> <!-- -%i的作用是在周期内，另一個triggering產生作用的時候計數 -->
+			filePattern="logs/$${date:yyyy-MM-dd}-%d{HH}.log"> <!-- -%i的作用是在周期内，另一個triggering產生作用的時候計數 -->
 			<PatternLayout>
 				<Pattern>%m%n</Pattern>
 			</PatternLayout>
@@ -26,7 +26,7 @@
 			<AppenderRef ref="RollingFile" />
 		</Logger>
 
-		<Root level="error">
+		<Root level="info">
 			<AppenderRef ref="STDOUT" />
 		</Root>
 	</Loggers>
