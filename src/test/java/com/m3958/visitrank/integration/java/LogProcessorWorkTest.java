@@ -28,9 +28,6 @@ import org.vertx.java.core.json.JsonObject;
 import org.vertx.testtools.TestVerticle;
 import org.vertx.testtools.VertxAssert;
 
-import com.m3958.visitrank.AppConstants;
-import com.m3958.visitrank.mongocmd.SiteMongoCmd;
-
 /**
  * Example Java integration test that deploys the module that this project builds.
  * 
@@ -39,27 +36,21 @@ import com.m3958.visitrank.mongocmd.SiteMongoCmd;
  * 
  * This test demonstrates how to do that.
  */
-public class MongodbTest extends TestVerticle {
+public class LogProcessorWorkTest extends TestVerticle {
 
   @Test
   public void testSaveTestSite() {
-    container.logger().info("testSaveTestSite()");
     vertx.eventBus().send(
-      AppConstants.MOD_MONGO_PERSIST_ADDRESS,
-        new SiteMongoCmd(TestConstants.DEMO_SITEID).saveCmd(new JsonObject().putString("_id",
-            TestConstants.DEMO_SITEID).putString("sitename", "A Site for test")),
+      "log-processor",new JsonObject(),
         new Handler<Message<JsonObject>>() {
-
           @Override
-          public void handle(Message<JsonObject> saveResultMessage) {
-            JsonObject saveSiteResultBody = saveResultMessage.body();
-            if ("ok".equals(saveSiteResultBody.getString("status"))) {
-              // when save site has _id, will not return _id;
-              VertxAssert.assertNull(saveSiteResultBody.getString("_id"));
+          public void handle(Message<JsonObject> message) {
+            JsonObject body = message.body();
+            if ("ok".equals(body.getString("status"))) {
               VertxAssert.testComplete();
             } else {
-              container.logger().error(saveSiteResultBody);
-              container.logger().error(saveSiteResultBody.getString("message"));
+              container.logger().error(body);
+              container.logger().error(body.getString("message"));
               VertxAssert.testComplete();
             }
           }
@@ -69,22 +60,20 @@ public class MongodbTest extends TestVerticle {
   @Override
   public void start() {
     initialize();
-    
-    JsonObject mongodbCfg = new JsonObject();
-    mongodbCfg.putString("address", AppConstants.MOD_MONGO_PERSIST_ADDRESS).putString("host", "localhost")
-        .putString("db_name", "visitrank").putNumber("port", AppConstants.MONGODB_PORT);
-    
-    container.deployModule(AppConstants.MONGODB_MODULE_NAME, mongodbCfg, 1, new AsyncResultHandler<String>() {
-      @Override
-      public void handle(AsyncResult<String> asyncResult) {
-        // Deployment is asynchronous and this this handler will be called when it's complete (or
-        // failed)
-        assertTrue(asyncResult.succeeded());
-        assertNotNull("deploymentID should not be null", asyncResult.result());
-        // If deployed correctly then start the tests!
-        startTests();
-      }
-    });
-    
+
+    container.deployWorkerVerticle("com.m3958.visitrank.LogProcessorWorkVerticle",
+        new JsonObject(), 1, false, new AsyncResultHandler<String>() {
+          @Override
+          public void handle(AsyncResult<String> asyncResult) {
+            // Deployment is asynchronous and this this handler will be called when it's complete
+            // (or
+            // failed)
+            assertTrue(asyncResult.succeeded());
+            assertNotNull("deploymentID should not be null", asyncResult.result());
+            // If deployed correctly then start the tests!
+            startTests();
+          }
+        });
+
   }
 }

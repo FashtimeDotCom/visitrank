@@ -16,7 +16,9 @@ public class AppConstants {
   public static int SAVETO_MONGO_INSTANCE = 1;
 
 
-  public static String REDIS_HOST = "127.0.0.1";
+  public static String REDIS_HOST = "localhost";
+  
+  public static String MONGODB_HOST = "localhost";
 
   public static String REDIS_MODULE_NAME = "io.vertx~mod-redis~1.1.3";
 
@@ -38,6 +40,8 @@ public class AppConstants {
       MONGODB_MODULE_NAME = config.getString("mongodbmodulename",MONGODB_MODULE_NAME);
 
       REDIS_HOST = config.getString("redishost",REDIS_HOST);
+      
+      MONGODB_HOST = config.getString("mongodbhost",MONGODB_HOST);
 
   }
 

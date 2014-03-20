@@ -49,7 +49,7 @@ public class MainVerticle extends Verticle {
     // deploy mongodb
     JsonObject mongodbCfg = new JsonObject();
     mongodbCfg.putString("address", AppConstants.MOD_MONGO_PERSIST_ADDRESS)
-        .putString("host", "localhost").putString("db_name", "visitrank")
+        .putString("host", AppConstants.MONGODB_HOST).putString("db_name", "visitrank")
         .putNumber("port", AppConstants.MONGODB_PORT);
 
     container.deployModule(AppConstants.MONGODB_MODULE_NAME, mongodbCfg,
@@ -68,5 +68,8 @@ public class MainVerticle extends Verticle {
         AppConstants.SAVETO_MONGO_INSTANCE);
 
     container.deployVerticle("mapreduce_verticle.js", 1);
+
+    container.deployWorkerVerticle("com.m3958.visitrank.LogProcessorWorkVerticle",
+        new JsonObject(), 1);
   }
 }
