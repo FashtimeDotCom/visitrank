@@ -16,7 +16,6 @@ package com.m3958.visitrank.integration.java;
  * @author <a href="http://tfox.org">Tim Fox</a>
  */
 
-import static org.vertx.testtools.VertxAssert.assertNotNull;
 import static org.vertx.testtools.VertxAssert.assertTrue;
 
 import org.junit.Test;
@@ -27,6 +26,8 @@ import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.testtools.TestVerticle;
 import org.vertx.testtools.VertxAssert;
+
+import com.m3958.visitrank.AppConstants;
 
 /**
  * Example Java integration test that deploys the module that this project builds.
@@ -40,27 +41,36 @@ public class LogProcessorWorkTest extends TestVerticle {
 
   @Test
   public void testSaveTestSite() {
-    vertx.eventBus().send(
-      "log-processor",new JsonObject(),
-        new Handler<Message<JsonObject>>() {
-          @Override
-          public void handle(Message<JsonObject> message) {
-            JsonObject body = message.body();
-            if ("ok".equals(body.getString("status"))) {
-              VertxAssert.testComplete();
-            } else {
-              container.logger().error(body);
-              container.logger().error(body.getString("message"));
-              VertxAssert.testComplete();
-            }
-          }
-        });
+    vertx.eventBus().send("log-processor", new JsonObject(), new Handler<Message<String>>() {
+      @Override
+      public void handle(Message<String> message) {
+        String str = message.body();
+        if ("ok".equals(str)) {
+          VertxAssert.testComplete();
+        } else {
+          VertxAssert.testComplete();
+        }
+      }
+    });
+  }
+
+  @Test
+  public void testUndeploy() {
+    String id =
+        (String) vertx.sharedData().getMap(AppConstants.DEPLOIED_ID_SHARE_MAP).get("testdeploy");
+    container.undeployVerticle(id, new Handler<AsyncResult<Void>>() {
+
+      @Override
+      public void handle(AsyncResult<Void> result) {
+        VertxAssert.assertTrue(result.succeeded());
+        VertxAssert.testComplete();
+      }
+    });
   }
 
   @Override
   public void start() {
     initialize();
-
     container.deployWorkerVerticle("com.m3958.visitrank.LogProcessorWorkVerticle",
         new JsonObject(), 1, false, new AsyncResultHandler<String>() {
           @Override
@@ -69,7 +79,8 @@ public class LogProcessorWorkTest extends TestVerticle {
             // (or
             // failed)
             assertTrue(asyncResult.succeeded());
-            assertNotNull("deploymentID should not be null", asyncResult.result());
+            vertx.sharedData().getMap(AppConstants.DEPLOIED_ID_SHARE_MAP)
+                .put("testdeploy", asyncResult.result());
             // If deployed correctly then start the tests!
             startTests();
           }

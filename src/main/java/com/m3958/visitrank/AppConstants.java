@@ -15,7 +15,6 @@ public class AppConstants {
   public static int MONGODB_INSTANCE = 1;
   public static int SAVETO_MONGO_INSTANCE = 1;
 
-
   public static String REDIS_HOST = "localhost";
   
   public static String MONGODB_HOST = "localhost";
@@ -23,6 +22,9 @@ public class AppConstants {
   public static String REDIS_MODULE_NAME = "io.vertx~mod-redis~1.1.3";
 
   public static String MONGODB_MODULE_NAME = "io.vertx~mod-mongo-persistor~2.1.1";
+  
+  
+  public static String DEPLOIED_ID_SHARE_MAP = "deploiedidmap";
 
   public static void initConfigConstants(JsonObject config) {
 

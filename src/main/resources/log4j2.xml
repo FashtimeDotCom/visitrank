@@ -14,11 +14,16 @@
 			<Policies>
 				<TimeBasedTriggeringPolicy interval="1"
 					modulate="true" />
-<!-- 				<SizeBasedTriggeringPolicy size="250 MB" />  -->
+				<!-- <SizeBasedTriggeringPolicy size="250 MB" /> -->
 			</Policies>
 		</RollingFile>
-		<!-- <File name="MyFile" fileName="logs/app.log"> <PatternLayout> <Pattern> 
-			%m%n </Pattern> </PatternLayout> </File> -->
+		<File name="DeployError" fileName="logs/derr.log">
+			<PatternLayout>
+				<Pattern>
+					%m%n </Pattern>
+			</PatternLayout>
+		</File>
+
 	</Appenders>
 
 	<Loggers>

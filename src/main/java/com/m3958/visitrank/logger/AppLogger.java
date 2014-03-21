@@ -4,10 +4,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.vertx.java.core.json.JsonObject;
 
-public class UrlPersistorLogger {
+public class AppLogger {
 
   public static final Logger urlPersistor = LogManager.getLogger("UrlPersistor");
-
+  public static final Logger deployError = LogManager.getLogger("DeployError");
 
   // Set up a simple configuration that logs on the console.
   public static void main(String[] args) {

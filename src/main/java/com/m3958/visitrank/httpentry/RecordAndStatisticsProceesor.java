@@ -15,7 +15,7 @@ import org.vertx.java.core.logging.Logger;
 import com.m3958.visitrank.AppConstants;
 import com.m3958.visitrank.ResponseGenerator;
 import com.m3958.visitrank.SaveToMongoVerticle;
-import com.m3958.visitrank.logger.UrlPersistorLogger;
+import com.m3958.visitrank.logger.AppLogger;
 import com.m3958.visitrank.rediscmd.INCR;
 
 /**
@@ -60,7 +60,7 @@ public class RecordAndStatisticsProceesor {
 
               // save to mongodb
               // RecordAndStatisticsProceesor.this.eb.send(SaveToMongoVerticle.RECEIVER_ADDR, pjo);
-              UrlPersistorLogger.urlPersistor.info(pjo);
+              AppLogger.urlPersistor.info(pjo);
               pjo.removeField("record");
               String out = req.params().get("out");
 
