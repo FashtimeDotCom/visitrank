@@ -18,16 +18,14 @@ package com.m3958.visitrank.integration.java;
 
 import static org.vertx.testtools.VertxAssert.assertTrue;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.vertx.java.core.AsyncResult;
 import org.vertx.java.core.AsyncResultHandler;
-import org.vertx.java.core.Handler;
-import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.testtools.TestVerticle;
 import org.vertx.testtools.VertxAssert;
 
-import com.m3958.visitrank.AppConstants;
 
 /**
  * Example Java integration test that deploys the module that this project builds.
@@ -38,53 +36,35 @@ import com.m3958.visitrank.AppConstants;
  * This test demonstrates how to do that.
  */
 public class LogProcessorWorkTest extends TestVerticle {
-
-  @Test
-  public void testSaveTestSite() {
-    vertx.eventBus().send("log-processor", new JsonObject(), new Handler<Message<String>>() {
-      @Override
-      public void handle(Message<String> message) {
-        String str = message.body();
-        if ("ok".equals(str)) {
-          VertxAssert.testComplete();
-        } else {
-          VertxAssert.testComplete();
-        }
-      }
-    });
+  
+  public String filename = "2014-03-02-01.log";
+  
+  public String deployId;
+  
+  @Before
+  public void setup(){
+    deployId = null;
   }
-
+  
   @Test
-  public void testUndeploy() {
-    String id =
-        (String) vertx.sharedData().getMap(AppConstants.DEPLOIED_ID_SHARE_MAP).get("testdeploy");
-    container.undeployVerticle(id, new Handler<AsyncResult<Void>>() {
-
-      @Override
-      public void handle(AsyncResult<Void> result) {
-        VertxAssert.assertTrue(result.succeeded());
-        VertxAssert.testComplete();
-      }
-    });
+  public void t() {
+    VertxAssert.assertNotNull(deployId);
+//    vertx.eventBus().send(filename, deployId);
   }
 
   @Override
   public void start() {
     initialize();
+    JsonObject lpCfg =
+        new JsonObject().putString("filename", filename).putString("address", filename);
     container.deployWorkerVerticle("com.m3958.visitrank.LogProcessorWorkVerticle",
-        new JsonObject(), 1, false, new AsyncResultHandler<String>() {
+        lpCfg, 1, false, new AsyncResultHandler<String>() {
           @Override
           public void handle(AsyncResult<String> asyncResult) {
-            // Deployment is asynchronous and this this handler will be called when it's complete
-            // (or
-            // failed)
             assertTrue(asyncResult.succeeded());
-            vertx.sharedData().getMap(AppConstants.DEPLOIED_ID_SHARE_MAP)
-                .put("testdeploy", asyncResult.result());
-            // If deployed correctly then start the tests!
+            deployId = asyncResult.result();
             startTests();
           }
         });
-
   }
 }

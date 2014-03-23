@@ -6,8 +6,11 @@ import org.vertx.java.core.json.JsonObject;
 
 public class AppLogger {
 
-  public static final Logger urlPersistor = LogManager.getLogger("UrlPersistor");
-  public static final Logger deployError = LogManager.getLogger("DeployError");
+  public static final Logger urlPersistor = LogManager.getLogger("urlPersistorLogger");
+  public static final Logger deployError = LogManager.getLogger("deployLogger");
+  public static final Logger processLogger = LogManager.getLogger("processLogger");
+  
+  public static final Logger error = LogManager.getLogger("errorLog");
 
   // Set up a simple configuration that logs on the console.
   public static void main(String[] args) {

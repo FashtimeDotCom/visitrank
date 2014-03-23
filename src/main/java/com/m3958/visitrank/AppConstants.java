@@ -46,5 +46,12 @@ public class AppConstants {
       MONGODB_HOST = config.getString("mongodbhost",MONGODB_HOST);
 
   }
+  
+  public static class MongoNames{
+    public static String TOTAL_DB_NAME = "visitrannk";
+    public static String PAGE_VISIT_COL_NAME = "pagevisit";
+    public static String STATUS_COL_NAME = "writestatus";
+    public static String STATUS_COL_KEY = "complete";
+  }
 
 }

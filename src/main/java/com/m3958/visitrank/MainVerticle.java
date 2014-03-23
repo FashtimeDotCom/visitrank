@@ -69,7 +69,7 @@ public class MainVerticle extends Verticle {
 
     container.deployVerticle("mapreduce_verticle.js", 1);
 
-    container.deployWorkerVerticle("com.m3958.visitrank.LogProcessorWorkVerticle",
+    container.deployWorkerVerticle("com.m3958.visitrank.LogCheckVerticle",
         new JsonObject(), 1);
   }
 }

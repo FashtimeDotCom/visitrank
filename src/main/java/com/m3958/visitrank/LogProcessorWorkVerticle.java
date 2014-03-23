@@ -1,11 +1,38 @@
 package com.m3958.visitrank;
 
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
+import java.net.UnknownHostException;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.vertx.java.core.AsyncResult;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.platform.Verticle;
 
+import com.m3958.visitrank.logger.AppLogger;
+import com.mongodb.DB;
+import com.mongodb.DBCollection;
+import com.mongodb.DBObject;
+import com.mongodb.MongoClient;
+import com.mongodb.WriteResult;
+import com.mongodb.util.JSON;
+
 /**
+ * it's a sync worker verticle. First we start a mongodb connection, readlines from logfile,batchly
+ * insert into mongodb. according log filename,hourly 2014-03-03-01,construct hourly dbname,daily
+ * dbname 2014-03-03.maybe monthly dbname:2014-03,yearly dbname 2014.
+ * 这个verticle具有唯一的事件地址（logfilename），使用一次，然后销毁。
  * 
  * @author jianglibo@gmail.com
  * 
@@ -16,23 +43,102 @@ public class LogProcessorWorkVerticle extends Verticle {
   public void start() {
     JsonObject cfg = container.config();
 
-    final String address = cfg.getString("address");
-    final String mongoAddress = cfg.getString("mongoAddress");
     final String filename = cfg.getString("filename");
-    final String momongodeployid = cfg.getString("mongodeployid");
+    final String address = cfg.getString("address", filename);
+    final String logDir = cfg.getString("logDir", "logs");
+    final String archiveDir = cfg.getString("archiveDir", "archives");
 
     vertx.eventBus().registerHandler(address, new Handler<Message<String>>() {
       @Override
       public void handle(Message<String> message) {
-        try {
-          final String thisDeployId = message.body();
-          container.logger().info(thisDeployId + " deployed");
-          Thread.sleep(10000);
-          //这里可以最后验证一下条目是否相符。
-        } catch (InterruptedException e) {
-          e.printStackTrace();
-        }
+        final String thisDeployId = message.body();
+
+        new LogProcessor(logDir, archiveDir, filename).process();
+
+        container.undeployVerticle(thisDeployId, new Handler<AsyncResult<Void>>() {
+          @Override
+          public void handle(AsyncResult<Void> ar) {
+            if (ar.failed()) {
+              AppLogger.deployError.error("undeploy " + thisDeployId + " failure");
+            }
+          }
+        });
       }
     });
+  }
+
+  public static class LogProcessor {
+    private String filename;
+    private String logDir;
+    private String archiveDir;
+
+    public LogProcessor(String logDir, String archiveDir, String filename) {
+      this.logDir = logDir;
+      this.archiveDir = archiveDir;
+      this.filename = filename;
+    }
+
+    public void process() {
+      AppLogger.processLogger.info("process " + filename + " starting.");
+      try {
+        Path logfilePath = Paths.get(logDir, filename);
+        MongoClient mongoClient =
+            new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
+        DB db = mongoClient.getDB(AppUtils.getDailyDbName(filename));
+        DBCollection coll = db.getCollection("pagevisit");
+        BufferedReader reader =
+            new BufferedReader(new InputStreamReader(new FileInputStream(logfilePath.toFile()),
+                "UTF-8"));
+        List<DBObject> dbos = new ArrayList<>();
+        String line;
+        long counter = 0;
+        while ((line = reader.readLine()) != null) {
+          try {
+            dbos.add((DBObject) JSON.parse(line));
+          } catch (Exception e) {
+            AppLogger.error.error("parse exception:" + line);
+          }
+          counter++;
+          if (counter % 100 == 0) {
+            WriteResult wr = coll.insert(dbos);
+            dbos = new ArrayList<>();
+          }
+        }
+        if (dbos.size() > 0) {
+          coll.insert(dbos);
+        }
+        reader.close();
+        
+//        long insertedNum = coll.getCount();
+//        if (insertedNum != counter) {
+//          AppLogger.error.error("process items not match.excepted: " + counter + ",inserted: "
+//              + insertedNum);
+//        }
+        
+//        DBCollection statuscoll = db.getCollection(AppConstants.MongoNames.STATUS_COL_NAME);
+//        DBObject dbo = new BasicDBObject(AppConstants.MongoNames.STATUS_COL_KEY, true);
+//        statuscoll.insert(dbo);
+
+        mongoClient.close();
+        Path archiedPath = Paths.get(archiveDir);
+        if (!archiedPath.toFile().exists()) {
+          Files.createDirectories(archiedPath);
+        }
+        if(Files.exists(archiedPath.resolve(filename), LinkOption.NOFOLLOW_LINKS)){
+          Files.move(logfilePath, archiedPath.resolve(filename + ".duplicated"));
+        }else{
+          Files.move(logfilePath, archiedPath.resolve(filename));
+        }
+        
+        Files.delete(Paths.get(logDir, filename + ".doing"));
+        AppLogger.processLogger.info("process " + filename + " end.");
+      } catch (UnsupportedEncodingException | FileNotFoundException e) {
+        AppLogger.error.error("cann't create reader from file: " + filename);
+      } catch (UnknownHostException e1) {
+        AppLogger.error.error("cann't connect to mongo host: " + filename);
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+    }
   }
 }
