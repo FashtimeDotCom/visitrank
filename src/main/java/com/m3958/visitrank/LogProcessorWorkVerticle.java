@@ -39,14 +39,23 @@ import com.mongodb.util.JSON;
  */
 public class LogProcessorWorkVerticle extends Verticle {
 
+  public static class LogProcessorWorkCfgKey {
+    public static String FILE_NAME = "filename";
+    public static String ADDRESS = "address";
+    public static String LOG_DIR = "logDir";
+    public static String ARCHIVE_DIR = "archiveDir";
+    public static String REPLY = "reply";
+  }
+
   @Override
   public void start() {
     JsonObject cfg = container.config();
 
-    final String filename = cfg.getString("filename");
-    final String address = cfg.getString("address", filename);
-    final String logDir = cfg.getString("logDir", "logs");
-    final String archiveDir = cfg.getString("archiveDir", "archives");
+    final String filename = cfg.getString(LogProcessorWorkCfgKey.FILE_NAME);
+    final String address = cfg.getString(LogProcessorWorkCfgKey.ADDRESS, filename);
+    final String logDir = cfg.getString(LogProcessorWorkCfgKey.LOG_DIR, "logs");
+    final String archiveDir = cfg.getString(LogProcessorWorkCfgKey.ARCHIVE_DIR, "archives");
+    final boolean reply = cfg.getBoolean(LogProcessorWorkCfgKey.REPLY, false);
 
     vertx.eventBus().registerHandler(address, new Handler<Message<String>>() {
       @Override
@@ -54,6 +63,9 @@ public class LogProcessorWorkVerticle extends Verticle {
         final String thisDeployId = message.body();
 
         new LogProcessor(logDir, archiveDir, filename).process();
+        if (reply) {
+          message.reply("done");
+        }
 
         container.undeployVerticle(thisDeployId, new Handler<AsyncResult<Void>>() {
           @Override
@@ -82,10 +94,11 @@ public class LogProcessorWorkVerticle extends Verticle {
       AppLogger.processLogger.info("process " + filename + " starting.");
       try {
         Path logfilePath = Paths.get(logDir, filename);
+        
         MongoClient mongoClient =
             new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
         DB db = mongoClient.getDB(AppUtils.getDailyDbName(filename));
-        DBCollection coll = db.getCollection("pagevisit");
+        DBCollection coll = db.getCollection(AppConstants.MongoNames.PAGE_VISIT_COL_NAME);
         BufferedReader reader =
             new BufferedReader(new InputStreamReader(new FileInputStream(logfilePath.toFile()),
                 "UTF-8"));
@@ -108,29 +121,19 @@ public class LogProcessorWorkVerticle extends Verticle {
           coll.insert(dbos);
         }
         reader.close();
-        
-//        long insertedNum = coll.getCount();
-//        if (insertedNum != counter) {
-//          AppLogger.error.error("process items not match.excepted: " + counter + ",inserted: "
-//              + insertedNum);
-//        }
-        
-//        DBCollection statuscoll = db.getCollection(AppConstants.MongoNames.STATUS_COL_NAME);
-//        DBObject dbo = new BasicDBObject(AppConstants.MongoNames.STATUS_COL_KEY, true);
-//        statuscoll.insert(dbo);
-
         mongoClient.close();
         Path archiedPath = Paths.get(archiveDir);
         if (!archiedPath.toFile().exists()) {
           Files.createDirectories(archiedPath);
         }
-        if(Files.exists(archiedPath.resolve(filename), LinkOption.NOFOLLOW_LINKS)){
+        if (Files.exists(archiedPath.resolve(filename), LinkOption.NOFOLLOW_LINKS)) {
           Files.move(logfilePath, archiedPath.resolve(filename + ".duplicated"));
-        }else{
+        } else {
           Files.move(logfilePath, archiedPath.resolve(filename));
         }
-        
-        Files.delete(Paths.get(logDir, filename + ".doing"));
+        if (Files.exists(Paths.get(logDir, filename + ".doing"), LinkOption.NOFOLLOW_LINKS)) {
+          Files.delete(Paths.get(logDir, filename + ".doing"));
+        }
         AppLogger.processLogger.info("process " + filename + " end.");
       } catch (UnsupportedEncodingException | FileNotFoundException e) {
         AppLogger.error.error("cann't create reader from file: " + filename);

@@ -9,6 +9,7 @@ import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.core.logging.Logger;
 import org.vertx.java.platform.Verticle;
 
+import com.m3958.visitrank.LogProcessorWorkVerticle.LogProcessorWorkCfgKey;
 import com.m3958.visitrank.logger.AppLogger;
 
 /**
@@ -23,14 +24,17 @@ public class LogCheckVerticle extends Verticle {
   public void start() {
     final Logger log = container.logger();
     JsonObject jo = container.config();
-    final String rdir = jo.getString("logdir", "logs");
+    final String logDir = jo.getString(LogProcessorWorkCfgKey.LOG_DIR, "logs");
+    final String archiveDir = jo.getString(LogProcessorWorkCfgKey.ARCHIVE_DIR, "archives");
 
     vertx.setPeriodic(30000, new Handler<Long>() {
       public void handle(Long timerID) {
-        final String logfilename = new RemainLogFileFinder(rdir).findOne();
+        final String logfilename = new RemainLogFileFinder(logDir).findOne();
         if (logfilename != null) {
           JsonObject lpConfig =
-              new JsonObject().putString("address", logfilename).putString("filename", logfilename);
+              new JsonObject().putString(LogProcessorWorkCfgKey.ADDRESS, logfilename)
+                  .putString(LogProcessorWorkCfgKey.FILE_NAME, logfilename)
+                  .putString(LogProcessorWorkCfgKey.ARCHIVE_DIR, archiveDir);
           container.deployVerticle("com.m3958.visitrank.LogProcessorWorkVerticle", lpConfig, 1,
               new Handler<AsyncResult<String>>() {
                 @Override

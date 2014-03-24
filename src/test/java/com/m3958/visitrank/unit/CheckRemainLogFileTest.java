@@ -1,6 +1,6 @@
 package com.m3958.visitrank.unit;
 
-import java.io.File;
+import java.io.IOException;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -8,36 +8,34 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.m3958.visitrank.LogCheckVerticle;
+import com.m3958.visitrank.testutils.TestUtils;
 
 public class CheckRemainLogFileTest {
+  
+  private String testlogname = "t-2014-03-02-01.log";
+  private String logDir = "testlogs";
+  private String archiveDir = "tarchives";
 
   @Before
-  public void setup() {
-    File[] files = new File("testlogs").listFiles();
-    for (File f : files) {
-      if (f.getName().endsWith(".doing")) {
-        f.delete();
-      }
-    }
+  public void setup() throws IOException {
+    TestUtils.deleteTestDirs(logDir, archiveDir);
+    TestUtils.createDirs(logDir, archiveDir);
+    TestUtils.createSampleLogs(logDir, testlogname);
   }
 
   @After
-  public void cleanup() {
-    File[] files = new File("testlogs").listFiles();
-    for (File f : files) {
-      if (f.getName().endsWith(".doing")) {
-        f.delete();
-      }
-    }
+  public void cleanup() throws IOException {
+    TestUtils.deleteTestDirs(logDir, archiveDir);
   }
+
 
   @Test
   public void t() {
-    String f = new LogCheckVerticle.RemainLogFileFinder("testlogs").findOne();
-    Assert.assertEquals("t-2014-03-02-01.log", f);
+    String fn = new LogCheckVerticle.RemainLogFileFinder("testlogs").findOne();
+    Assert.assertEquals("t-2014-03-02-01.log", fn);
 
-    f = new LogCheckVerticle.RemainLogFileFinder("testlogs").findOne();
-    Assert.assertNull(f);
+    fn = new LogCheckVerticle.RemainLogFileFinder("testlogs").findOne();
+    Assert.assertNull(fn);
   }
 
 }

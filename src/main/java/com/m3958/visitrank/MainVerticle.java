@@ -25,13 +25,13 @@ public class MainVerticle extends Verticle {
     JsonObject httpCfg = new JsonObject();
     httpCfg.putNumber("port", AppConstants.HTTP_PORT);
 
-    container.deployVerticle("com.m3958.visitrank.CounterVerticle", httpCfg,
+    container.deployVerticle(AppConstants.COUNTER_VERTICLE_NAME, httpCfg,
         AppConstants.HTTP_INSTANCE);
 
     // deploy redis
     JsonObject redisCfg = new JsonObject();
     redisCfg.putString("address", AppConstants.MOD_REDIS_ADDRESS)
-        .putString("host", AppConstants.REDIS_HOST).putString("encodeing", "UTF-8")
+        .putString("host", AppConstants.REDIS_HOST).putString("encode", "UTF-8")
         .putNumber("port", AppConstants.REDIS_PORT);
 
     container.deployModule(AppConstants.REDIS_MODULE_NAME, redisCfg, AppConstants.REDIS_INSTANCE,
@@ -64,12 +64,8 @@ public class MainVerticle extends Verticle {
           }
         });
 
-    container.deployVerticle("com.m3958.visitrank.SaveToMongoVerticle",
-        AppConstants.SAVETO_MONGO_INSTANCE);
-
     container.deployVerticle("mapreduce_verticle.js", 1);
 
-    container.deployWorkerVerticle("com.m3958.visitrank.LogCheckVerticle",
-        new JsonObject(), 1);
+    container.deployWorkerVerticle(AppConstants.LOGCHECK_VERTICLE_NAME, new JsonObject(), 1);
   }
 }
