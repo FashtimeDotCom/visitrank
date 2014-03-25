@@ -55,6 +55,9 @@ public class AppConstants {
   public static class MongoNames {
     public static String TOTAL_DB_NAME = "visitrannk";
     public static String PAGE_VISIT_COL_NAME = "pagevisit";
+    public static String HOURLY_JOB_COL_NAME = "hourlyjob";
+    public static String HOURLY_JOB_NUMBER_KEY = "hournumber";
+    public static String HOURLY_JOB_STATUS_KEY = "status";
     public static String STATUS_COL_NAME = "writestatus";
     public static String STATUS_COL_KEY = "complete";
   }

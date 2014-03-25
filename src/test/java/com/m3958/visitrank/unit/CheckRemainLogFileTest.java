@@ -7,11 +7,12 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.m3958.visitrank.AppUtils;
 import com.m3958.visitrank.LogCheckVerticle;
 import com.m3958.visitrank.testutils.TestUtils;
 
 public class CheckRemainLogFileTest {
-  
+
   private String testlogname = "t-2014-03-02-01.log";
   private String logDir = "testlogs";
   private String archiveDir = "tarchives";
@@ -25,16 +26,17 @@ public class CheckRemainLogFileTest {
 
   @After
   public void cleanup() throws IOException {
+    AppUtils.releaseLock(logDir, testlogname);
     TestUtils.deleteTestDirs(logDir, archiveDir);
   }
 
 
   @Test
   public void t() {
-    String fn = new LogCheckVerticle.RemainLogFileFinder("testlogs").findOne();
+    String fn = new LogCheckVerticle.RemainLogFileFinder(logDir).findOne();
     Assert.assertEquals("t-2014-03-02-01.log", fn);
 
-    fn = new LogCheckVerticle.RemainLogFileFinder("testlogs").findOne();
+    fn = new LogCheckVerticle.RemainLogFileFinder(logDir).findOne();
     Assert.assertNull(fn);
   }
 
