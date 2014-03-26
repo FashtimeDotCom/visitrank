@@ -9,8 +9,12 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.UnknownHostException;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.junit.Assert;
 
@@ -69,6 +73,17 @@ public class TestUtils {
       out.println(sampleItemPre + "?article=" + i + sampleItemFix);
     }
     out.close();
+  }
+  
+  public static void createSamplePartialLogs(String logDir, String testlogname)
+      throws IOException {
+    List<String> lines = new ArrayList<>();
+    int i = 100;
+    for(;i<600;i+=100){
+      lines.add(i + "," + i + "\n");
+    }
+    
+    Files.write(Paths.get(logDir, testlogname + AppConstants.PARTIAL_POSTFIX), lines, Charset.forName("UTF-8"),StandardOpenOption.CREATE_NEW);
   }
 
   public static void assertDbItemEqual(String testlogname) throws UnknownHostException {

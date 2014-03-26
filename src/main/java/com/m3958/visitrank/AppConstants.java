@@ -6,7 +6,11 @@ public class AppConstants {
   public static String HOTEST_FIX = "~hotest";
   public static String MOD_REDIS_ADDRESS = "visit_counter.redis";
   public static String MOD_MONGO_PERSIST_ADDRESS = "visit_counter.mongodb";
-
+  
+  public static String DAILY_MOVE_DB_ADDRESS = "move_daily_db_address";
+  
+  public static String DAILY_PARTIAL_DIR = "dailycopypartial";
+  
   public static int HTTP_PORT = 8333;
   public static int HTTP_INSTANCE = 1;
   public static int REDIS_PORT = 6379;
@@ -14,6 +18,8 @@ public class AppConstants {
   public static int MONGODB_PORT = 27017;
   public static int MONGODB_INSTANCE = 1;
   public static int SAVETO_MONGO_INSTANCE = 1;
+  
+  
 
   public static String REDIS_HOST = "localhost";
 
@@ -30,6 +36,12 @@ public class AppConstants {
   public static String LOGCHECK_VERTICLE_NAME = "com.m3958.visitrank.LogCheckVerticle";
 
   public static String DEPLOIED_ID_SHARE_MAP = "deploiedidmap";
+  
+  public static String PARTIAL_POSTFIX = ".partial";
+  
+  public static int LOGFILE_READ_GAP = 100;
+  
+  public static int DAILY_DB_READ_GAP = 1000;
 
   public static void initConfigConstants(JsonObject config) {
 
@@ -53,13 +65,15 @@ public class AppConstants {
   }
 
   public static class MongoNames {
-    public static String TOTAL_DB_NAME = "visitrannk";
+    public static String REPOSITORY_DB_NAME = "visitrannk";
     public static String PAGE_VISIT_COL_NAME = "pagevisit";
     public static String HOURLY_JOB_COL_NAME = "hourlyjob";
     public static String HOURLY_JOB_NUMBER_KEY = "hournumber";
     public static String HOURLY_JOB_STATUS_KEY = "status";
-    public static String STATUS_COL_NAME = "writestatus";
-    public static String STATUS_COL_KEY = "complete";
+    
+    public static String DAILY_JOB_COL_NAME = "dailyjob";
+    public static String DAILY_JOB_STATUS_KEY = "status";
+
   }
 
 

@@ -98,6 +98,7 @@ public class LogProcessorWorkVerticle extends Verticle {
       AppLogger.processLogger.info("process " + filename + " starting.");
       try {
         Path logfilePath = Paths.get(logDir, filename);
+        Path partialLogPath = Paths.get(logDir, filename + AppConstants.PARTIAL_POSTFIX);
 
         MongoClient mongoClient =
             new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
@@ -107,21 +108,31 @@ public class LogProcessorWorkVerticle extends Verticle {
         BufferedReader reader =
             new BufferedReader(new InputStreamReader(new FileInputStream(logfilePath.toFile()),
                 "UTF-8"));
+        // skip partial appened.
+        long partialStart = 0;
+        if (Files.exists(partialLogPath)) {
+          partialStart = AppUtils.getLastPartialPosition(partialLogPath);
+        }
+
         OutputStreamWriter partialWriter =
-            new OutputStreamWriter(new FileOutputStream(Paths.get(logDir, filename + ".partial")
-                .toFile()), "UTF-8");
+            new OutputStreamWriter(new FileOutputStream(partialLogPath.toFile()), "UTF-8");
+        partialWriter.write(partialStart + "," + partialStart + "\n");
 
         List<DBObject> dbos = new ArrayList<>();
         String line;
         long counter = 0;
         while ((line = reader.readLine()) != null) {
+          if (counter < partialStart) {
+            counter++;
+            continue;
+          }
           try {
             dbos.add((DBObject) JSON.parse(line));
           } catch (Exception e) {
             AppLogger.error.error("parse exception:" + line);
           }
           counter++;
-          if (counter % 100 == 0) {
+          if (counter % AppConstants.LOGFILE_READ_GAP == 0) {
             partialWriter.write(counter + ",");
             partialWriter.flush();
             WriteResult wr = coll.insert(dbos);
@@ -164,8 +175,9 @@ public class LogProcessorWorkVerticle extends Verticle {
       } else {
         Files.move(logfilePath, archiedPath.resolve(filename));
       }
-      if (Files.exists(Paths.get(logDir, filename + ".partial"), LinkOption.NOFOLLOW_LINKS)) {
-        Files.delete(Paths.get(logDir, filename + ".partial"));
+      if (Files.exists(Paths.get(logDir, filename + AppConstants.PARTIAL_POSTFIX),
+          LinkOption.NOFOLLOW_LINKS)) {
+        Files.delete(Paths.get(logDir, filename + AppConstants.PARTIAL_POSTFIX));
       }
     }
 

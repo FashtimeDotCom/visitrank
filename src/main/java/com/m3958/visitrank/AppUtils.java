@@ -1,9 +1,12 @@
 package com.m3958.visitrank;
 
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import com.m3958.visitrank.Utils.FileTailer;
 
 public class AppUtils {
 
@@ -48,5 +51,19 @@ public class AppUtils {
 
   public static void releaseLock(String logDir, String filename) {
     pickupLockMap.remove(filename);
+  }
+  
+
+  public static long getLastPartialPosition(Path partialLogPath) {
+    String[] lines = new FileTailer(partialLogPath.toString()).getLines(1);
+    if (lines.length == 1) {
+      String[] ss = lines[0].split(",");
+      if (ss.length == 2) { // 1000,1000 means 1000 has write to mongodb.
+        return Long.parseLong(ss[0], 10);
+      } else { // 1000, means 1000 - gap to 1000 has not write to mongodb.
+        return Long.parseLong(ss[0], 10) - AppConstants.LOGFILE_READ_GAP;
+      }
+    }
+    return 0;
   }
 }
