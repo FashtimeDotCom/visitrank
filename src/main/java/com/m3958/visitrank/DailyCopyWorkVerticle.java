@@ -16,6 +16,7 @@ import org.vertx.java.core.Handler;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.platform.Verticle;
 
+import com.m3958.visitrank.logger.AppLogger;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
@@ -44,45 +45,72 @@ public class DailyCopyWorkVerticle extends Verticle {
         new Handler<Message<String>>() {
           @Override
           public void handle(Message<String> message) {
-            new DailyCopyProcessor().dailyCopy();
+            Calendar rightNow = Calendar.getInstance();
+            int hour = rightNow.get(Calendar.HOUR_OF_DAY);
+            if (hour == 1) {
+              MongoClient mongoClient;
+              try {
+                mongoClient = new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
+                for (String dbname : mongoClient.getDatabaseNames()) {
+                  if (AppUtils.isDailyDb(dbname)) {
+                    new DailyCopyProcessor(mongoClient, dbname).process();
+                    mongoClient.close();
+                  }
+                }
+              } catch (UnknownHostException e) {}
+            }
           }
         });
   }
 
   public static class DailyCopyProcessor {
 
-    public void dailyCopy() {
-      Calendar rightNow = Calendar.getInstance();
-      int hour = rightNow.get(Calendar.HOUR_OF_DAY);
-      if (hour == 1) {
-        MongoClient mongoClient;
-        try {
-          mongoClient = new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
-          for (String dbname : mongoClient.getDatabaseNames()) {
-            if (AppUtils.isDailyDb(dbname) && !isDailyInProcess(mongoClient, dbname)) {
-              if (isDailyDbComplete(mongoClient, dbname)) {
-                markInProcess(mongoClient, dbname);
-                try {
-                  copyDailyDb(mongoClient, dbname);
-                } catch (IOException e) {
-                  mongoClient.close();
-                }
-              }
-            }
+    private String repositoryDbName;
+
+    private String dailyDbname;
+
+    private MongoClient mongoClient;
+    
+    private String dailyPartialDir;
+
+    public DailyCopyProcessor(MongoClient mongoClient, String dbname) {
+      this.mongoClient = mongoClient;
+      this.dailyDbname = dbname;
+      this.repositoryDbName = AppConstants.MongoNames.REPOSITORY_DB_NAME;
+      this.dailyPartialDir = AppConstants.DAILY_PARTIAL_DIR;
+      
+    }
+    
+    public DailyCopyProcessor(MongoClient mongoClient, String dbname,String repositoryDbName,String dailyPartialDir) {
+      this.repositoryDbName = AppConstants.MongoNames.REPOSITORY_DB_NAME;
+      this.mongoClient = mongoClient;
+      this.repositoryDbName = repositoryDbName;
+      this.dailyPartialDir = dailyPartialDir;
+    }
+
+    public void process() {
+      AppLogger.processLogger.info("process daily copy " + dailyDbname + " starting.");
+      if (!isDailyInProcess()) {
+        if (isDailyDbComplete()) {
+          markInProcess();
+          try {
+            copyDailyDb();
+          } catch (IOException e) {
           }
-        } catch (UnknownHostException e) {}
+        }
       }
+      AppLogger.processLogger.info("process daily copy " + dailyDbname + " end.");
     }
 
     /**
      * when all hourly job is end,return true
      * 
      * @param mongoClient
-     * @param dbname
+     * @param dailyDbname
      * @return
      */
-    private boolean isDailyDbComplete(MongoClient mongoClient, String dbname) {
-      DB db = mongoClient.getDB(dbname);
+    private boolean isDailyDbComplete() {
+      DB db = mongoClient.getDB(dailyDbname);
       DBCollection coll = db.getCollection(AppConstants.MongoNames.HOURLY_JOB_COL_NAME);
       DBCursor cursor = coll.find();
       List<Integer> hourlyJobAry = new ArrayList<>();
@@ -102,7 +130,6 @@ public class DailyCopyWorkVerticle extends Verticle {
         }
       } finally {
         cursor.close();
-        mongoClient.close();
       }
       if (hasTwentyFour) {
         int jobSize = hourlyJobAry.size();
@@ -116,14 +143,14 @@ public class DailyCopyWorkVerticle extends Verticle {
     }
 
 
-    public void copyDailyDb(MongoClient mongoClient, String dbname) throws IOException {
-      DB dailyDb = mongoClient.getDB(dbname);
+    public void copyDailyDb() throws IOException {
+      DB dailyDb = mongoClient.getDB(dailyDbname);
       DBCollection dailyColl = dailyDb.getCollection(AppConstants.MongoNames.PAGE_VISIT_COL_NAME);
 
-      DB repositoryDb = mongoClient.getDB(AppConstants.MongoNames.REPOSITORY_DB_NAME);
+      DB repositoryDb = mongoClient.getDB(repositoryDbName);
       DBCollection repositoryCol =
           repositoryDb.getCollection(AppConstants.MongoNames.PAGE_VISIT_COL_NAME);
-      Path partialLogPath = Paths.get(AppConstants.DAILY_PARTIAL_DIR, dbname);
+      Path partialLogPath = Paths.get(dailyPartialDir, dailyDbname);
 
       long partialStart = 0;
       if (Files.exists(partialLogPath)) {
@@ -168,8 +195,8 @@ public class DailyCopyWorkVerticle extends Verticle {
       Files.delete(partialLogPath);
     }
 
-    public boolean isDailyInProcess(MongoClient mongoClient, String dbname) {
-      DB db = mongoClient.getDB(dbname);
+    public boolean isDailyInProcess() {
+      DB db = mongoClient.getDB(dailyDbname);
       DBCollection coll = db.getCollection(AppConstants.MongoNames.DAILY_JOB_COL_NAME);
       DBObject item = coll.findOne();
       if (item == null) {
@@ -178,8 +205,8 @@ public class DailyCopyWorkVerticle extends Verticle {
       return true;
     }
 
-    public void markInProcess(MongoClient mongoClient, String dbname) {
-      DB db = mongoClient.getDB(dbname);
+    public void markInProcess() {
+      DB db = mongoClient.getDB(dailyDbname);
       DBCollection coll = db.getCollection(AppConstants.MongoNames.DAILY_JOB_COL_NAME);
       DBObject dbo = new BasicDBObject();
       dbo.put(AppConstants.MongoNames.DAILY_JOB_STATUS_KEY, "yes");
