@@ -67,5 +67,7 @@ public class MainVerticle extends Verticle {
     container.deployVerticle("mapreduce_verticle.js", 1);
 
     container.deployWorkerVerticle(AppConstants.LOGCHECK_VERTICLE_NAME, new JsonObject(), 1);
+    
+    container.deployWorkerVerticle(AppConstants.DAILY_COPY_VERTICLE_NAME, new JsonObject(), AppConstants.DAILY_COPY_INSTANCE);
   }
 }

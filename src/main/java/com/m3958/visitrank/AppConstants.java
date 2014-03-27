@@ -19,6 +19,8 @@ public class AppConstants {
   public static int MONGODB_INSTANCE = 1;
   public static int SAVETO_MONGO_INSTANCE = 1;
   
+  public static int DAILY_COPY_INSTANCE = 1;
+  
   
 
   public static String REDIS_HOST = "localhost";
@@ -34,6 +36,8 @@ public class AppConstants {
   public static String COUNTER_VERTICLE_NAME = "com.m3958.visitrank.CounterVerticle";
 
   public static String LOGCHECK_VERTICLE_NAME = "com.m3958.visitrank.LogCheckVerticle";
+  
+  public static String DAILY_COPY_VERTICLE_NAME = "com.m3958.visitrank.DailyCopyWorkVerticle";
 
   public static String DEPLOIED_ID_SHARE_MAP = "deploiedidmap";
   
@@ -61,6 +65,8 @@ public class AppConstants {
     REDIS_HOST = config.getString("redishost", REDIS_HOST);
 
     MONGODB_HOST = config.getString("mongodbhost", MONGODB_HOST);
+    
+    DAILY_COPY_INSTANCE = config.getInteger("dailycopyinstance",DAILY_COPY_INSTANCE);
 
   }
 
