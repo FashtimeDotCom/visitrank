@@ -22,7 +22,7 @@ public class LogProcessorTest {
 
   @Before
   public void setup() throws IOException {
-    TestUtils.deleteTestDirs(logDir, archiveDir);
+    TestUtils.deleteDirs(logDir, archiveDir);
     TestUtils.dropDailyDb(testlogname);
     TestUtils.createDirs(logDir, archiveDir);
     TestUtils.createSampleLogs(logDir, testlogname);
@@ -30,7 +30,7 @@ public class LogProcessorTest {
 
   @After
   public void cleanup() throws IOException {
-    TestUtils.deleteTestDirs(logDir, archiveDir);
+    TestUtils.deleteDirs(logDir, archiveDir);
     TestUtils.dropDailyDb(testlogname);
   }
 

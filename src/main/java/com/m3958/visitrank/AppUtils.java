@@ -49,7 +49,7 @@ public class AppUtils {
     }
   }
 
-  public static void releaseLock(String logDir, String filename) {
+  public static void releaseLock(String filename) {
     pickupLockMap.remove(filename);
   }
   

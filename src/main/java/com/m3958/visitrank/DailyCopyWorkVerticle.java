@@ -17,7 +17,6 @@ import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.platform.Verticle;
 
 import com.m3958.visitrank.logger.AppLogger;
-import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
@@ -52,9 +51,10 @@ public class DailyCopyWorkVerticle extends Verticle {
               try {
                 mongoClient = new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
                 for (String dbname : mongoClient.getDatabaseNames()) {
-                  if (AppUtils.isDailyDb(dbname)) {
+                  if (AppUtils.isDailyDb(dbname) && AppUtils.canLockLog(dbname)) {
                     new DailyCopyProcessor(mongoClient, dbname).process();
                     mongoClient.close();
+                    AppUtils.releaseLock(dbname);
                   }
                 }
               } catch (UnknownHostException e) {}
@@ -70,7 +70,7 @@ public class DailyCopyWorkVerticle extends Verticle {
     private String dailyDbname;
 
     private MongoClient mongoClient;
-    
+
     private String dailyPartialDir;
 
     public DailyCopyProcessor(MongoClient mongoClient, String dbname) {
@@ -78,35 +78,20 @@ public class DailyCopyWorkVerticle extends Verticle {
       this.dailyDbname = dbname;
       this.repositoryDbName = AppConstants.MongoNames.REPOSITORY_DB_NAME;
       this.dailyPartialDir = AppConstants.DAILY_PARTIAL_DIR;
-      
-    }
-    
-    public DailyCopyProcessor(MongoClient mongoClient, String dbname,String repositoryDbName,String dailyPartialDir) {
-      this.repositoryDbName = AppConstants.MongoNames.REPOSITORY_DB_NAME;
-      this.mongoClient = mongoClient;
-      this.repositoryDbName = repositoryDbName;
-      this.dailyPartialDir = dailyPartialDir;
+
     }
 
-    public void process() {
-      AppLogger.processLogger.info("process daily copy " + dailyDbname + " starting.");
-      if (!isDailyInProcess()) {
-        if (isDailyDbComplete()) {
-          markInProcess();
-          try {
-            copyDailyDb();
-          } catch (IOException e) {
-          }
-        }
-      }
-      AppLogger.processLogger.info("process daily copy " + dailyDbname + " end.");
+    public DailyCopyProcessor(MongoClient mongoClient, String dailyDbname, String repositoryDbName,
+        String dailyPartialDir) {
+      this.repositoryDbName = repositoryDbName;
+      this.mongoClient = mongoClient;
+      this.dailyDbname = dailyDbname;
+      this.dailyPartialDir = dailyPartialDir;
     }
 
     /**
      * when all hourly job is end,return true
      * 
-     * @param mongoClient
-     * @param dailyDbname
      * @return
      */
     private boolean isDailyDbComplete() {
@@ -143,6 +128,17 @@ public class DailyCopyWorkVerticle extends Verticle {
     }
 
 
+
+    public void process() {
+      AppLogger.processLogger.info("process daily copy " + dailyDbname + " starting.");
+      if (isDailyDbComplete()) {
+        try {
+          copyDailyDb();
+        } catch (IOException e) {}
+      }
+      AppLogger.processLogger.info("process daily copy " + dailyDbname + " end.");
+    }
+
     public void copyDailyDb() throws IOException {
       DB dailyDb = mongoClient.getDB(dailyDbname);
       DBCollection dailyColl = dailyDb.getCollection(AppConstants.MongoNames.PAGE_VISIT_COL_NAME);
@@ -150,6 +146,10 @@ public class DailyCopyWorkVerticle extends Verticle {
       DB repositoryDb = mongoClient.getDB(repositoryDbName);
       DBCollection repositoryCol =
           repositoryDb.getCollection(AppConstants.MongoNames.PAGE_VISIT_COL_NAME);
+
+      if (!Files.exists(Paths.get(dailyPartialDir))) {
+        Files.createDirectory(Paths.get(dailyPartialDir));
+      }
       Path partialLogPath = Paths.get(dailyPartialDir, dailyDbname);
 
       long partialStart = 0;
@@ -193,24 +193,29 @@ public class DailyCopyWorkVerticle extends Verticle {
       }
       partialWriter.close();
       Files.delete(partialLogPath);
+      mongoClient.dropDatabase(dailyDbname);
     }
 
-    public boolean isDailyInProcess() {
-      DB db = mongoClient.getDB(dailyDbname);
-      DBCollection coll = db.getCollection(AppConstants.MongoNames.DAILY_JOB_COL_NAME);
-      DBObject item = coll.findOne();
-      if (item == null) {
-        return false;
-      }
-      return true;
-    }
+    // public boolean isDailyInProcess() {
+    // DB db = mongoClient.getDB(dailyDbname);
+    // DBCollection coll = db.getCollection(AppConstants.MongoNames.DAILY_JOB_COL_NAME);
+    // DBObject item = coll.findOne();
+    // if (item == null) {
+    // return false;
+    // }
+    // return true;
+    // }
 
-    public void markInProcess() {
-      DB db = mongoClient.getDB(dailyDbname);
-      DBCollection coll = db.getCollection(AppConstants.MongoNames.DAILY_JOB_COL_NAME);
-      DBObject dbo = new BasicDBObject();
-      dbo.put(AppConstants.MongoNames.DAILY_JOB_STATUS_KEY, "yes");
-      coll.insert(dbo);
-    }
+    /**
+     * no need,we can use lock,in memory.if vm crashed,lock will lost,but dailydb remains,when
+     * system restart,first one get the lock.
+     */
+    // public void markInProcess() {
+    // DB db = mongoClient.getDB(dailyDbname);
+    // DBCollection coll = db.getCollection(AppConstants.MongoNames.DAILY_JOB_COL_NAME);
+    // DBObject dbo = new BasicDBObject();
+    // dbo.put(AppConstants.MongoNames.DAILY_JOB_STATUS_KEY, "yes");
+    // coll.insert(dbo);
+    // }
   }
 }

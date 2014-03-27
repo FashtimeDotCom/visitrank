@@ -52,7 +52,7 @@ public class LogProcessorWorkTest extends TestVerticle {
   public void t() throws IOException {
     TestUtils.assertDbItemEqual(testlogname);
     
-    TestUtils.deleteTestDirs(logDir, archiveDir);
+    TestUtils.deleteDirs(logDir, archiveDir);
     TestUtils.dropDailyDb(testlogname);
     VertxAssert.testComplete();
   }
@@ -61,7 +61,7 @@ public class LogProcessorWorkTest extends TestVerticle {
   public void start() {
     initialize();
     try {
-      TestUtils.deleteTestDirs(logDir, archiveDir);
+      TestUtils.deleteDirs(logDir, archiveDir);
       TestUtils.dropDailyDb(testlogname);
       TestUtils.createDirs(logDir, archiveDir);
       TestUtils.createSampleLogs(logDir, testlogname);

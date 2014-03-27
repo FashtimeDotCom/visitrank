@@ -67,40 +67,23 @@ public class TestUtils {
     mongoClient.close();
   }
 
-  public static void deleteTestDirs(String logDir, String archiveDir) throws IOException {
-    if (Files.exists(Paths.get(logDir))) {
-      File[] files = new File(logDir).listFiles();
-      for (File f : files) {
-        f.delete();
+  public static void deleteDirs(String...dirs) throws IOException {
+    for(String dir: dirs){
+      if (Files.exists(Paths.get(dir))) {
+        File[] files = new File(dir).listFiles();
+        for (File f : files) {
+          f.delete();
+        }
+        Files.deleteIfExists(Paths.get(dir));
       }
-    }
-
-    if (Files.exists(Paths.get(archiveDir))) {
-      File[] afiles = new File(archiveDir).listFiles();
-      for (File f : afiles) {
-        f.delete();
-      }
-      Files.deleteIfExists(Paths.get(archiveDir));
-      Files.deleteIfExists(Paths.get(logDir));
     }
   }
 
-  public static void deleteDailyPartials(String dailyPartialDir) throws IOException {
-    if (Files.exists(Paths.get(dailyPartialDir))) {
-      File[] files = new File(dailyPartialDir).listFiles();
-      for (File f : files) {
-        f.delete();
+  public static void createDirs(String...dirs) throws IOException {
+    for(String dir: dirs){
+      if (!Files.exists(Paths.get(dir))) {
+        Files.createDirectory(Paths.get(dir));
       }
-    }
-    Files.deleteIfExists(Paths.get(dailyPartialDir));
-  }
-
-  public static void createDirs(String logDir, String archiveDir) throws IOException {
-    if (!Files.exists(Paths.get(logDir))) {
-      Files.createDirectories(Paths.get(logDir));
-    }
-    if (!Files.exists(Paths.get(archiveDir))) {
-      Files.createDirectories(Paths.get(archiveDir));
     }
   }
 

@@ -151,7 +151,7 @@ public class LogProcessorWorkVerticle extends Verticle {
         reader.close();
         partialWriter.close();
         updateHourJobEnd(db, hourJobId);
-        AppUtils.releaseLock(logDir, filename);
+        AppUtils.releaseLock(filename);
         mongoClient.close();
 
         moveLogFiles(logfilePath);

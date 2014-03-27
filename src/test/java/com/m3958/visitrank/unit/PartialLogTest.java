@@ -30,7 +30,7 @@ public class PartialLogTest {
   @Before
   public void setup() throws IOException {
     if (!Files.exists(Paths.get(logDir, testlogname + AppConstants.PARTIAL_POSTFIX))) {
-      TestUtils.deleteTestDirs(logDir, archiveDir);
+      TestUtils.deleteDirs(logDir, archiveDir);
       TestUtils.createDirs(logDir, archiveDir);
       TestUtils.createSampleLogs(logDir, testlogname);
       TestUtils.dropDailyDb(testlogname);
@@ -41,7 +41,7 @@ public class PartialLogTest {
   @After
   public void cleanup() throws IOException {
     if (!Files.exists(Paths.get(logDir, testlogname + AppConstants.PARTIAL_POSTFIX))) {
-      TestUtils.deleteTestDirs(logDir, archiveDir);
+      TestUtils.deleteDirs(logDir, archiveDir);
       TestUtils.dropDailyDb(testlogname);
     }
   }

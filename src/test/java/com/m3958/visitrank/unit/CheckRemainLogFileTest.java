@@ -19,15 +19,15 @@ public class CheckRemainLogFileTest {
 
   @Before
   public void setup() throws IOException {
-    TestUtils.deleteTestDirs(logDir, archiveDir);
+    TestUtils.deleteDirs(logDir, archiveDir);
     TestUtils.createDirs(logDir, archiveDir);
     TestUtils.createSampleLogs(logDir, testlogname);
   }
 
   @After
   public void cleanup() throws IOException {
-    AppUtils.releaseLock(logDir, testlogname);
-    TestUtils.deleteTestDirs(logDir, archiveDir);
+    AppUtils.releaseLock(testlogname);
+    TestUtils.deleteDirs(logDir, archiveDir);
   }
 
 
