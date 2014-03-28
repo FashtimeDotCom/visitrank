@@ -27,7 +27,7 @@ public class LogCheckVerticle extends Verticle {
     final String logDir = jo.getString(LogProcessorWorkCfgKey.LOG_DIR, "logs");
     final String archiveDir = jo.getString(LogProcessorWorkCfgKey.ARCHIVE_DIR, "archives");
 
-    vertx.setPeriodic(4511, new Handler<Long>() {
+    vertx.setPeriodic(451111, new Handler<Long>() {
       public void handle(Long timerID) {
         // logger file check.
         log.info("daily copy instance remains: " + AppUtils.dailyProcessorRemainsGetSet(0));
@@ -42,7 +42,7 @@ public class LogCheckVerticle extends Verticle {
       }
     });
 
-    vertx.setPeriodic(3000, new Handler<Long>() {
+    vertx.setPeriodic(300000, new Handler<Long>() {
       public void handle(Long timerID) {
         // logger file check.
         log.info("log processor instance remains: " + AppUtils.logProcessorRemainsGetSet(0));
