@@ -16,12 +16,10 @@ public class MainVerticle extends Verticle {
 
   public void start() {
 
-    AppConstants.initConfigConstants(container.config());
-    AppUtils.initLogProcessorRemains(AppConstants.LOG_PROCESSOR_INSTANCE);
-    AppUtils.initDailyProcessorRemains(AppConstants.DAILY_COPY_INSTANCE);
-    AppLogger.urlPersistor.trace("loger started");
-
     final Logger log = container.logger();
+    AppConstants.initConfigConstants(container.config());
+    
+    AppLogger.urlPersistor.trace("loger started");
 
     JsonObject httpCfg = new JsonObject();
     httpCfg.putNumber("port", AppConstants.HTTP_PORT);
@@ -69,8 +67,8 @@ public class MainVerticle extends Verticle {
 
     container.deployVerticle(AppConstants.LOGCHECK_VERTICLE_NAME, new JsonObject(), 1);
     
-    container.deployWorkerVerticle(AppConstants.DAILY_COPY_VERTICLE_NAME, new JsonObject(), AppConstants.DAILY_COPY_INSTANCE);
+    container.deployWorkerVerticle(DailyCopyWorkVerticle.VERTICLE_NAME, new JsonObject(), AppConstants.DAILY_COPY_INSTANCE,false);
     
-    container.deployWorkerVerticle(LogProcessorWorkVerticle.VERTICLE_NAME, new JsonObject(), AppConstants.LOG_PROCESSOR_INSTANCE);
+    container.deployWorkerVerticle(LogProcessorWorkVerticle.VERTICLE_NAME, new JsonObject(), AppConstants.LOG_PROCESSOR_INSTANCE,false);
   }
 }

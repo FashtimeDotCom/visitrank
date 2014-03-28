@@ -5,6 +5,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.vertx.java.core.Handler;
+import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.core.logging.Logger;
 import org.vertx.java.platform.Verticle;
@@ -25,29 +26,39 @@ public class LogCheckVerticle extends Verticle {
     JsonObject jo = container.config();
     final String logDir = jo.getString(LogProcessorWorkCfgKey.LOG_DIR, "logs");
     final String archiveDir = jo.getString(LogProcessorWorkCfgKey.ARCHIVE_DIR, "archives");
-    
-    vertx.setPeriodic(450000, new Handler<Long>() {
+
+    vertx.setPeriodic(4511, new Handler<Long>() {
       public void handle(Long timerID) {
         // logger file check.
+        log.info("daily copy instance remains: " + AppUtils.dailyProcessorRemainsGetSet(0));
         if (AppUtils.dailyProcessorRemainsGetSet(0) > 0) {
           AppUtils.dailyProcessorRemainsGetSet(1);
-            vertx.eventBus().send(DailyCopyWorkVerticle.VERTICLE_ADDRESS, "start");
-          }
+          vertx.eventBus().send(DailyCopyWorkVerticle.VERTICLE_ADDRESS, "start",new Handler<Message<String>>() {
+            @Override
+            public void handle(Message<String> msg) {
+              AppUtils.dailyProcessorRemainsGetSet(-1);
+            }});
         }
-      });
+      }
+    });
 
-    vertx.setPeriodic(300000, new Handler<Long>() {
+    vertx.setPeriodic(3000, new Handler<Long>() {
       public void handle(Long timerID) {
         // logger file check.
+        log.info("log processor instance remains: " + AppUtils.logProcessorRemainsGetSet(0));
         if (AppUtils.logProcessorRemainsGetSet(0) > 0) {
-          AppUtils.logProcessorRemainsGetSet(1);
           final String logfilename = new RemainLogFileFinder(logDir).findOne();
           if (logfilename != null) {
             JsonObject body =
                 new JsonObject().putString(LogProcessorWorkCfgKey.LOG_DIR, logDir)
                     .putString(LogProcessorWorkCfgKey.FILE_NAME, logfilename)
                     .putString(LogProcessorWorkCfgKey.ARCHIVE_DIR, archiveDir);
-            vertx.eventBus().send(LogProcessorWorkVerticle.VERTICLE_ADDRESS, body);
+            AppUtils.logProcessorRemainsGetSet(1);
+            vertx.eventBus().send(LogProcessorWorkVerticle.VERTICLE_ADDRESS, body,new Handler<Message<String>>() {
+              @Override
+              public void handle(Message<String> msg) {
+                AppUtils.logProcessorRemainsGetSet(-1);
+              }});
           }
         }
       }

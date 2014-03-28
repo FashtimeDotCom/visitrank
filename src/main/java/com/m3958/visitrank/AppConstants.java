@@ -37,8 +37,6 @@ public class AppConstants {
 
   public static String LOGCHECK_VERTICLE_NAME = "com.m3958.visitrank.LogCheckVerticle";
   
-  public static String DAILY_COPY_VERTICLE_NAME = "com.m3958.visitrank.DailyCopyWorkVerticle";
-
   public static String DEPLOIED_ID_SHARE_MAP = "deploiedidmap";
   
   public static String PARTIAL_POSTFIX = ".partial";

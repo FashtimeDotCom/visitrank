@@ -22,11 +22,15 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.vertx.java.core.AsyncResult;
 import org.vertx.java.core.AsyncResultHandler;
+import org.vertx.java.core.Handler;
+import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.testtools.TestVerticle;
 import org.vertx.testtools.VertxAssert;
 
-import com.m3958.visitrank.LogProcessorWorkVerticle;
+import com.m3958.visitrank.AppConstants;
+import com.m3958.visitrank.AppUtils;
+import com.m3958.visitrank.DailyCopyWorkVerticle;
 
 
 /**
@@ -41,15 +45,20 @@ public class RemainsVerticleTest extends TestVerticle {
   
   @Test
   public void t(){
-    Assert.assertTrue(true);
-    VertxAssert.testComplete();
+    vertx.eventBus().send(DailyCopyWorkVerticle.VERTICLE_ADDRESS, "start",new Handler<Message<String>>() {
+      @Override
+      public void handle(Message<String> msg) {
+        Assert.assertEquals(AppConstants.DAILY_COPY_INSTANCE, AppUtils.dailyProcessorRemainsGetSet(0));
+        VertxAssert.testComplete();
+      }
+    });
   }
 
   @Override
   public void start() {
     initialize();
     
-    container.deployWorkerVerticle(LogProcessorWorkVerticle.VERTICLE_NAME, new JsonObject(), 5,false,
+    container.deployWorkerVerticle(DailyCopyWorkVerticle.VERTICLE_NAME, new JsonObject(), AppConstants.DAILY_COPY_INSTANCE,false,
         new AsyncResultHandler<String>() {
           @Override
           public void handle(AsyncResult<String> asyncResult) {

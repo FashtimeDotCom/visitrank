@@ -61,13 +61,9 @@ public class LogProcessorWorkVerticle extends Verticle {
         final String filename = body.getString(LogProcessorWorkCfgKey.FILE_NAME);
         final String logDir = body.getString(LogProcessorWorkCfgKey.LOG_DIR, "logs");
         final String archiveDir = body.getString(LogProcessorWorkCfgKey.ARCHIVE_DIR, "archives");
-        final boolean reply = body.getBoolean(LogProcessorWorkCfgKey.REPLY, false);
-        
+
         new LogProcessor(logDir, archiveDir, filename).process();
-        AppUtils.logProcessorRemainsGetSet(-1);
-        if (reply) {
-          message.reply("done");
-        }
+        message.reply("done");
       }
     });
   }
@@ -84,7 +80,8 @@ public class LogProcessorWorkVerticle extends Verticle {
     }
 
     public void process() {
-      AppLogger.processLogger.info("process " + filename + " starting. remain LogProcessorInstancs: " + AppUtils.logProcessorRemainsGetSet(0));
+      AppLogger.processLogger.info("process " + filename
+          + " starting. remain LogProcessorInstancs: " + AppUtils.logProcessorRemainsGetSet(0));
       try {
         Path logfilePath = Paths.get(logDir, filename);
         Path partialLogPath = Paths.get(logDir, filename + AppConstants.PARTIAL_POSTFIX);

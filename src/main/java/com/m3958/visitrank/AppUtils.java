@@ -13,12 +13,14 @@ public class AppUtils {
   private static Pattern logdbPat = Pattern.compile(".*\\d{4}-\\d{2}-\\d{2}");
 
   private static Map<String, String> pickupLockMap = new HashMap<>();
-  
+
   private static String tfilename = "t-2014-03-02-1.log";
-  
+
   private static int logProcessorRemains = 0;
-  
+
   private static int dailyProcessorRemains = 0;
+
+  private static boolean processorNumberInited = false;
 
   public static String getDailyDbName(String filename) {
     int idx = filename.lastIndexOf('-');
@@ -43,31 +45,36 @@ public class AppUtils {
     System.out.println(getHour(tfilename));
     System.out.println(isDailyDb(getDailyDbName(tfilename)));
   }
-  
-  public static void initLogProcessorRemains(int i){
-    logProcessorRemains = i;
-  }
-  
-  public static void initDailyProcessorRemains(int i){
-    dailyProcessorRemains = i;
-  }
-  
-  public static synchronized int logProcessorRemainsGetSet(int i){
-    if(i == -1){
-      logProcessorRemains += 1;
-    }else if(i == 1){
-      logProcessorRemains -= 1;
+
+  public static synchronized void initProcessorRemains() {
+    if (!processorNumberInited) {
+      processorNumberInited = true;
+      AppUtils.logProcessorRemains = AppConstants.LOG_PROCESSOR_INSTANCE;
+      AppUtils.dailyProcessorRemains = AppConstants.DAILY_COPY_INSTANCE;
     }
-    return logProcessorRemains;
   }
-  
-  public static synchronized int dailyProcessorRemainsGetSet(int i){
-    if(i == -1){
-      dailyProcessorRemains += 1;
-    }else if(i == 1){
-      dailyProcessorRemains -= 1;
+  public static synchronized int logProcessorRemainsGetSet(int i) {
+    if(!processorNumberInited){
+      initProcessorRemains();
     }
-    return dailyProcessorRemains;
+    if (i == -1) {
+      AppUtils.logProcessorRemains += 1;
+    } else if (i == 1) {
+      AppUtils.logProcessorRemains -= 1;
+    }
+    return AppUtils.logProcessorRemains;
+  }
+
+  public static synchronized int dailyProcessorRemainsGetSet(int i) {
+    if(!processorNumberInited){
+      initProcessorRemains();
+    }
+    if (i == -1) {
+      AppUtils.dailyProcessorRemains += 1;
+    } else if (i == 1) {
+      AppUtils.dailyProcessorRemains -= 1;
+    }
+    return AppUtils.dailyProcessorRemains;
   }
 
   public static synchronized boolean canLockLog(String filename) {
@@ -82,7 +89,7 @@ public class AppUtils {
   public static void releaseLock(String filename) {
     pickupLockMap.remove(filename);
   }
-  
+
 
   public static long getLastPartialPosition(Path partialLogPath) {
     String[] lines = new FileTailer(partialLogPath.toString()).getLines(1);

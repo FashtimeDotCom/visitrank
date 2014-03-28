@@ -13,6 +13,7 @@ import java.util.List;
 
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.eventbus.Message;
+import org.vertx.java.core.logging.Logger;
 import org.vertx.java.platform.Verticle;
 
 import com.m3958.visitrank.logger.AppLogger;
@@ -37,9 +38,11 @@ import com.mongodb.MongoClient;
 public class DailyCopyWorkVerticle extends Verticle {
 
   public static String VERTICLE_ADDRESS = "move_daily_db_address";
+  public static String VERTICLE_NAME = "com.m3958.visitrank.DailyCopyWorkVerticle";
 
   @Override
   public void start() {
+    final Logger log = container.logger();
     vertx.eventBus().registerHandler(VERTICLE_ADDRESS, new Handler<Message<String>>() {
       @Override
       public void handle(Message<String> message) {
@@ -70,8 +73,10 @@ public class DailyCopyWorkVerticle extends Verticle {
               AppUtils.releaseLock(foundDbName);
             }
             mongoClient.close();
-            AppUtils.dailyProcessorRemainsGetSet(-1);
+            message.reply("yes");
           } catch (UnknownHostException e) {}
+        }else{
+          message.reply("no");
         }
       }
     });
