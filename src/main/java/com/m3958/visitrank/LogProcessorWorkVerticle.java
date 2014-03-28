@@ -17,7 +17,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.bson.types.ObjectId;
-import org.vertx.java.core.AsyncResult;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonObject;
@@ -36,16 +35,17 @@ import com.mongodb.util.JSON;
  * it's a sync worker verticle. First we start a mongodb connection, readlines from logfile,batchly
  * insert into mongodb. according log filename,hourly 2014-03-03-01,construct hourly dbname,daily
  * dbname 2014-03-03.maybe monthly dbname:2014-03,yearly dbname 2014.
- * 这个verticle具有唯一的事件地址（logfilename），使用一次，然后销毁。
  * 
  * @author jianglibo@gmail.com
  * 
  */
 public class LogProcessorWorkVerticle extends Verticle {
 
+  public static String VERTICLE_ADDRESS = "logprocessor";
+  public static String VERTICLE_NAME = "com.m3958.visitrank.LogProcessorWorkVerticle";
+
   public static class LogProcessorWorkCfgKey {
     public static String FILE_NAME = "filename";
-    public static String ADDRESS = "address";
     public static String LOG_DIR = "logDir";
     public static String ARCHIVE_DIR = "archiveDir";
     public static String REPLY = "reply";
@@ -53,32 +53,21 @@ public class LogProcessorWorkVerticle extends Verticle {
 
   @Override
   public void start() {
-    JsonObject cfg = container.config();
-
-    final String filename = cfg.getString(LogProcessorWorkCfgKey.FILE_NAME);
-    final String address = cfg.getString(LogProcessorWorkCfgKey.ADDRESS, filename);
-    final String logDir = cfg.getString(LogProcessorWorkCfgKey.LOG_DIR, "logs");
-    final String archiveDir = cfg.getString(LogProcessorWorkCfgKey.ARCHIVE_DIR, "archives");
-    final boolean reply = cfg.getBoolean(LogProcessorWorkCfgKey.REPLY, false);
-
-    vertx.eventBus().registerHandler(address, new Handler<Message<String>>() {
+    vertx.eventBus().registerHandler(VERTICLE_ADDRESS, new Handler<Message<JsonObject>>() {
       @Override
-      public void handle(Message<String> message) {
-        final String thisDeployId = message.body();
+      public void handle(Message<JsonObject> message) {
+        final JsonObject body = message.body();
 
+        final String filename = body.getString(LogProcessorWorkCfgKey.FILE_NAME);
+        final String logDir = body.getString(LogProcessorWorkCfgKey.LOG_DIR, "logs");
+        final String archiveDir = body.getString(LogProcessorWorkCfgKey.ARCHIVE_DIR, "archives");
+        final boolean reply = body.getBoolean(LogProcessorWorkCfgKey.REPLY, false);
+        
         new LogProcessor(logDir, archiveDir, filename).process();
+        AppUtils.logProcessorRemainsGetSet(-1);
         if (reply) {
           message.reply("done");
         }
-
-        container.undeployVerticle(thisDeployId, new Handler<AsyncResult<Void>>() {
-          @Override
-          public void handle(AsyncResult<Void> ar) {
-            if (ar.failed()) {
-              AppLogger.deployError.error("undeploy " + thisDeployId + " failure");
-            }
-          }
-        });
       }
     });
   }
@@ -95,7 +84,7 @@ public class LogProcessorWorkVerticle extends Verticle {
     }
 
     public void process() {
-      AppLogger.processLogger.info("process " + filename + " starting.");
+      AppLogger.processLogger.info("process " + filename + " starting. remain LogProcessorInstancs: " + AppUtils.logProcessorRemainsGetSet(0));
       try {
         Path logfilePath = Paths.get(logDir, filename);
         Path partialLogPath = Paths.get(logDir, filename + AppConstants.PARTIAL_POSTFIX);
@@ -193,8 +182,9 @@ public class LogProcessorWorkVerticle extends Verticle {
 
     private void updateHourJobEnd(DB db, ObjectId id) {
       DBCollection hourlyCol = db.getCollection(AppConstants.MongoNames.HOURLY_JOB_COL_NAME);
-      hourlyCol.findAndModify(new BasicDBObject("_id", id), new BasicDBObject(
-          AppConstants.MongoNames.HOURLY_JOB_STATUS_KEY, "end"));
+      DBObject dbo = hourlyCol.findOne(new BasicDBObject("_id", id));
+      dbo.put(AppConstants.MongoNames.HOURLY_JOB_STATUS_KEY, "end");
+      hourlyCol.update(new BasicDBObject("_id", id), dbo);
     }
   }
 }

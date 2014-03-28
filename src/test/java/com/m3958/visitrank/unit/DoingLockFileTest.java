@@ -67,4 +67,14 @@ public class DoingLockFileTest {
       Assert.assertNotNull(getLock());
       Assert.assertNull(getLock());
   }
+  
+  @Test
+  public void riqi() {
+      Assert.assertTrue("aa".compareTo("bb") < 0);
+      Assert.assertTrue("2014-03-27".compareTo("2014-03-28") < 0);
+      Assert.assertTrue("2014-03-27".compareTo("2014-04-01") < 0);
+  }
+
+  
+  
 }

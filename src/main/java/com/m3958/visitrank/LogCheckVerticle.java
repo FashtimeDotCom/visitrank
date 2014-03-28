@@ -4,14 +4,12 @@ import java.io.File;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.vertx.java.core.AsyncResult;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.core.logging.Logger;
 import org.vertx.java.platform.Verticle;
 
 import com.m3958.visitrank.LogProcessorWorkVerticle.LogProcessorWorkCfgKey;
-import com.m3958.visitrank.logger.AppLogger;
 
 /**
  * We run one instance of this verticle,so don't worry about concurrency problem.
@@ -27,27 +25,30 @@ public class LogCheckVerticle extends Verticle {
     JsonObject jo = container.config();
     final String logDir = jo.getString(LogProcessorWorkCfgKey.LOG_DIR, "logs");
     final String archiveDir = jo.getString(LogProcessorWorkCfgKey.ARCHIVE_DIR, "archives");
-
-    vertx.setPeriodic(30000, new Handler<Long>() {
+    
+    vertx.setPeriodic(450000, new Handler<Long>() {
       public void handle(Long timerID) {
         // logger file check.
-        final String logfilename = new RemainLogFileFinder(logDir).findOne();
-        if (logfilename != null) {
-          JsonObject lpConfig =
-              new JsonObject().putString(LogProcessorWorkCfgKey.ADDRESS, logfilename)
-                  .putString(LogProcessorWorkCfgKey.FILE_NAME, logfilename)
-                  .putString(LogProcessorWorkCfgKey.ARCHIVE_DIR, archiveDir);
-          container.deployVerticle("com.m3958.visitrank.LogProcessorWorkVerticle", lpConfig, 1,
-              new Handler<AsyncResult<String>>() {
-                @Override
-                public void handle(AsyncResult<String> ar) {
-                  if (ar.succeeded()) {
-                    vertx.eventBus().send(logfilename, ar.result());
-                  } else {
-                    AppLogger.deployError.info("logprocessor deploy:" + logfilename + " failure");
-                  }
-                }
-              });
+        if (AppUtils.dailyProcessorRemainsGetSet(0) > 0) {
+          AppUtils.dailyProcessorRemainsGetSet(1);
+            vertx.eventBus().send(DailyCopyWorkVerticle.VERTICLE_ADDRESS, "start");
+          }
+        }
+      });
+
+    vertx.setPeriodic(300000, new Handler<Long>() {
+      public void handle(Long timerID) {
+        // logger file check.
+        if (AppUtils.logProcessorRemainsGetSet(0) > 0) {
+          AppUtils.logProcessorRemainsGetSet(1);
+          final String logfilename = new RemainLogFileFinder(logDir).findOne();
+          if (logfilename != null) {
+            JsonObject body =
+                new JsonObject().putString(LogProcessorWorkCfgKey.LOG_DIR, logDir)
+                    .putString(LogProcessorWorkCfgKey.FILE_NAME, logfilename)
+                    .putString(LogProcessorWorkCfgKey.ARCHIVE_DIR, archiveDir);
+            vertx.eventBus().send(LogProcessorWorkVerticle.VERTICLE_ADDRESS, body);
+          }
         }
       }
     });

@@ -7,8 +7,6 @@ public class AppConstants {
   public static String MOD_REDIS_ADDRESS = "visit_counter.redis";
   public static String MOD_MONGO_PERSIST_ADDRESS = "visit_counter.mongodb";
   
-  public static String DAILY_MOVE_DB_ADDRESS = "move_daily_db_address";
-  
   public static String DAILY_PARTIAL_DIR = "dailycopypartial";
   
   public static int HTTP_PORT = 8333;
@@ -19,7 +17,9 @@ public class AppConstants {
   public static int MONGODB_INSTANCE = 1;
   public static int SAVETO_MONGO_INSTANCE = 1;
   
-  public static int DAILY_COPY_INSTANCE = 1;
+  public static int DAILY_COPY_INSTANCE = 3;
+  
+  public static int LOG_PROCESSOR_INSTANCE = 5;
   
   
 
@@ -67,6 +67,8 @@ public class AppConstants {
     MONGODB_HOST = config.getString("mongodbhost", MONGODB_HOST);
     
     DAILY_COPY_INSTANCE = config.getInteger("dailycopyinstance",DAILY_COPY_INSTANCE);
+    
+    LOG_PROCESSOR_INSTANCE = config.getInteger("logprocessorinstance",LOG_PROCESSOR_INSTANCE);
 
   }
 
@@ -79,8 +81,5 @@ public class AppConstants {
     
     public static String DAILY_JOB_COL_NAME = "dailyjob";
     public static String DAILY_JOB_STATUS_KEY = "status";
-
   }
-
-
 }

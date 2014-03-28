@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -64,7 +66,7 @@ public class DailyProcessorTest {
       hourlyCol.insert(dbo);
     }
     new DailyCopyWorkVerticle.DailyCopyProcessor(mongoClient, dailyDbName, repositoryDbName,
-        dailyPartialDir).process();
+        dailyPartialDir,new ArrayList<String>()).process();
     mongoClient = new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
     DB db = mongoClient.getDB(repositoryDbName);
     DBCollection col = db.getCollection(AppConstants.MongoNames.PAGE_VISIT_COL_NAME);
@@ -95,7 +97,7 @@ public class DailyProcessorTest {
     hourlyCol.insert(dbo);
 
     new DailyCopyWorkVerticle.DailyCopyProcessor(mongoClient, dailyDbName, repositoryDbName,
-        dailyPartialDir).process();
+        dailyPartialDir,new ArrayList<String>()).process();
     
     mongoClient = new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
     DB db = mongoClient.getDB(repositoryDbName);
@@ -123,7 +125,7 @@ public class DailyProcessorTest {
       hourlyCol.insert(dbo);
     }
     new DailyCopyWorkVerticle.DailyCopyProcessor(mongoClient, dailyDbName, repositoryDbName,
-        dailyPartialDir).process();
+        dailyPartialDir,Arrays.asList("t-2014-03-03")).process();
     mongoClient = new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
     DB db = mongoClient.getDB(repositoryDbName);
     DBCollection col = db.getCollection(AppConstants.MongoNames.PAGE_VISIT_COL_NAME);

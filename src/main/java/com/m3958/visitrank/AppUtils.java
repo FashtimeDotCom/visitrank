@@ -15,6 +15,10 @@ public class AppUtils {
   private static Map<String, String> pickupLockMap = new HashMap<>();
   
   private static String tfilename = "t-2014-03-02-1.log";
+  
+  private static int logProcessorRemains = 0;
+  
+  private static int dailyProcessorRemains = 0;
 
   public static String getDailyDbName(String filename) {
     int idx = filename.lastIndexOf('-');
@@ -38,6 +42,32 @@ public class AppUtils {
     System.out.println(getDailyDbName(tfilename));
     System.out.println(getHour(tfilename));
     System.out.println(isDailyDb(getDailyDbName(tfilename)));
+  }
+  
+  public static void initLogProcessorRemains(int i){
+    logProcessorRemains = i;
+  }
+  
+  public static void initDailyProcessorRemains(int i){
+    dailyProcessorRemains = i;
+  }
+  
+  public static synchronized int logProcessorRemainsGetSet(int i){
+    if(i == -1){
+      logProcessorRemains += 1;
+    }else if(i == 1){
+      logProcessorRemains -= 1;
+    }
+    return logProcessorRemains;
+  }
+  
+  public static synchronized int dailyProcessorRemainsGetSet(int i){
+    if(i == -1){
+      dailyProcessorRemains += 1;
+    }else if(i == 1){
+      dailyProcessorRemains -= 1;
+    }
+    return dailyProcessorRemains;
   }
 
   public static synchronized boolean canLockLog(String filename) {

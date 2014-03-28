@@ -18,20 +18,15 @@ package com.m3958.visitrank.integration.java;
 
 import static org.vertx.testtools.VertxAssert.assertTrue;
 
-import java.io.IOException;
-
+import org.junit.Assert;
 import org.junit.Test;
 import org.vertx.java.core.AsyncResult;
 import org.vertx.java.core.AsyncResultHandler;
-import org.vertx.java.core.Handler;
-import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.testtools.TestVerticle;
 import org.vertx.testtools.VertxAssert;
 
 import com.m3958.visitrank.LogProcessorWorkVerticle;
-import com.m3958.visitrank.LogProcessorWorkVerticle.LogProcessorWorkCfgKey;
-import com.m3958.visitrank.testutils.TestUtils;
 
 
 /**
@@ -42,52 +37,25 @@ import com.m3958.visitrank.testutils.TestUtils;
  * 
  * This test demonstrates how to do that.
  */
-public class LogProcessorWorkTest extends TestVerticle {
-
-  private String testlogname = "t-2014-03-02-01.log";
-  private String logDir = "testlogs";
-  private String archiveDir = "tarchives";
-
-
+public class RemainsVerticleTest extends TestVerticle {
+  
   @Test
-  public void t() throws IOException {
-    TestUtils.assertDbItemEqual(testlogname);
-
-    TestUtils.deleteDirs(logDir, archiveDir);
-    TestUtils.dropDailyDb(testlogname);
+  public void t(){
+    Assert.assertTrue(true);
     VertxAssert.testComplete();
   }
-  
+
   @Override
   public void start() {
     initialize();
-    try {
-      TestUtils.deleteDirs(logDir, archiveDir);
-      TestUtils.dropDailyDb(testlogname);
-      TestUtils.createDirs(logDir, archiveDir);
-      TestUtils.createSampleLogs(logDir, testlogname);
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-
-    final JsonObject body =
-        new JsonObject().putString(LogProcessorWorkCfgKey.FILE_NAME, testlogname)
-            .putString(LogProcessorWorkCfgKey.LOG_DIR, logDir)
-            .putString(LogProcessorWorkCfgKey.ARCHIVE_DIR, archiveDir)
-            .putBoolean(LogProcessorWorkCfgKey.REPLY, true);
     
-    container.deployWorkerVerticle(LogProcessorWorkVerticle.VERTICLE_NAME, new JsonObject(), 1,
-        false, new AsyncResultHandler<String>() {
+    container.deployWorkerVerticle(LogProcessorWorkVerticle.VERTICLE_NAME, new JsonObject(), 5,false,
+        new AsyncResultHandler<String>() {
           @Override
           public void handle(AsyncResult<String> asyncResult) {
+            container.logger().info("deploy success");
             assertTrue(asyncResult.succeeded());
-            vertx.eventBus().send(LogProcessorWorkVerticle.VERTICLE_ADDRESS, body,
-                new Handler<Message<String>>() {
-                  @Override
-                  public void handle(Message<String> ar) {
-                    startTests();
-                  }
-                });
+            startTests();
           }
         });
   }
