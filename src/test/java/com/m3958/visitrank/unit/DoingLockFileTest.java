@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.nio.channels.OverlappingFileLockException;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -31,6 +33,21 @@ public class DoingLockFileTest {
     if (f.exists()) {
       f.delete();
     }
+  }
+  
+  @Test
+  public void tpari(){
+    Assert.assertEquals(0, Integer.parseInt("00"));
+  }
+  
+  @Test
+  public void tmap(){
+    Map<String, String> m = new HashMap<>();
+    Assert.assertEquals(0, m.size());
+    m.put("a", "b");
+    Assert.assertEquals(1, m.size());
+    m.remove("a");
+    Assert.assertEquals(0, m.size());
   }
 
   private FileLock getLock() {

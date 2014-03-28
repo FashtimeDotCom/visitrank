@@ -13,7 +13,7 @@ public class AppUtils {
   private static Pattern logdbPat = Pattern.compile(".*\\d{4}-\\d{2}-\\d{2}");
 
   private static Map<String, String> pickupLockMap = new HashMap<>();
-
+  
   private static String tfilename = "t-2014-03-02-1.log";
 
   public static String getDailyDbName(String filename) {

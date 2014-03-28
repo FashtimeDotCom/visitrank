@@ -16,3 +16,5 @@ logprocessVerticle根据文件名的新启动一个mongodb verticle，当verticl
 日志文件处理成功，需要一个标志
 日数据库成功生成，需要一个标志，成功导入到主表，需要一个标志（也许不需要，删除）。
 
+频繁的deployverticle 和 undeployverticle 会导致permgen，所以必须更改设计方案，采用固定的LogProcessVerticle instances 数量。
+通过全局变量监控当前运行的实例。
