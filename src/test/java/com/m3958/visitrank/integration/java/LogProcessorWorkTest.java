@@ -30,7 +30,7 @@ import org.vertx.testtools.TestVerticle;
 import org.vertx.testtools.VertxAssert;
 
 import com.m3958.visitrank.LogProcessorWorkVerticle;
-import com.m3958.visitrank.LogProcessorWorkVerticle.LogProcessorWorkCfgKey;
+import com.m3958.visitrank.LogProcessorWorkVerticle.LogProcessorWorkMsgKey;
 import com.m3958.visitrank.testutils.TestUtils;
 
 
@@ -71,10 +71,10 @@ public class LogProcessorWorkTest extends TestVerticle {
     }
 
     final JsonObject body =
-        new JsonObject().putString(LogProcessorWorkCfgKey.FILE_NAME, testlogname)
-            .putString(LogProcessorWorkCfgKey.LOG_DIR, logDir)
-            .putString(LogProcessorWorkCfgKey.ARCHIVE_DIR, archiveDir)
-            .putBoolean(LogProcessorWorkCfgKey.REPLY, true);
+        new JsonObject().putString(LogProcessorWorkMsgKey.FILE_NAME, testlogname)
+            .putString(LogProcessorWorkMsgKey.LOG_DIR, logDir)
+            .putString(LogProcessorWorkMsgKey.ARCHIVE_DIR, archiveDir)
+            .putBoolean(LogProcessorWorkMsgKey.REPLY, true);
     
     container.deployWorkerVerticle(LogProcessorWorkVerticle.VERTICLE_NAME, new JsonObject(), 1,
         false, new AsyncResultHandler<String>() {

@@ -1,8 +1,6 @@
 package com.m3958.visitrank;
 
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -10,17 +8,15 @@ import com.m3958.visitrank.Utils.FileTailer;
 
 public class AppUtils {
 
-  private static Pattern logdbPat = Pattern.compile(".*\\d{4}-\\d{2}-\\d{2}");
-
-  private static Map<String, String> pickupLockMap = new HashMap<>();
+//  private static Pattern logdbPat = Pattern.compile(".*\\d{4}-\\d{2}-\\d{2}");
 
   private static String tfilename = "t-2014-03-02-1.log";
 
-  private static int logProcessorRemains = 0;
-
-  private static int dailyProcessorRemains = 0;
-
-  private static boolean processorNumberInited = false;
+//  private static int logProcessorRemains = 0;
+//
+//  private static int dailyProcessorRemains = 0;
+//
+//  private static boolean processorNumberInited = false;
 
   public static String getDailyDbName(String filename) {
     int idx = filename.lastIndexOf('-');
@@ -35,61 +31,46 @@ public class AppUtils {
     return Integer.parseInt(ss[ss.length - 1].split("\\.")[0]);
   }
 
-  public static boolean isDailyDb(String dbname) {
-    Matcher m = logdbPat.matcher(dbname);
-    return m.matches();
-  }
+//  public static boolean isDailyDb(String dbname) {
+//    Matcher m = logdbPat.matcher(dbname);
+//    return m.matches();
+//  }
 
   public static void main(String[] args) {
     System.out.println(getDailyDbName(tfilename));
     System.out.println(getHour(tfilename));
-    System.out.println(isDailyDb(getDailyDbName(tfilename)));
   }
 
-  public static synchronized void initProcessorRemains() {
-    if (!processorNumberInited) {
-      processorNumberInited = true;
-      AppUtils.logProcessorRemains = AppConstants.LOG_PROCESSOR_INSTANCE;
-      AppUtils.dailyProcessorRemains = AppConstants.DAILY_COPY_INSTANCE;
-    }
-  }
-  public static synchronized int logProcessorRemainsGetSet(int i) {
-    if(!processorNumberInited){
-      initProcessorRemains();
-    }
-    if (i == -1) {
-      AppUtils.logProcessorRemains += 1;
-    } else if (i == 1) {
-      AppUtils.logProcessorRemains -= 1;
-    }
-    return AppUtils.logProcessorRemains;
-  }
-
-  public static synchronized int dailyProcessorRemainsGetSet(int i) {
-    if(!processorNumberInited){
-      initProcessorRemains();
-    }
-    if (i == -1) {
-      AppUtils.dailyProcessorRemains += 1;
-    } else if (i == 1) {
-      AppUtils.dailyProcessorRemains -= 1;
-    }
-    return AppUtils.dailyProcessorRemains;
-  }
-
-  public static synchronized boolean canLockLog(String filename) {
-    if (pickupLockMap.containsKey(filename)) {
-      return false;
-    } else {
-      pickupLockMap.put(filename, "yes");
-      return true;
-    }
-  }
-
-  public static void releaseLock(String filename) {
-    pickupLockMap.remove(filename);
-  }
-
+//  public static synchronized void initProcessorRemains() {
+//    if (!processorNumberInited) {
+//      processorNumberInited = true;
+//      AppUtils.logProcessorRemains = AppConstants.LOG_PROCESSOR_INSTANCE;
+//      AppUtils.dailyProcessorRemains = AppConstants.DAILY_COPY_INSTANCE;
+//    }
+//  }
+//  public static synchronized int logProcessorRemainsGetSet(int i) {
+//    if(!processorNumberInited){
+//      initProcessorRemains();
+//    }
+//    if (i == -1) {
+//      AppUtils.logProcessorRemains += 1;
+//    } else if (i == 1) {
+//      AppUtils.logProcessorRemains -= 1;
+//    }
+//    return AppUtils.logProcessorRemains;
+//  }
+//
+//  public static synchronized int dailyProcessorRemainsGetSet(int i) {
+//    if(!processorNumberInited){
+//      initProcessorRemains();
+//    }
+//    if (i == -1) {
+//      AppUtils.dailyProcessorRemains += 1;
+//    } else if (i == 1) {
+//      AppUtils.dailyProcessorRemains -= 1;
+//    }
+//    return AppUtils.dailyProcessorRemains;
+//  }
 
   public static long getLastPartialPosition(Path partialLogPath) {
     String[] lines = new FileTailer(partialLogPath.toString()).getLines(1);

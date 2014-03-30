@@ -17,7 +17,7 @@ public class AppConstants {
   public static int MONGODB_INSTANCE = 1;
   public static int SAVETO_MONGO_INSTANCE = 1;
   
-  public static int DAILY_COPY_INSTANCE = 3;
+  public static int DAILY_PROCESSOR_INSTANCE = 3;
   
   public static int LOG_PROCESSOR_INSTANCE = 5;
   
@@ -51,7 +51,6 @@ public class AppConstants {
     REDIS_PORT = config.getInteger("redisport", REDIS_PORT);
     MONGODB_PORT = config.getInteger("mongodbport", MONGODB_PORT);
 
-
     HTTP_INSTANCE = config.getInteger("httpinstance", HTTP_INSTANCE);
     REDIS_INSTANCE = config.getInteger("redisinstance", REDIS_INSTANCE);
     MONGODB_INSTANCE = config.getInteger("mongodbinstance", MONGODB_INSTANCE);
@@ -64,14 +63,14 @@ public class AppConstants {
 
     MONGODB_HOST = config.getString("mongodbhost", MONGODB_HOST);
     
-    DAILY_COPY_INSTANCE = config.getInteger("dailycopyinstance",DAILY_COPY_INSTANCE);
+    DAILY_PROCESSOR_INSTANCE = config.getInteger("dailycopyinstance",DAILY_PROCESSOR_INSTANCE);
     
     LOG_PROCESSOR_INSTANCE = config.getInteger("logprocessorinstance",LOG_PROCESSOR_INSTANCE);
 
   }
 
   public static class MongoNames {
-    public static String REPOSITORY_DB_NAME = "visitrannk";
+    public static String REPOSITORY_DB_NAME = "visitrank";
     public static String PAGE_VISIT_COL_NAME = "pagevisit";
     public static String HOURLY_JOB_COL_NAME = "hourlyjob";
     public static String HOURLY_JOB_NUMBER_KEY = "hournumber";

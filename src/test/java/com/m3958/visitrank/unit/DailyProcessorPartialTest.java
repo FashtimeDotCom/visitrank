@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Arrays;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -12,7 +11,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.m3958.visitrank.AppConstants;
-import com.m3958.visitrank.AppUtils;
 import com.m3958.visitrank.DailyCopyWorkVerticle;
 import com.m3958.visitrank.testutils.TestUtils;
 import com.mongodb.BasicDBObject;
@@ -72,24 +70,12 @@ public class DailyProcessorPartialTest {
       hourlyCol.insert(dbo);
     }
     new DailyCopyWorkVerticle.DailyCopyProcessor(mongoClient, dailyDbName, repositoryDbName,
-        dailyPartialDir,Arrays.asList("t-2014-03-03")).process();
+        dailyPartialDir).process();
     mongoClient = new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
     DB db = mongoClient.getDB(repositoryDbName);
     DBCollection col = db.getCollection(AppConstants.MongoNames.PAGE_VISIT_COL_NAME);
     Assert.assertEquals(10005, col.count());
     Assert.assertFalse(Files.exists(Paths.get(dailyPartialDir, dailyDbName)));
-    Assert.assertNull(findDb(mongoClient, dailyDbName));
-  }
-
-  private String findDb(MongoClient mongoClient, String dbnametofind) {
-    for (String dbname : mongoClient.getDatabaseNames()) {
-      if (AppUtils.isDailyDb(dbname)) {
-        if (dbnametofind.equals(dbname)) {
-          return dbname;
-        }
-      }
-    }
-    return null;
   }
 
 }

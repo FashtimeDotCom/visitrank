@@ -44,7 +44,7 @@ public class LogProcessorWorkVerticle extends Verticle {
   public static String VERTICLE_ADDRESS = "logprocessor";
   public static String VERTICLE_NAME = "com.m3958.visitrank.LogProcessorWorkVerticle";
 
-  public static class LogProcessorWorkCfgKey {
+  public static class LogProcessorWorkMsgKey {
     public static String FILE_NAME = "filename";
     public static String LOG_DIR = "logDir";
     public static String ARCHIVE_DIR = "archiveDir";
@@ -58,9 +58,9 @@ public class LogProcessorWorkVerticle extends Verticle {
       public void handle(Message<JsonObject> message) {
         final JsonObject body = message.body();
 
-        final String filename = body.getString(LogProcessorWorkCfgKey.FILE_NAME);
-        final String logDir = body.getString(LogProcessorWorkCfgKey.LOG_DIR, "logs");
-        final String archiveDir = body.getString(LogProcessorWorkCfgKey.ARCHIVE_DIR, "archives");
+        final String filename = body.getString(LogProcessorWorkMsgKey.FILE_NAME);
+        final String logDir = body.getString(LogProcessorWorkMsgKey.LOG_DIR, "logs");
+        final String archiveDir = body.getString(LogProcessorWorkMsgKey.ARCHIVE_DIR, "archives");
 
         new LogProcessor(logDir, archiveDir, filename).process();
         message.reply("done");
@@ -80,8 +80,6 @@ public class LogProcessorWorkVerticle extends Verticle {
     }
 
     public void process() {
-      AppLogger.processLogger.info("process " + filename
-          + " starting. remain LogProcessorInstancs: " + AppUtils.logProcessorRemainsGetSet(0));
       try {
         Path logfilePath = Paths.get(logDir, filename);
         Path partialLogPath = Paths.get(logDir, filename + AppConstants.PARTIAL_POSTFIX);
@@ -98,6 +96,8 @@ public class LogProcessorWorkVerticle extends Verticle {
         long partialStart = 0;
         if (Files.exists(partialLogPath)) {
           partialStart = AppUtils.getLastPartialPosition(partialLogPath);
+          AppLogger.processLogger.info("process " + filename
+            + " continueing.");
         }
 
         OutputStreamWriter partialWriter =
@@ -137,7 +137,6 @@ public class LogProcessorWorkVerticle extends Verticle {
         reader.close();
         partialWriter.close();
         updateHourJobEnd(db, hourJobId);
-        AppUtils.releaseLock(filename);
         mongoClient.close();
 
         moveLogFiles(logfilePath);

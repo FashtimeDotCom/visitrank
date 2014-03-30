@@ -18,7 +18,7 @@ public class MainVerticle extends Verticle {
 
     final Logger log = container.logger();
     AppConstants.initConfigConstants(container.config());
-    
+
     AppLogger.urlPersistor.trace("loger started");
 
     JsonObject httpCfg = new JsonObject();
@@ -65,10 +65,16 @@ public class MainVerticle extends Verticle {
 
     container.deployVerticle("mapreduce_verticle.js", 1);
 
-    container.deployVerticle(AppConstants.LOGCHECK_VERTICLE_NAME, new JsonObject(), 1);
-    
-    container.deployWorkerVerticle(DailyCopyWorkVerticle.VERTICLE_NAME, new JsonObject(), AppConstants.DAILY_COPY_INSTANCE,false);
-    
-    container.deployWorkerVerticle(LogProcessorWorkVerticle.VERTICLE_NAME, new JsonObject(), AppConstants.LOG_PROCESSOR_INSTANCE,false);
+    JsonObject logCheckCfg =
+        new JsonObject().putNumber("dailyCopyInstance", AppConstants.DAILY_PROCESSOR_INSTANCE)
+            .putNumber("logProcessorInstance", AppConstants.LOG_PROCESSOR_INSTANCE);
+
+    container.deployVerticle(AppConstants.LOGCHECK_VERTICLE_NAME,logCheckCfg, 1);
+
+    container.deployWorkerVerticle(DailyCopyWorkVerticle.VERTICLE_NAME, new JsonObject(),
+        AppConstants.DAILY_PROCESSOR_INSTANCE, false);
+
+    container.deployWorkerVerticle(LogProcessorWorkVerticle.VERTICLE_NAME, new JsonObject(),
+        AppConstants.LOG_PROCESSOR_INSTANCE, false);
   }
 }

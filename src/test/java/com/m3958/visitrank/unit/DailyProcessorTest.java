@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -32,6 +30,8 @@ public class DailyProcessorTest {
 
   private String repositoryDbName = "t-visitrank";
   private String dailyDbName = "t-2014-03-02";
+  private String newerdbname = "t-2014-03-03";
+  
   private String dailyPartialDir = "t-" + AppConstants.DAILY_PARTIAL_DIR;
 
   @Before
@@ -39,6 +39,7 @@ public class DailyProcessorTest {
     TestUtils.deleteDirs(dailyPartialDir);
     TestUtils.dropTestRepositoryDb(repositoryDbName);
     TestUtils.createSampleDailyDb(dailyDbName, 1005);
+    TestUtils.dropSampleDailyDb(newerdbname);
   }
 
   @After
@@ -46,10 +47,11 @@ public class DailyProcessorTest {
     TestUtils.deleteDirs(dailyPartialDir);
     TestUtils.dropTestRepositoryDb(repositoryDbName);
     TestUtils.dropSampleDailyDb(dailyDbName);
+    TestUtils.dropSampleDailyDb(newerdbname);
   }
 
   /**
-   * if hourlyjob is not completed,no item will insert to repository db.
+   * hourlydb not completed,even newerdb exist,repositoryDb should not change.
    * 
    * @throws UnknownHostException
    */
@@ -65,50 +67,25 @@ public class DailyProcessorTest {
               AppConstants.MongoNames.HOURLY_JOB_STATUS_KEY, "start");
       hourlyCol.insert(dbo);
     }
-    new DailyCopyWorkVerticle.DailyCopyProcessor(mongoClient, dailyDbName, repositoryDbName,
-        dailyPartialDir,new ArrayList<String>()).process();
-    mongoClient = new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
-    DB db = mongoClient.getDB(repositoryDbName);
-    DBCollection col = db.getCollection(AppConstants.MongoNames.PAGE_VISIT_COL_NAME);
-    Assert.assertEquals(0, col.count());
-  }
-
-  /**
-   * if hourlyjob had completed some,but has gap in hourly, no item will insert to repository db.
-   * 
-   * @throws UnknownHostException
-   */
-  @Test
-  public void t1() throws UnknownHostException {
-    MongoClient mongoClient = new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
-    DB dailyDb = mongoClient.getDB(dailyDbName);
-
-    DBCollection hourlyCol = dailyDb.getCollection(AppConstants.MongoNames.HOURLY_JOB_COL_NAME);
-    for (int idx = 24; idx > 12; idx--) {
-      DBObject dbo =
-          new BasicDBObject().append(AppConstants.MongoNames.HOURLY_JOB_NUMBER_KEY, idx).append(
-              AppConstants.MongoNames.HOURLY_JOB_STATUS_KEY, "end");
-      hourlyCol.insert(dbo);
-    }
 
     DBObject dbo =
         new BasicDBObject().append(AppConstants.MongoNames.HOURLY_JOB_NUMBER_KEY, 10).append(
             AppConstants.MongoNames.HOURLY_JOB_STATUS_KEY, "end");
     hourlyCol.insert(dbo);
-
-    new DailyCopyWorkVerticle.DailyCopyProcessor(mongoClient, dailyDbName, repositoryDbName,
-        dailyPartialDir,new ArrayList<String>()).process();
     
+    TestUtils.createSampleDailyDb(newerdbname, 10);
+    
+    new DailyCopyWorkVerticle.DailyCopyProcessor(mongoClient, dailyDbName, repositoryDbName,
+        dailyPartialDir).process();
     mongoClient = new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
     DB db = mongoClient.getDB(repositoryDbName);
     DBCollection col = db.getCollection(AppConstants.MongoNames.PAGE_VISIT_COL_NAME);
     Assert.assertEquals(0, col.count());
-    mongoClient.close();
   }
 
   /**
-   * if hourlyjob has completed,item will insert to repository db.and partial file will delete,
-   * dailydb will delete.
+   * hourlyjob completed, and has newerdb exists,item will insert to repository db.and partial file
+   * will delete, dailydb will delete.
    * 
    * @throws UnknownHostException
    */
@@ -124,25 +101,15 @@ public class DailyProcessorTest {
               AppConstants.MongoNames.HOURLY_JOB_STATUS_KEY, "end");
       hourlyCol.insert(dbo);
     }
+    
+    TestUtils.createSampleDailyDb(newerdbname, 10);
     new DailyCopyWorkVerticle.DailyCopyProcessor(mongoClient, dailyDbName, repositoryDbName,
-        dailyPartialDir,Arrays.asList("t-2014-03-03")).process();
+        dailyPartialDir).process();
+
     mongoClient = new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
     DB db = mongoClient.getDB(repositoryDbName);
     DBCollection col = db.getCollection(AppConstants.MongoNames.PAGE_VISIT_COL_NAME);
     Assert.assertEquals(1005, col.count());
     Assert.assertFalse(Files.exists(Paths.get(dailyPartialDir, dailyDbName)));
-    Assert.assertNull(findDb(mongoClient, dailyDbName));
   }
-
-  private String findDb(MongoClient mongoClient, String dbnametofind) {
-    for (String dbname : mongoClient.getDatabaseNames()) {
-      if (AppUtils.isDailyDb(dbname)) {
-        if(dbnametofind.equals(dbname)){
-          return dbname;
-        }
-      }
-    }
-    return null;
-  }
-
 }
