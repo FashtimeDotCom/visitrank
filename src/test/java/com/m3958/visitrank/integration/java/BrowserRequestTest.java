@@ -68,7 +68,7 @@ public class BrowserRequestTest extends TestVerticle {
         vertx.createHttpClient().setHost("localhost").setPort(AppConstants.HTTP_PORT);
 
     HttpClientRequest request =
-        client.get("/?siteid=" + TestConstants.DEMO_SITEID, new Handler<HttpClientResponse>() {
+        client.get("/?siteid=" + TestConstants.DEMO_SITEID + "&record=true", new Handler<HttpClientResponse>() {
           @Override
           public void handle(HttpClientResponse resp) {
             assertEquals(200, resp.statusCode());

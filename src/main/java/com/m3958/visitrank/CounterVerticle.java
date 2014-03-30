@@ -7,8 +7,8 @@ import org.vertx.java.core.http.HttpServerRequest;
 import org.vertx.java.core.logging.Logger;
 import org.vertx.java.platform.Verticle;
 
-import com.m3958.visitrank.httpentry.RecordAndStatisticsProceesor;
-import com.m3958.visitrank.httpentry.StatisticsProceesor;
+import com.m3958.visitrank.httpentry.SinglePageProceesor;
+import com.m3958.visitrank.httpentry.WholeSiteCountProceesor;
 
 /**
  * 
@@ -17,29 +17,35 @@ import com.m3958.visitrank.httpentry.StatisticsProceesor;
  */
 public class CounterVerticle extends Verticle {
 
-
-  public static String resstr;
-
-  static {
-    StringBuilder sb = new StringBuilder();
-    for (int i = 0; i < 1001; i++) {
-      sb.append("a");
-    }
-    resstr = sb.toString();
-  }
-
+  /**
+   * 如果默认是referer的主机名，那么siteid将不再是必须，反而可以引入sitegroup概念，从而增加系统的灵活性。
+   */
   public void start() {
     vertx.createHttpServer().requestHandler(new Handler<HttpServerRequest>() {
       public void handle(final HttpServerRequest req) {
         MultiMap mm = req.params();
         String record = mm.get("record");
-
+        String out = mm.get("out");
+        String referer = req.headers().get("referer");
+        
+        boolean noReferer = (referer == null ||referer.isEmpty());
+        boolean needRecord = !(record == null ||record.isEmpty());
+        
         EventBus eb = vertx.eventBus();
         Logger log = container.logger();
-        if (record == null || record.isEmpty()) {
-          new StatisticsProceesor(eb, req, log).process();
-        } else { // need record
-          new RecordAndStatisticsProceesor(eb, req, log).process();
+        
+        if("wholesite".equals(out)){
+          if(noReferer){
+            new ResponseGenerator(req, "0").sendResponse();
+            return;
+          }
+          new WholeSiteCountProceesor(eb, req, log,needRecord,referer).process();
+        }else{
+          if(noReferer){
+            new ResponseGenerator(req, "0").sendResponse();
+            return;
+          }
+          new SinglePageProceesor(eb, req, log, needRecord,referer).process();
         }
       }
     }).listen(AppConstants.HTTP_PORT);
