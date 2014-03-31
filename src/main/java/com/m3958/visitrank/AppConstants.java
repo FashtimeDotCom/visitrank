@@ -68,7 +68,7 @@ public class AppConstants {
 
     MONGODB_HOST = config.getString("mongodbhost", MONGODB_HOST);
 
-    DAILY_PROCESSOR_INSTANCE = config.getInteger("dailycopyinstance", DAILY_PROCESSOR_INSTANCE);
+    DAILY_PROCESSOR_INSTANCE = config.getInteger("dailyprocessinstance", DAILY_PROCESSOR_INSTANCE);
 
     LOG_PROCESSOR_INSTANCE = config.getInteger("logprocessorinstance", LOG_PROCESSOR_INSTANCE);
 

@@ -42,8 +42,8 @@ public class LogCheckVerticle extends Verticle {
     final Long logfilereadgap = jo.getLong("logfilereadgap");
     final Long dailydbreadgap = jo.getLong("dailydbreadgap");
 
-    int logProcessorInstance = jo.getInteger("logProcessorInstance", 5);
-    int dailyProcessorInstance = jo.getInteger("dailyProcessorInstance", 3);
+    int logProcessorInstance = jo.getInteger("logprocessorinstance", 5);
+    int dailyProcessorInstance = jo.getInteger("dailyprocessinstance", 3);
     
     log.info("logProcessorInstance: " + logProcessorInstance);
     log.info("dailyProcessorInstance: " + dailyProcessorInstance);

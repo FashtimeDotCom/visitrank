@@ -66,8 +66,8 @@ public class MainVerticle extends Verticle {
     container.deployVerticle("mapreduce_verticle.js", 1);
 
     JsonObject logCheckCfg =
-        new JsonObject().putNumber("dailyCopyInstance", AppConstants.DAILY_PROCESSOR_INSTANCE)
-            .putNumber("logProcessorInstance", AppConstants.LOG_PROCESSOR_INSTANCE)
+        new JsonObject().putNumber("dailyprocessinstance", AppConstants.DAILY_PROCESSOR_INSTANCE)
+            .putNumber("logprocessorinstance", AppConstants.LOG_PROCESSOR_INSTANCE)
             .putNumber("dailydbreadgap", AppConstants.DAILY_DB_READ_GAP)
             .putNumber("logfilereadgap", AppConstants.LOGFILE_READ_GAP)
             .putString("writeconcern", AppConstants.WRITE_CONCERN);
