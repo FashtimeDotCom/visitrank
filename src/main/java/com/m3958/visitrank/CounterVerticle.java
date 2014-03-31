@@ -24,28 +24,28 @@ public class CounterVerticle extends Verticle {
     vertx.createHttpServer().requestHandler(new Handler<HttpServerRequest>() {
       public void handle(final HttpServerRequest req) {
         MultiMap mm = req.params();
-        String record = mm.get("record");
+//        String record = mm.get("record");
         String out = mm.get("out");
         String referer = req.headers().get("referer");
 
         boolean noReferer = (referer == null || referer.isEmpty());
-        boolean needRecord = !(record == null || record.isEmpty());
+//        boolean needRecord = !(record == null || record.isEmpty());
 
         EventBus eb = vertx.eventBus();
         Logger log = container.logger();
 
-        if ("thispage".equals(out)) {
+        if ("wholesite".equals(out)) {
           if (noReferer) {
             new ResponseGenerator(req, "0").sendResponse();
             return;
           }
-          new SinglePageProceesor(eb, req, log, needRecord, referer).process();
+          new WholeSiteCountProceesor(eb, req, log, referer).process();
         } else { //wholesite counter is default.
           if (noReferer) {
             new ResponseGenerator(req, "0").sendResponse();
             return;
           }
-          new WholeSiteCountProceesor(eb, req, log, needRecord, referer).process();
+          new SinglePageProceesor(eb, req, log, referer).process();
         }
       }
     }).listen(AppConstants.HTTP_PORT);

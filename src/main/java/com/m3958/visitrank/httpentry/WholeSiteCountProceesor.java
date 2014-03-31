@@ -8,9 +8,10 @@ import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.core.logging.Logger;
 
 import com.m3958.visitrank.AppConstants;
+import com.m3958.visitrank.AppUtils;
 import com.m3958.visitrank.ResponseGenerator;
 import com.m3958.visitrank.Utils.HostExtractor;
-import com.m3958.visitrank.rediscmd.GET;
+import com.m3958.visitrank.logger.AppLogger;
 import com.m3958.visitrank.rediscmd.INCR;
 
 public class WholeSiteCountProceesor {
@@ -21,16 +22,12 @@ public class WholeSiteCountProceesor {
 
   private EventBus eb;
 
-  private boolean record;
-
   private String referer;
 
-  public WholeSiteCountProceesor(EventBus eb, HttpServerRequest req, Logger log, boolean record,
-      String referer) {
+  public WholeSiteCountProceesor(EventBus eb, HttpServerRequest req, Logger log, String referer) {
     this.eb = eb;
     this.req = req;
     this.log = log;
-    this.record = record;
     this.referer = referer;
   }
 
@@ -39,17 +36,19 @@ public class WholeSiteCountProceesor {
     String host = HostExtractor.getHost(referer);
 
     JsonObject wholeSiteCountCmd;
-    if (record) {
-      wholeSiteCountCmd = new INCR(host).getCmd();
-    } else {
-      wholeSiteCountCmd = new GET(host).getCmd();
-    }
+    wholeSiteCountCmd = new INCR(host).getCmd();
 
     this.eb.send(AppConstants.MOD_REDIS_ADDRESS, wholeSiteCountCmd,
         new Handler<Message<JsonObject>>() {
           public void handle(Message<JsonObject> message) {
             JsonObject redisResultBody = message.body();
             if ("ok".equals(redisResultBody.getString("status"))) {
+
+              JsonObject pjo = AppUtils.getParamsHeadersOb(req);
+              pjo.removeField("record");
+              pjo.removeField("out");
+              AppLogger.urlPersistor.info(pjo);
+
               String value;
               try {
                 value = redisResultBody.getString("value");

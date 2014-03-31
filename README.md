@@ -10,11 +10,14 @@ This app can record page visit,get visit count for page,for category and for sit
 ## url参数约定如下：
 
 * record=true，就会记录此次访问的referer
-* out=wholesite || thispage (wholesite is default)
+* out=wholesite || thispage
 * 如果有domid参数，就会输出一段js代码，用访问次数替换dom里面的内容。
 * 如果有callback参数，输出的代码回调用callback指定的函数，传入数值。
 * 如果domid和callback都有，callback优先。
 * 如果有silent=true，那么返回空白字符串。
+
+
+## 注意，只有out=wholesite的请求会将referer保存到数据库中，所以必须确保每个页面都存在这个请求。其它类型的out不会在将referer保存到数据库中去。
 
 ## 最简单的版本，同步版本。
 
@@ -26,10 +29,10 @@ document.write(33); //33是计数值。
 1、需要在每个页面的尾部，显示整个网站的访问次数。
 
 ```
-<script src="http://vr.fh.gov.cn?record=true"></script>
+<script src="http://vr.fh.gov.cn?out=wholesite"></script>
 ```
 
-2、在文章页面显示访问次数，因为已经在公共尾部参与了记录，文章页的record参数不要再加上，否则会造成重复计数。
+2、在文章页面显示访问次数.
 
 ```
 <script src="http://vr.fh.gov.cn?out=thispage"></script>
@@ -47,10 +50,10 @@ document.write(33); //33是计数值。
 1、需要在每个页面的尾部，显示整个网站的访问次数。
 
 ```
-<script src="http://vr.fh.gov.cn?record=true&domid=site-stats"></script>
+<script src="http://vr.fh.gov.cn?out=wholesite&domid=site-stats"></script>
 ```
 
-2、在文章页面显示访问次数，因为已经在公共尾部参与了记录，文章页的record参数不要再加上，否则会造成重复计数。
+2、在文章页面显示访问次数
 
 ```
 <script src="http://vr.fh.gov.cn?out=thispage&domid=page-stat"></script>
@@ -74,10 +77,9 @@ cb(33);
 1、需要在每个页面的尾部，显示整个网站的访问次数。
 
 ```
-<script src="http://vr.fh.gov.cn?record=true&callback=cb"></script>
+<script src="http://vr.fh.gov.cn?out=wholesite&callback=cb"></script>
 ```
-
-2、在文章页面显示访问次数，因为已经在公共尾部参与了记录，文章页的record参数不要再加上，否则会造成重复计数。
+2、在文章页面显示访问次数
 
 ```
 <script src="http://vr.fh.gov.cn?out=thispage&callback=cb"></script>
