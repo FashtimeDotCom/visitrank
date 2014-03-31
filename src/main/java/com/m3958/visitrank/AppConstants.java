@@ -6,9 +6,11 @@ public class AppConstants {
   public static String HOTEST_FIX = "~hotest";
   public static String MOD_REDIS_ADDRESS = "visit_counter.redis";
   public static String MOD_MONGO_PERSIST_ADDRESS = "visit_counter.mongodb";
-  
+
   public static String DAILY_PARTIAL_DIR = "dailycopypartial";
   
+  public static String LINE_SEP = System.getProperty("line.separator");
+
   public static int HTTP_PORT = 8333;
   public static int HTTP_INSTANCE = 1;
   public static int REDIS_PORT = 6379;
@@ -16,12 +18,15 @@ public class AppConstants {
   public static int MONGODB_PORT = 27017;
   public static int MONGODB_INSTANCE = 1;
   public static int SAVETO_MONGO_INSTANCE = 1;
-  
-  public static int DAILY_PROCESSOR_INSTANCE = 3;
-  
-  public static int LOG_PROCESSOR_INSTANCE = 5;
-  
-  
+
+  public static int DAILY_PROCESSOR_INSTANCE = 1;
+
+  public static int LOG_PROCESSOR_INSTANCE = 1;
+
+  public static String WRITE_CONCERN = "0,0,false,true,true"; // WriteConcern(int w, int wtimeout,
+                                                              // boolean fsync, boolean j, boolean
+                                                              // continueOnError)
+
 
   public static String REDIS_HOST = "localhost";
 
@@ -36,13 +41,13 @@ public class AppConstants {
   public static String COUNTER_VERTICLE_NAME = "com.m3958.visitrank.CounterVerticle";
 
   public static String LOGCHECK_VERTICLE_NAME = "com.m3958.visitrank.LogCheckVerticle";
-  
+
   public static String DEPLOIED_ID_SHARE_MAP = "deploiedidmap";
-  
+
   public static String PARTIAL_POSTFIX = ".partial";
-  
+
   public static int LOGFILE_READ_GAP = 100;
-  
+
   public static int DAILY_DB_READ_GAP = 1000;
 
   public static void initConfigConstants(JsonObject config) {
@@ -62,10 +67,15 @@ public class AppConstants {
     REDIS_HOST = config.getString("redishost", REDIS_HOST);
 
     MONGODB_HOST = config.getString("mongodbhost", MONGODB_HOST);
-    
-    DAILY_PROCESSOR_INSTANCE = config.getInteger("dailycopyinstance",DAILY_PROCESSOR_INSTANCE);
-    
-    LOG_PROCESSOR_INSTANCE = config.getInteger("logprocessorinstance",LOG_PROCESSOR_INSTANCE);
+
+    DAILY_PROCESSOR_INSTANCE = config.getInteger("dailycopyinstance", DAILY_PROCESSOR_INSTANCE);
+
+    LOG_PROCESSOR_INSTANCE = config.getInteger("logprocessorinstance", LOG_PROCESSOR_INSTANCE);
+
+    LOGFILE_READ_GAP = config.getInteger("logfilereadgap", LOGFILE_READ_GAP);
+    DAILY_DB_READ_GAP = config.getInteger("dailydbreadgap", DAILY_DB_READ_GAP);
+
+    WRITE_CONCERN = config.getString("writeconcern", WRITE_CONCERN);
 
   }
 
@@ -75,7 +85,7 @@ public class AppConstants {
     public static String HOURLY_JOB_COL_NAME = "hourlyjob";
     public static String HOURLY_JOB_NUMBER_KEY = "hournumber";
     public static String HOURLY_JOB_STATUS_KEY = "status";
-    
+
     public static String DAILY_JOB_COL_NAME = "dailyjob";
     public static String DAILY_JOB_STATUS_KEY = "status";
   }

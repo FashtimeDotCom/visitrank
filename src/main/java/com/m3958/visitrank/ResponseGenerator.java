@@ -26,29 +26,33 @@ public class ResponseGenerator {
     resp.headers().set("Content-Type", "application/javascript; charset=UTF-8");
     MultiMap mm = req.params();
 
-    String record = mm.get("record");
-    
-    if(record == null || record.isEmpty()){
-      resp.headers()
-          .set("Expires", String.valueOf(System.currentTimeMillis() + fiveMinutesInMilli));
-      resp.headers().set("Cache-Control", "max-age=" + fiveMinutesInInSeconds);
-    }else{
-      resp.headers().set("Cache-Control", "no-cache, no-store, must-revalidate"); // HTTP 1.1.
-      resp.headers().set("Pragma", "no-cache"); // HTTP 1.0.
-      resp.headers().set("Expires", "0"); // Proxies.
-    }
+    // String record = mm.get("record");
+    // if(record == null || record.isEmpty()){
+    // resp.headers()
+    // .set("Expires", String.valueOf(System.currentTimeMillis() + fiveMinutesInMilli));
+    // resp.headers().set("Cache-Control", "max-age=" + fiveMinutesInInSeconds);
+    // }else{
+    resp.headers().set("Cache-Control", "no-cache, no-store, must-revalidate"); // HTTP 1.1.
+    resp.headers().set("Pragma", "no-cache"); // HTTP 1.0.
+    resp.headers().set("Expires", "0"); // Proxies.
+    // }
 
     String tobesend = "";
     String cb = mm.get("callback");
     String domid = mm.get("domid");
-    if (!(cb == null || cb.isEmpty())) {
-      tobesend = cb + "(" + result + ");";
-    } else if(!(domid == null || domid.isEmpty())){
-      tobesend = "(function(){var domid=document.getElementById(\"" + domid +  "\").innerHTML = " + result  + ";})();";
-    }else{
-      tobesend = result;
+    String silent = mm.get("silent");
+    // default is documentwrite.
+    if (!(silent == null || silent.isEmpty())) {
+      tobesend = "";
+    } else if (!(cb == null || cb.isEmpty())) {
+      tobesend = new StringBuilder(cb).append("(").append(result).append(");").toString();
+    } else if (!(domid == null || domid.isEmpty())) {
+      tobesend =
+          new StringBuilder("(function(){var domid=document.getElementById(\"").append(domid)
+              .append("\").innerHTML = ").append(result).append(";})();").toString();
+    } else {
+      tobesend = new StringBuilder("document.write(").append(result).append(");").toString();
     }
-
     resp.end(tobesend);
   }
 

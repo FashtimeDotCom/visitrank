@@ -19,63 +19,74 @@ import org.vertx.testtools.VertxAssert;
 import com.m3958.visitrank.AppConstants;
 
 public class BrowserRequestTest extends TestVerticle {
+  
+  private String callbackPtnStr = "^abc\\(\\d+\\);$";
+  
+  private String dwPtnStr = "document.write\\(\\d+\\);$";
 
   @Test
-  public void testNoSiteid() {
-    /**
-     * tes no siteid parameter,should return 0,pagevisit should not increase.
-     */
-    AppConstants.HTTP_PORT = 8334;
-    vertx.createHttpClient().setPort(AppConstants.HTTP_PORT)
-        .getNow("/", new Handler<HttpClientResponse>() {
-          @Override
-          public void handle(HttpClientResponse resp) {
-            assertEquals(200, resp.statusCode());
-            resp.bodyHandler(new Handler<Buffer>() {
-              @Override
-              public void handle(Buffer respStr) {
-                assertEquals("0", respStr.toString());
-                VertxAssert.testComplete();
-              }
-            });
-          }
-        });
-  }
-
-  @Test
-  public void testWithSiteidNoReferer() {
-    AppConstants.HTTP_PORT = 8334;
-    vertx.createHttpClient().setPort(AppConstants.HTTP_PORT)
-        .getNow("/?siteid=" + TestConstants.DEMO_SITEID, new Handler<HttpClientResponse>() {
-          @Override
-          public void handle(HttpClientResponse resp) {
-            assertEquals(200, resp.statusCode());
-            resp.bodyHandler(new Handler<Buffer>() {
-              @Override
-              public void handle(Buffer respStr) {
-                assertEquals("0", respStr.toString());
-                VertxAssert.testComplete();
-              }
-            });
-          }
-        });
-  }
-
-  @Test
-  public void testWithSiteid() {
+  public void t() {
     AppConstants.HTTP_PORT = 8334;
     HttpClient client =
         vertx.createHttpClient().setHost("localhost").setPort(AppConstants.HTTP_PORT);
 
     HttpClientRequest request =
-        client.get("/?siteid=" + TestConstants.DEMO_SITEID + "&record=true", new Handler<HttpClientResponse>() {
+        client.get("/?record=true&silent=true", new Handler<HttpClientResponse>() {
           @Override
           public void handle(HttpClientResponse resp) {
             assertEquals(200, resp.statusCode());
             resp.bodyHandler(new Handler<Buffer>() {
               @Override
               public void handle(Buffer respStr) {
-                assertTrue(Long.valueOf(respStr.toString()) > 0);
+                assertEquals("", respStr.toString());
+                VertxAssert.testComplete();
+              }
+            });
+          }
+        });
+    request.putHeader("referer", "http://www.example.com/");
+    request.end();
+  }
+  
+  @Test
+  public void t1() {
+    AppConstants.HTTP_PORT = 8334;
+    HttpClient client =
+        vertx.createHttpClient().setHost("localhost").setPort(AppConstants.HTTP_PORT);
+
+    HttpClientRequest request =
+        client.get("/?&record=true&callback=abc", new Handler<HttpClientResponse>() {
+          @Override
+          public void handle(HttpClientResponse resp) {
+            assertEquals(200, resp.statusCode());
+            resp.bodyHandler(new Handler<Buffer>() {
+              @Override
+              public void handle(Buffer respStr) {
+                assertTrue(respStr.toString().matches(callbackPtnStr));
+                VertxAssert.testComplete();
+              }
+            });
+          }
+        });
+    request.putHeader("referer", "http://www.example.com");
+    request.end();
+  }
+  
+  @Test
+  public void t3() {
+    AppConstants.HTTP_PORT = 8334;
+    HttpClient client =
+        vertx.createHttpClient().setHost("localhost").setPort(AppConstants.HTTP_PORT);
+
+    HttpClientRequest request =
+        client.get("/?&record=true", new Handler<HttpClientResponse>() {
+          @Override
+          public void handle(HttpClientResponse resp) {
+            assertEquals(200, resp.statusCode());
+            resp.bodyHandler(new Handler<Buffer>() {
+              @Override
+              public void handle(Buffer respStr) {
+                assertTrue(respStr.toString().matches(dwPtnStr));
                 VertxAssert.testComplete();
               }
             });

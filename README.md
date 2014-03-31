@@ -2,27 +2,84 @@
 
 This app can record page visit,get visit count for page,for category and for site.
 
+## 注册问题
+
+* 你不需要注册，将代码加入你的网页即可工作。
+* 注册之后，才能管理和查看站点的统计，还可以将站点组成群，统计群内的访问排行等。
+
 ## url参数约定如下：
 
-* siteid，必须参数，如果没有这个参数，服务器不做任何动作，直接返回。必须先在 http://sites.fh.gov.cn/vrapp/index.html 注册站点，获取siteid值。
 * record=true，就会记录此次访问的referer
-* out=wholesite || thispage
+* out=wholesite || thispage (wholesite is default)
 * 如果有domid参数，就会输出一段js代码，用访问次数替换dom里面的内容。
 * 如果有callback参数，输出的代码回调用callback指定的函数，传入数值。
 * 如果domid和callback都有，callback优先。
+* 如果有silent=true，那么返回空白字符串。
 
-## 看几个常用的场景：
+## 最简单的版本，同步版本。
+
+服务器返回类型：
+```
+document.write(33); //33是计数值。
+```
 
 1、需要在每个页面的尾部，显示整个网站的访问次数。
 
 ```
-<script src="http://vr.fh.gov.cn?siteid=some-uuid&record=true&out=wholesite&domid=site-counter"></script>
+<script src="http://vr.fh.gov.cn?record=true"></script>
 ```
 
 2、在文章页面显示访问次数，因为已经在公共尾部参与了记录，文章页的record参数不要再加上，否则会造成重复计数。
 
 ```
-<script src="http://vr.fh.gov.cn?siteid=some-uuid&out=thispage&domid=page-counter"></script>
+<script src="http://vr.fh.gov.cn?out=thispage"></script>
+```
+## 异步版本
+
+服务器返回类型：
+```
+(function(){
+	var dom = document.getElementById("you-domid-parameters");
+	dom.innerHTML = "33";
+})();
 ```
 
+1、需要在每个页面的尾部，显示整个网站的访问次数。
+
+```
+<script src="http://vr.fh.gov.cn?record=true&domid=site-stats"></script>
+```
+
+2、在文章页面显示访问次数，因为已经在公共尾部参与了记录，文章页的record参数不要再加上，否则会造成重复计数。
+
+```
+<script src="http://vr.fh.gov.cn?out=thispage&domid=page-stat"></script>
+```
+
+## 异步的callback版本，随心所有的控制。
+
+你需要在页面上先定义回调函数，让后将函数名作为callback参数。
+
+```
+function cb(num){
+	//split number,and use gif or other technology to display what ever you like.
+};
+```
+
+服务器返回类型：
+```
+cb(33);
+```
+
+1、需要在每个页面的尾部，显示整个网站的访问次数。
+
+```
+<script src="http://vr.fh.gov.cn?record=true&callback=cb"></script>
+```
+
+2、在文章页面显示访问次数，因为已经在公共尾部参与了记录，文章页的record参数不要再加上，否则会造成重复计数。
+
+```
+<script src="http://vr.fh.gov.cn?out=thispage&callback=cb"></script>
+```
 用来统计站点的文章访问数，同时记录详细的客户端信息，包括ip，ua。引入的数据可以在后台通过mongodb的MapReduce或者hadoop分析处理。

@@ -20,15 +20,17 @@ import org.bson.types.ObjectId;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonObject;
+import org.vertx.java.core.logging.Logger;
 import org.vertx.java.platform.Verticle;
 
+import com.m3958.visitrank.LogCheckVerticle.WriteConcernParser;
 import com.m3958.visitrank.logger.AppLogger;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
-import com.mongodb.WriteResult;
+import com.mongodb.WriteConcern;
 import com.mongodb.util.JSON;
 
 /**
@@ -43,7 +45,7 @@ public class LogProcessorWorkVerticle extends Verticle {
 
   public static String VERTICLE_ADDRESS = "logprocessor";
   public static String VERTICLE_NAME = "com.m3958.visitrank.LogProcessorWorkVerticle";
-
+  
   public static class LogProcessorWorkMsgKey {
     public static String FILE_NAME = "filename";
     public static String LOG_DIR = "logDir";
@@ -53,16 +55,16 @@ public class LogProcessorWorkVerticle extends Verticle {
 
   @Override
   public void start() {
+    final Logger log = container.logger();
     vertx.eventBus().registerHandler(VERTICLE_ADDRESS, new Handler<Message<JsonObject>>() {
       @Override
       public void handle(Message<JsonObject> message) {
         final JsonObject body = message.body();
-
+        log.info("logfilereadgap in LogProcessorWorkVerticle: " + body.getNumber("logfilereadgap"));
         final String filename = body.getString(LogProcessorWorkMsgKey.FILE_NAME);
         final String logDir = body.getString(LogProcessorWorkMsgKey.LOG_DIR, "logs");
         final String archiveDir = body.getString(LogProcessorWorkMsgKey.ARCHIVE_DIR, "archives");
-
-        new LogProcessor(logDir, archiveDir, filename).process();
+        new LogProcessor(logDir, archiveDir, filename, body).process();
         message.reply("done");
       }
     });
@@ -73,14 +75,21 @@ public class LogProcessorWorkVerticle extends Verticle {
     private String logDir;
     private String archiveDir;
 
-    public LogProcessor(String logDir, String archiveDir, String filename) {
+    private long gap;
+
+    private JsonObject writeConcern;
+
+    public LogProcessor(String logDir, String archiveDir, String filename, JsonObject cfg) {
       this.logDir = logDir;
       this.archiveDir = archiveDir;
       this.filename = filename;
+      this.gap = cfg.getLong("logfilereadgap", 1000);
+      this.writeConcern = cfg.getObject("writeConcern");
     }
 
     public void process() {
       try {
+        WriteConcern wc = WriteConcernParser.getWriteConcern(writeConcern);
         Path logfilePath = Paths.get(logDir, filename);
         Path partialLogPath = Paths.get(logDir, filename + AppConstants.PARTIAL_POSTFIX);
 
@@ -96,13 +105,13 @@ public class LogProcessorWorkVerticle extends Verticle {
         long partialStart = 0;
         if (Files.exists(partialLogPath)) {
           partialStart = AppUtils.getLastPartialPosition(partialLogPath);
-          AppLogger.processLogger.info("process " + filename
-            + " continueing.");
+          AppLogger.processLogger.info("process " + filename + " " + partialStart + " continueing.");
         }
 
         OutputStreamWriter partialWriter =
             new OutputStreamWriter(new FileOutputStream(partialLogPath.toFile()), "UTF-8");
-        partialWriter.write(partialStart + "," + partialStart + "\n");
+        partialWriter.write(partialStart + "," + partialStart + AppConstants.LINE_SEP);
+        
 
         List<DBObject> dbos = new ArrayList<>();
         String line;
@@ -118,11 +127,16 @@ public class LogProcessorWorkVerticle extends Verticle {
             AppLogger.error.error("parse exception:" + line);
           }
           counter++;
-          if (counter % AppConstants.LOGFILE_READ_GAP == 0) {
+          if (counter % gap == 0) {
             partialWriter.write(counter + ",");
             partialWriter.flush();
-            WriteResult wr = coll.insert(dbos);
-            partialWriter.write(counter + "\n");
+            if(wc == null){
+              coll.insert(dbos);
+            }else{
+              coll.insert(dbos,wc);
+            }
+            
+            partialWriter.write(counter + AppConstants.LINE_SEP);
             partialWriter.flush();
             dbos = new ArrayList<>();
           }
@@ -130,8 +144,13 @@ public class LogProcessorWorkVerticle extends Verticle {
         if (dbos.size() > 0) {
           partialWriter.write(counter + ",");
           partialWriter.flush();
-          coll.insert(dbos);
-          partialWriter.write(counter + "\n");
+          
+          if(wc == null){
+            coll.insert(dbos);
+          }else{
+            coll.insert(dbos,wc);
+          }
+          partialWriter.write(counter + AppConstants.LINE_SEP);
           partialWriter.flush();
         }
         reader.close();

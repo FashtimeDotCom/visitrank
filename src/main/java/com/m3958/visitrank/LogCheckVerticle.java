@@ -20,6 +20,7 @@ import com.m3958.visitrank.Utils.Locker;
 import com.m3958.visitrank.Utils.RemainsCounter;
 import com.m3958.visitrank.logger.AppLogger;
 import com.mongodb.MongoClient;
+import com.mongodb.WriteConcern;
 
 /**
  * We run one instance of this verticle,so don't worry about concurrency problem.
@@ -37,11 +38,22 @@ public class LogCheckVerticle extends Verticle {
     JsonObject jo = container.config();
     final String logDir = jo.getString(LogProcessorWorkMsgKey.LOG_DIR, "logs");
     final String archiveDir = jo.getString(LogProcessorWorkMsgKey.ARCHIVE_DIR, "archives");
-    
+
+    final Long logfilereadgap = jo.getLong("logfilereadgap");
+    final Long dailydbreadgap = jo.getLong("dailydbreadgap");
+
     int logProcessorInstance = jo.getInteger("logProcessorInstance", 5);
-    int dailyProcessorInstance = jo.getInteger("dailyProcessorInstance",3);
+    int dailyProcessorInstance = jo.getInteger("dailyProcessorInstance", 3);
+    
     log.info("logProcessorInstance: " + logProcessorInstance);
     log.info("dailyProcessorInstance: " + dailyProcessorInstance);
+    
+    log.info("logfilereadgap: " + logfilereadgap);
+    log.info("dailydbreadgap: " + dailydbreadgap);
+    
+    final JsonObject writeConcern = new WriteConcernParser(jo.getString("writeconcern","")).parse();
+    log.info(writeConcern);
+
     final RemainsCounter dailyProcessorCounter = new RemainsCounter(dailyProcessorInstance);
     vertx.setPeriodic(451111, new Handler<Long>() {
       public void handle(Long timerID) {
@@ -50,7 +62,9 @@ public class LogCheckVerticle extends Verticle {
         final String dbname = new RemainDailyDbFinder(locker).findOne("^\\d{4}-\\d{2}-\\d{2}$");
         if (dbname != null) {
           if (dailyProcessorCounter.remainsGetSet(0) > 0) {
-            JsonObject body = new JsonObject().putString(DailyProcessorWorkMsgKey.DBNAME, dbname);
+            JsonObject body =
+                new JsonObject().putString(DailyProcessorWorkMsgKey.DBNAME, dbname).putNumber(
+                    "dailydbreadgap", dailydbreadgap).putObject("writeConcern", writeConcern);
 
             dailyProcessorCounter.remainsGetSet(1);
             vertx.eventBus().send(DailyCopyWorkVerticle.VERTICLE_ADDRESS, body,
@@ -76,10 +90,12 @@ public class LogCheckVerticle extends Verticle {
             JsonObject body =
                 new JsonObject().putString(LogProcessorWorkMsgKey.LOG_DIR, logDir)
                     .putString(LogProcessorWorkMsgKey.FILE_NAME, logfilename)
-                    .putString(LogProcessorWorkMsgKey.ARCHIVE_DIR, archiveDir);
+                    .putString(LogProcessorWorkMsgKey.ARCHIVE_DIR, archiveDir)
+                    .putNumber("logfilereadgap", logfilereadgap)
+                    .putObject("writeConcern", writeConcern);
             logProcessorCounter.remainsGetSet(1);
             AppLogger.processLogger.info("process " + logfilename
-              + " starting. remain LogProcessorInstancs: " + logProcessorCounter.remainsGetSet(0));
+                + " starting. remain LogProcessorInstancs: " + logProcessorCounter.remainsGetSet(0));
             vertx.eventBus().send(LogProcessorWorkVerticle.VERTICLE_ADDRESS, body,
                 new Handler<Message<String>>() {
                   @Override
@@ -87,7 +103,8 @@ public class LogCheckVerticle extends Verticle {
                     logProcessorCounter.remainsGetSet(-1);
                     locker.releaseLock(logfilename);
                     AppLogger.processLogger.info("process " + logfilename
-                      + " end. remain LogProcessorInstancs: " + logProcessorCounter.remainsGetSet(0));
+                        + " end. remain LogProcessorInstancs: "
+                        + logProcessorCounter.remainsGetSet(0));
                   }
                 });
           }
@@ -117,15 +134,13 @@ public class LogCheckVerticle extends Verticle {
         if (f.endsWith("log") && m.matches()) { // find log file.
           if (locker.canLockLog(f)) {
             return f;
-          } else {
-            return null;
           }
         }
       }
       return null;
     }
   }
-  
+
   public static class RemainDailyDbFinder {
     private Locker locker;
 
@@ -139,8 +154,8 @@ public class LogCheckVerticle extends Verticle {
       MongoClient mongoClient;
       try {
         mongoClient = new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
-        
-        List<String> alldbnames = mongoClient.getDatabaseNames(); 
+
+        List<String> alldbnames = mongoClient.getDatabaseNames();
         List<String> dbnames = new ArrayList<>();
 
         for (String dbname : alldbnames) {
@@ -148,10 +163,10 @@ public class LogCheckVerticle extends Verticle {
             dbnames.add(dbname);
           }
         }
-        
+
         Collections.sort(dbnames);
         Iterator<String> it = dbnames.iterator();
-        while(it.hasNext()){
+        while (it.hasNext()) {
           String dbname = it.next();
           if (locker.canLockLog(dbname) && it.hasNext()) {
             foundDbName = dbname;
@@ -162,6 +177,40 @@ public class LogCheckVerticle extends Verticle {
         return foundDbName;
       } catch (Exception e) {
         AppLogger.error.error(e.getMessage());
+        return null;
+      }
+    }
+  }
+
+  public static class WriteConcernParser {
+    private String raw;
+
+    public WriteConcernParser(String raw) {
+      this.raw = raw;
+    }
+
+    public JsonObject parse() {
+      if (raw.isEmpty()) {
+        return null;
+      }
+      // WriteConcern(int w, int wtimeout, boolean fsync, boolean j, boolean continueOnInsertError)
+      String[] ss = raw.split(",");
+      JsonObject jo = new JsonObject();
+      jo.putNumber("w", Integer.parseInt(ss[0], 10));
+      jo.putNumber("wtimeout", Long.parseLong(ss[1], 10));
+      jo.putBoolean("fsync", "true".equals(ss[2]) ? true : false);
+      jo.putBoolean("j", "true".equals(ss[3]) ? true : false);
+      jo.putBoolean("continueOnInsertError", "true".equals(ss[4]) ? true : false);
+      return jo;
+    }
+
+    public static WriteConcern getWriteConcern(JsonObject jo){
+      if (jo != null) {
+        return
+            new WriteConcern(jo.getInteger("w"), jo.getInteger("wtimeout"),
+                jo.getBoolean("fsync"), jo.getBoolean("j"),
+                jo.getBoolean("continueOnInsertError"));
+      }else{
         return null;
       }
     }

@@ -67,9 +67,12 @@ public class MainVerticle extends Verticle {
 
     JsonObject logCheckCfg =
         new JsonObject().putNumber("dailyCopyInstance", AppConstants.DAILY_PROCESSOR_INSTANCE)
-            .putNumber("logProcessorInstance", AppConstants.LOG_PROCESSOR_INSTANCE);
+            .putNumber("logProcessorInstance", AppConstants.LOG_PROCESSOR_INSTANCE)
+            .putNumber("dailydbreadgap", AppConstants.DAILY_DB_READ_GAP)
+            .putNumber("logfilereadgap", AppConstants.LOGFILE_READ_GAP)
+            .putString("writeconcern", AppConstants.WRITE_CONCERN);
 
-    container.deployVerticle(AppConstants.LOGCHECK_VERTICLE_NAME,logCheckCfg, 1);
+    container.deployVerticle(AppConstants.LOGCHECK_VERTICLE_NAME, logCheckCfg, 1);
 
     container.deployWorkerVerticle(DailyCopyWorkVerticle.VERTICLE_NAME, new JsonObject(),
         AppConstants.DAILY_PROCESSOR_INSTANCE, false);

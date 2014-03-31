@@ -9,6 +9,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.vertx.java.core.json.JsonObject;
 
 import com.m3958.visitrank.AppConstants;
 import com.m3958.visitrank.DailyCopyWorkVerticle;
@@ -70,7 +71,7 @@ public class DailyProcessorPartialTest {
       hourlyCol.insert(dbo);
     }
     new DailyCopyWorkVerticle.DailyCopyProcessor(mongoClient, dailyDbName, repositoryDbName,
-        dailyPartialDir).process();
+        dailyPartialDir,new JsonObject().putNumber("dailydbreadgap", 1000)).process();
     mongoClient = new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
     DB db = mongoClient.getDB(repositoryDbName);
     DBCollection col = db.getCollection(AppConstants.MongoNames.PAGE_VISIT_COL_NAME);

@@ -10,6 +10,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.vertx.java.core.json.JsonObject;
 
 import com.m3958.visitrank.AppConstants;
 import com.m3958.visitrank.LogProcessorWorkVerticle;
@@ -48,7 +49,8 @@ public class PartialLogTest {
 
   @Test
   public void t() throws UnknownHostException {
-    new LogProcessorWorkVerticle.LogProcessor(logDir, archiveDir, testlogname).process();
+    new LogProcessorWorkVerticle.LogProcessor(logDir, archiveDir, testlogname,
+        new JsonObject().putNumber("logfilereadgap", 10)).process();
     Assert.assertTrue(Files.exists(Paths.get(archiveDir), LinkOption.NOFOLLOW_LINKS));
     Assert.assertTrue(Files.exists(Paths.get(archiveDir, testlogname), LinkOption.NOFOLLOW_LINKS));
     TestUtils.assertDbItemEqual(testlogname);

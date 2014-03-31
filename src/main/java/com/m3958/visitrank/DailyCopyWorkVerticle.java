@@ -14,14 +14,17 @@ import java.util.List;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonObject;
+import org.vertx.java.core.logging.Logger;
 import org.vertx.java.platform.Verticle;
 
+import com.m3958.visitrank.LogCheckVerticle.WriteConcernParser;
 import com.m3958.visitrank.logger.AppLogger;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
+import com.mongodb.WriteConcern;
 
 /**
  * it's a sync worker verticle. unlike LogProcessorWorkVerticle, We don't consider task overlap. So
@@ -46,10 +49,12 @@ public class DailyCopyWorkVerticle extends Verticle {
 
   @Override
   public void start() {
+    final Logger log = container.logger();
     vertx.eventBus().registerHandler(VERTICLE_ADDRESS, new Handler<Message<JsonObject>>() {
       @Override
       public void handle(Message<JsonObject> message) {
         JsonObject body = message.body();
+        log.info("dailydbreadgap in DailyCopyWorkVerticle: " + body.getNumber("dailydbreadgap"));
         String dbname = body.getString(DailyProcessorWorkMsgKey.DBNAME);
         Calendar rightNow = Calendar.getInstance();
         int hour = rightNow.get(Calendar.HOUR_OF_DAY);
@@ -57,7 +62,8 @@ public class DailyCopyWorkVerticle extends Verticle {
           MongoClient mongoClient;
           try {
             mongoClient = new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
-            new DailyCopyProcessor(mongoClient, dbname).process();
+
+            new DailyCopyProcessor(mongoClient, dbname, body).process();
           } catch (UnknownHostException e) {}
           message.reply("yes");
         } else {
@@ -77,21 +83,27 @@ public class DailyCopyWorkVerticle extends Verticle {
 
     private String dailyPartialDir;
 
+    private long gap;
 
-    public DailyCopyProcessor(MongoClient mongoClient, String dailyDbname) {
+    private JsonObject writeConcern;
+
+    public DailyCopyProcessor(MongoClient mongoClient, String dailyDbname, JsonObject cfg) {
       this.mongoClient = mongoClient;
       this.dailyDbname = dailyDbname;
       this.repositoryDbName = AppConstants.MongoNames.REPOSITORY_DB_NAME;
       this.dailyPartialDir = AppConstants.DAILY_PARTIAL_DIR;
-
+      this.gap = cfg.getLong("dailydbreadgap", 1000);
+      this.writeConcern = cfg.getObject("writeConcern");
     }
 
     public DailyCopyProcessor(MongoClient mongoClient, String dailyDbname, String repositoryDbName,
-        String dailyPartialDir) {
+        String dailyPartialDir, JsonObject cfg) {
       this.repositoryDbName = repositoryDbName;
       this.mongoClient = mongoClient;
       this.dailyDbname = dailyDbname;
       this.dailyPartialDir = dailyPartialDir;
+      this.gap = cfg.getLong("dailydbreadgap", 1000);
+      this.writeConcern = cfg.getObject("writeConcern");
     }
 
     /**
@@ -126,8 +138,7 @@ public class DailyCopyWorkVerticle extends Verticle {
 
 
     public void process() {
-      AppLogger.processLogger.info("process daily copy " + dailyDbname
-          + " starting.");
+      AppLogger.processLogger.info("process daily copy " + dailyDbname + " starting.");
       if (isDailyDbComplete()) {
         try {
           copyDailyDb();
@@ -139,6 +150,9 @@ public class DailyCopyWorkVerticle extends Verticle {
     }
 
     public void copyDailyDb() throws IOException {
+
+      WriteConcern wc = WriteConcernParser.getWriteConcern(writeConcern);
+
       DB dailyDb = mongoClient.getDB(dailyDbname);
       DBCollection dailyColl = dailyDb.getCollection(AppConstants.MongoNames.PAGE_VISIT_COL_NAME);
 
@@ -158,7 +172,7 @@ public class DailyCopyWorkVerticle extends Verticle {
 
       OutputStreamWriter partialWriter =
           new OutputStreamWriter(new FileOutputStream(partialLogPath.toFile()), "UTF-8");
-      partialWriter.write(partialStart + "," + partialStart + "\n");
+      partialWriter.write(partialStart + "," + partialStart + AppConstants.LINE_SEP);
 
       DBCursor cursor = dailyColl.find();
       int counter = 0;
@@ -173,11 +187,15 @@ public class DailyCopyWorkVerticle extends Verticle {
         DBObject item = cursor.next();
         counter++;
         obs.add(item);
-        if (counter % AppConstants.DAILY_DB_READ_GAP == 0) {
+        if (counter % gap == 0) {
           partialWriter.write(counter + ",");
           partialWriter.flush();
-          repositoryCol.insert(obs);
-          partialWriter.write(counter + "\n");
+          if (wc == null) {
+            repositoryCol.insert(obs);
+          } else {
+            repositoryCol.insert(obs, wc);
+          }
+          partialWriter.write(counter + AppConstants.LINE_SEP);
           partialWriter.flush();
           obs.clear();
         }
@@ -186,8 +204,12 @@ public class DailyCopyWorkVerticle extends Verticle {
       if (obs.size() > 0) {
         partialWriter.write(counter + ",");
         partialWriter.flush();
-        repositoryCol.insert(obs);
-        partialWriter.write(counter + "\n");
+        if (wc == null) {
+          repositoryCol.insert(obs);
+        } else {
+          repositoryCol.insert(obs, wc);
+        }
+        partialWriter.write(counter + AppConstants.LINE_SEP);
         partialWriter.flush();
       }
       obs.clear();

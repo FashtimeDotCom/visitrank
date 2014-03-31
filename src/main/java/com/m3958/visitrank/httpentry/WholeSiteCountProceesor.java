@@ -22,10 +22,11 @@ public class WholeSiteCountProceesor {
   private EventBus eb;
 
   private boolean record;
-  
+
   private String referer;
 
-  public WholeSiteCountProceesor(EventBus eb, HttpServerRequest req, Logger log, boolean record,String referer) {
+  public WholeSiteCountProceesor(EventBus eb, HttpServerRequest req, Logger log, boolean record,
+      String referer) {
     this.eb = eb;
     this.req = req;
     this.log = log;
