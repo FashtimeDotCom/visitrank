@@ -36,7 +36,7 @@ public class DailyProcessorPartialTest {
   public void setup() throws IOException {
     if (!Files.exists(Paths.get(dailyPartialDir, dailyDbName))) {
       TestUtils.deleteDirs(dailyPartialDir);
-      TestUtils.dropTestRepositoryDb(repositoryDbName);
+      TestUtils.dropDb(repositoryDbName);
       TestUtils.createSampleDailyDb(dailyDbName, 10005);
     }
   }
@@ -45,8 +45,8 @@ public class DailyProcessorPartialTest {
   public void cleanup() throws IOException {
     if (!Files.exists(Paths.get(dailyPartialDir, dailyDbName))) {
       TestUtils.deleteDirs(dailyPartialDir);
-      TestUtils.dropTestRepositoryDb(repositoryDbName);
-      TestUtils.dropSampleDailyDb(dailyDbName);
+      TestUtils.dropDb(repositoryDbName);
+      TestUtils.dropDb(dailyDbName);
     }
   }
 

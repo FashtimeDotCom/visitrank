@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -19,6 +20,7 @@ import com.m3958.visitrank.LogProcessorWorkVerticle.LogProcessorWorkMsgKey;
 import com.m3958.visitrank.Utils.Locker;
 import com.m3958.visitrank.Utils.RemainsCounter;
 import com.m3958.visitrank.logger.AppLogger;
+import com.mongodb.DB;
 import com.mongodb.MongoClient;
 import com.mongodb.WriteConcern;
 
@@ -91,7 +93,7 @@ public class LogCheckVerticle extends Verticle {
                     .putString(LogProcessorWorkMsgKey.FILE_NAME, logfilename)
                     .putString(LogProcessorWorkMsgKey.ARCHIVE_DIR, archiveDir)
                     .putNumber("logfilereadgap", logfilereadgap)
-                    .putObject("writeConcern", writeConcern);
+                    .putObject("writeconcern", writeConcern);
             logProcessorCounter.remainsGetSet(1);
             AppLogger.processLogger.info("process " + logfilename
                 + " starting. remain LogProcessorInstancs: " + logProcessorCounter.remainsGetSet(0));
@@ -167,7 +169,9 @@ public class LogCheckVerticle extends Verticle {
         Iterator<String> it = dbnames.iterator();
         while (it.hasNext()) {
           String dbname = it.next();
-          if (locker.canLockLog(dbname) && it.hasNext()) {
+          DB db = mongoClient.getDB(dbname);
+          Set<String> cols = db.getCollectionNames();
+          if (cols.size() > 0 && locker.canLockLog(dbname) && it.hasNext()) {
             foundDbName = dbname;
             break;
           }

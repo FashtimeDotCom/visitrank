@@ -52,12 +52,12 @@ public class DailyCopyWorkVerticle extends Verticle {
       public void handle(Message<JsonObject> message) {
         JsonObject body = message.body();
         String dbname = body.getString(DailyProcessorWorkMsgKey.DBNAME);
-          MongoClient mongoClient;
-          try {
-            mongoClient = new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
-            new DailyCopyProcessor(mongoClient, dbname, body).process();
-          } catch (UnknownHostException e) {}
-          message.reply("done");
+        MongoClient mongoClient;
+        try {
+          mongoClient = new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
+          new DailyCopyProcessor(mongoClient, dbname, body).process();
+        } catch (UnknownHostException e) {}
+        message.reply("done");
       }
     });
   }
@@ -134,9 +134,6 @@ public class DailyCopyWorkVerticle extends Verticle {
           AppLogger.processLogger.info("process daily copy " + dailyDbname + " end.");
         } catch (IOException e) {}
       }
-//      else {
-//        AppLogger.processLogger.info("process daily copy " + dailyDbname + " in progess.");
-//      }
     }
 
     public void copyDailyDb() throws IOException {

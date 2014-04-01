@@ -24,15 +24,15 @@ public class CheckRemainDbTest {
   public void setup() throws IOException {
     locker = new Locker();
     TestUtils.createSampleDailyDb(dailydbname, 10);
-    TestUtils.dropSampleDailyDb(newerdbname);
+    TestUtils.dropDb(newerdbname);
   }
 
   @After
   public void cleanup() throws IOException {
     locker.releaseLock(dailydbname);
     locker = null;
-    TestUtils.dropSampleDailyDb(dailydbname);
-    TestUtils.dropSampleDailyDb(newerdbname);
+    TestUtils.dropDb(dailydbname);
+    TestUtils.dropDb(newerdbname);
   }
 
 
@@ -47,7 +47,7 @@ public class CheckRemainDbTest {
     fn = new LogCheckVerticle.RemainDailyDbFinder(locker).findOne("t-\\d{4}-\\d{2}-\\d{2}");
     Assert.assertEquals(dailydbname, fn);
     locker.releaseLock(dailydbname);
-    TestUtils.dropSampleDailyDb(newerdbname);
+    TestUtils.dropDb(newerdbname);
     fn = new LogCheckVerticle.RemainDailyDbFinder(locker).findOne("t-\\d{4}-\\d{2}-\\d{2}");
     Assert.assertNull(fn);
   }

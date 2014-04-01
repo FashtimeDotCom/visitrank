@@ -26,7 +26,7 @@ public class LogProcessorTest {
     TestUtils.deleteDirs(logDir, archiveDir);
     TestUtils.dropDailyDb(testlogname);
     TestUtils.createDirs(logDir, archiveDir);
-    TestUtils.createSampleLogs(logDir, testlogname);
+    TestUtils.createSampleLogs(logDir, testlogname, 1000);
   }
 
   @After
@@ -41,6 +41,6 @@ public class LogProcessorTest {
         new JsonObject().putNumber("logfilereadgap", 1000)).process();
     Assert.assertTrue(Files.exists(Paths.get(archiveDir), LinkOption.NOFOLLOW_LINKS));
     Assert.assertTrue(Files.exists(Paths.get(archiveDir, testlogname), LinkOption.NOFOLLOW_LINKS));
-    TestUtils.assertDbItemEqual(testlogname);
+    TestUtils.assertDailyDbItemEqual(testlogname);
   }
 }

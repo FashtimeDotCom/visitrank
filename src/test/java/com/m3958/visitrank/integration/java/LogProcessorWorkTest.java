@@ -51,13 +51,13 @@ public class LogProcessorWorkTest extends TestVerticle {
 
   @Test
   public void t() throws IOException {
-    TestUtils.assertDbItemEqual(testlogname);
+    TestUtils.assertDailyDbItemEqual(testlogname);
 
     TestUtils.deleteDirs(logDir, archiveDir);
     TestUtils.dropDailyDb(testlogname);
     VertxAssert.testComplete();
   }
-  
+
   @Override
   public void start() {
     initialize();
@@ -65,7 +65,7 @@ public class LogProcessorWorkTest extends TestVerticle {
       TestUtils.deleteDirs(logDir, archiveDir);
       TestUtils.dropDailyDb(testlogname);
       TestUtils.createDirs(logDir, archiveDir);
-      TestUtils.createSampleLogs(logDir, testlogname);
+      TestUtils.createSampleLogs(logDir, testlogname, 1000);
     } catch (IOException e) {
       e.printStackTrace();
     }
@@ -75,7 +75,7 @@ public class LogProcessorWorkTest extends TestVerticle {
             .putString(LogProcessorWorkMsgKey.LOG_DIR, logDir)
             .putString(LogProcessorWorkMsgKey.ARCHIVE_DIR, archiveDir)
             .putBoolean(LogProcessorWorkMsgKey.REPLY, true);
-    
+
     container.deployWorkerVerticle(LogProcessorWorkVerticle.VERTICLE_NAME, new JsonObject(), 1,
         false, new AsyncResultHandler<String>() {
           @Override

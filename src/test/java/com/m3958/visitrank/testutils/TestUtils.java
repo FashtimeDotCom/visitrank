@@ -24,51 +24,52 @@ import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
+import com.mongodb.WriteConcern;
 import com.mongodb.util.JSON;
 
 public class TestUtils {
 
   public static void dropDailyDb(String testlogname) throws UnknownHostException {
-    MongoClient mongoClient;
-    mongoClient = new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
-    mongoClient.dropDatabase(AppUtils.getDailyDbName(testlogname));
-    mongoClient.close();
+    dropDb(AppUtils.getDailyDbName(testlogname));
   }
-  
-  
-  public static void createSampleDailyDb(String dbname,int number) throws UnknownHostException {
-    MongoClient mongoClient;
-    mongoClient = new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
-    DB db = mongoClient.getDB(dbname);
-    DBCollection col = db.getCollection(AppConstants.MongoNames.PAGE_VISIT_COL_NAME);
-    
-    String sampleItemPre = "{\"url\":\"http://sb.m3958.com";
-    String sampleItemFix =
-        "\",\"siteid\":\"fa5f2e1d-092a-4c8c-9518-f5b7600f8f80\",\"record\":\"true\",\"ts\":1395291463536,\"headers\":{\"Connection\":\"keep-alive\",\"\":\"\",\"Host\":\"localhost:8333\",\"User-Agent\":\"Apache-HttpClient/4.2.6 (java 1.5)\",\"ip\":\"127.0.0.1\"}}";
 
-    for (int i = 0; i < number; i++) {
-      DBObject dbo = (DBObject) JSON.parse(sampleItemPre + "?article=" + i + sampleItemFix);
-      col.insert(dbo);
-    }
-    mongoClient.close();
-  }
-  
-  public static void dropSampleDailyDb(String dbname) throws UnknownHostException {
+  public static void dropDb(String dbname) throws UnknownHostException {
     MongoClient mongoClient;
     mongoClient = new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
     mongoClient.dropDatabase(dbname);
     mongoClient.close();
   }
 
-  public static void dropTestRepositoryDb(String repositoryDbName) throws UnknownHostException {
+  public static void createSampleDailyDb(String dbname, int number) throws UnknownHostException {
     MongoClient mongoClient;
     mongoClient = new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
-    mongoClient.dropDatabase(repositoryDbName);
+    DB db = mongoClient.getDB(dbname);
+    DBCollection col = db.getCollection(AppConstants.MongoNames.PAGE_VISIT_COL_NAME);
+
+    String sampleItemPre = "{\"url\":\"http://sb.m3958.com";
+    String sampleItemFix =
+        "\",\"ts\":1395291463536,\"headers\":{\"Connection\":\"keep-alive\",\"\":\"\",\"Host\":\"localhost:8333\",\"User-Agent\":\"Apache-HttpClient/4.2.6 (java 1.5)\",\"ip\":\"127.0.0.1\"}}";
+
+    List<DBObject> obs = new ArrayList<>();
+    for (int i = 0; i < number; i++) {
+      DBObject dbo = (DBObject) JSON.parse(sampleItemPre + "?article=" + i + sampleItemFix);
+      obs.add(dbo);
+      if (i> 0 && i % 5000 == 0) {
+        col.insert(obs, new WriteConcern(0, 0, false, true, true));
+        obs.clear();
+      }
+    }
+
+    if (obs.size() > 0) {
+      col.insert(obs, new WriteConcern(0, 0, false, true, true));
+    }
     mongoClient.close();
   }
 
-  public static void deleteDirs(String...dirs) throws IOException {
-    for(String dir: dirs){
+
+
+  public static void deleteDirs(String... dirs) throws IOException {
+    for (String dir : dirs) {
       if (Files.exists(Paths.get(dir))) {
         File[] files = new File(dir).listFiles();
         for (File f : files) {
@@ -79,25 +80,25 @@ public class TestUtils {
     }
   }
 
-  public static void createDirs(String...dirs) throws IOException {
-    for(String dir: dirs){
+  public static void createDirs(String... dirs) throws IOException {
+    for (String dir : dirs) {
       if (!Files.exists(Paths.get(dir))) {
         Files.createDirectory(Paths.get(dir));
       }
     }
   }
 
-  public static void createSampleLogs(String logDir, String testlogname)
+  public static void createSampleLogs(String logDir, String testlogname, long number)
       throws UnsupportedEncodingException, FileNotFoundException {
     String sampleItemPre = "{\"url\":\"http://sb.m3958.com";
     String sampleItemFix =
-        "\",\"siteid\":\"fa5f2e1d-092a-4c8c-9518-f5b7600f8f80\",\"record\":\"true\",\"ts\":1395291463536,\"headers\":{\"Connection\":\"keep-alive\",\"\":\"\",\"Host\":\"localhost:8333\",\"User-Agent\":\"Apache-HttpClient/4.2.6 (java 1.5)\",\"ip\":\"127.0.0.1\"}}";
+        "\",\"ts\":1396173397887,\"headers\":{\"Connection\":\"keep-alive\",\"\":\"\",\"Host\":\"localhost:8333\",\"User-Agent\":\"Apache-HttpClient/4.2.6 (java 1.5)\",\"ip\":\"127.0.0.1\"}}";
 
     PrintWriter out =
         new PrintWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(new File(
             logDir, testlogname)), "UTF-8")));
 
-    for (int i = 0; i < 1000; i++) {
+    for (int i = 0; i < number; i++) {
       out.println(sampleItemPre + "?article=" + i + sampleItemFix);
     }
     out.close();
@@ -114,12 +115,17 @@ public class TestUtils {
         Charset.forName("UTF-8"), StandardOpenOption.CREATE_NEW);
   }
 
-  public static void assertDbItemEqual(String testlogname) throws UnknownHostException {
-    MongoClient mongoClient = new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
-    DB db = mongoClient.getDB(AppUtils.getDailyDbName(testlogname));
-    DBCollection coll = db.getCollection(AppConstants.MongoNames.PAGE_VISIT_COL_NAME);
-    Assert.assertEquals(1000, coll.getCount());
-    mongoClient.close();
-
+  public static void assertDailyDbItemEqual(String testlogname) throws UnknownHostException {
+    assertDbItemEqual(AppUtils.getDailyDbName(testlogname), 1000l);
   }
+
+  public static void assertDbItemEqual(String dbname, long itemnumber) throws UnknownHostException {
+    MongoClient mongoClient = new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
+    DB db = mongoClient.getDB(dbname);
+    DBCollection coll = db.getCollection(AppConstants.MongoNames.PAGE_VISIT_COL_NAME);
+    Assert.assertEquals(itemnumber, coll.getCount());
+    mongoClient.close();
+  }
+
+
 }

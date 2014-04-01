@@ -16,7 +16,7 @@ public class CheckRemainLogFileTest {
   private String testlogname = "t-2014-03-02-01.log";
   private String logDir = "testlogs";
   private String archiveDir = "tarchives";
-  
+
   private Locker locker;
 
   @Before
@@ -24,7 +24,7 @@ public class CheckRemainLogFileTest {
     locker = new Locker();
     TestUtils.deleteDirs(logDir, archiveDir);
     TestUtils.createDirs(logDir, archiveDir);
-    TestUtils.createSampleLogs(logDir, testlogname);
+    TestUtils.createSampleLogs(logDir, testlogname, 1000);
   }
 
   @After
@@ -37,10 +37,10 @@ public class CheckRemainLogFileTest {
 
   @Test
   public void t() {
-    String fn = new LogCheckVerticle.RemainLogFileFinder(logDir,locker).findOne();
+    String fn = new LogCheckVerticle.RemainLogFileFinder(logDir, locker).findOne();
     Assert.assertEquals("t-2014-03-02-01.log", fn);
 
-    fn = new LogCheckVerticle.RemainLogFileFinder(logDir,locker).findOne();
+    fn = new LogCheckVerticle.RemainLogFileFinder(logDir, locker).findOne();
     Assert.assertNull(fn);
   }
 

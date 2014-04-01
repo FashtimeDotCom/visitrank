@@ -33,7 +33,7 @@ public class PartialLogTest {
     if (!Files.exists(Paths.get(logDir, testlogname + AppConstants.PARTIAL_POSTFIX))) {
       TestUtils.deleteDirs(logDir, archiveDir);
       TestUtils.createDirs(logDir, archiveDir);
-      TestUtils.createSampleLogs(logDir, testlogname);
+      TestUtils.createSampleLogs(logDir, testlogname, 1000);
       TestUtils.dropDailyDb(testlogname);
     }
 
@@ -53,7 +53,7 @@ public class PartialLogTest {
         new JsonObject().putNumber("logfilereadgap", 10)).process();
     Assert.assertTrue(Files.exists(Paths.get(archiveDir), LinkOption.NOFOLLOW_LINKS));
     Assert.assertTrue(Files.exists(Paths.get(archiveDir, testlogname), LinkOption.NOFOLLOW_LINKS));
-    TestUtils.assertDbItemEqual(testlogname);
+    TestUtils.assertDailyDbItemEqual(testlogname);
   }
 
 }

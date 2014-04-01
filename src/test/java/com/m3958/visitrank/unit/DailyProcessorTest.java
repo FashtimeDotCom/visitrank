@@ -37,17 +37,17 @@ public class DailyProcessorTest {
   @Before
   public void setup() throws IOException {
     TestUtils.deleteDirs(dailyPartialDir);
-    TestUtils.dropTestRepositoryDb(repositoryDbName);
+    TestUtils.dropDb(repositoryDbName);
     TestUtils.createSampleDailyDb(dailyDbName, 1005);
-    TestUtils.dropSampleDailyDb(newerdbname);
+    TestUtils.dropDb(newerdbname);
   }
 
   @After
   public void cleanup() throws IOException {
     TestUtils.deleteDirs(dailyPartialDir);
-    TestUtils.dropTestRepositoryDb(repositoryDbName);
-    TestUtils.dropSampleDailyDb(dailyDbName);
-    TestUtils.dropSampleDailyDb(newerdbname);
+    TestUtils.dropDb(repositoryDbName);
+    TestUtils.dropDb(dailyDbName);
+    TestUtils.dropDb(newerdbname);
   }
 
   /**

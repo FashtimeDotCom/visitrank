@@ -74,19 +74,19 @@ public class LogProcessorWorkVerticle extends Verticle {
 
     private long gap;
 
-    private JsonObject writeConcern;
+    private JsonObject writeconcern;
 
     public LogProcessor(String logDir, String archiveDir, String filename, JsonObject cfg) {
       this.logDir = logDir;
       this.archiveDir = archiveDir;
       this.filename = filename;
       this.gap = cfg.getLong("logfilereadgap", 1000);
-      this.writeConcern = cfg.getObject("writeConcern");
+      this.writeconcern = cfg.getObject("writeconcern");
     }
 
     public void process() {
       try {
-        WriteConcern wc = WriteConcernParser.getWriteConcern(writeConcern);
+        WriteConcern wc = WriteConcernParser.getWriteConcern(writeconcern);
         Path logfilePath = Paths.get(logDir, filename);
         Path partialLogPath = Paths.get(logDir, filename + AppConstants.PARTIAL_POSTFIX);
 
