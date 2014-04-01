@@ -55,10 +55,9 @@ public class LogCheckVerticle extends Verticle {
     log.info(writeConcern);
 
     final RemainsCounter dailyProcessorCounter = new RemainsCounter(dailyProcessorInstance);
-    vertx.setPeriodic(451111, new Handler<Long>() {
+    vertx.setPeriodic(45111, new Handler<Long>() {
       public void handle(Long timerID) {
         // logger file check.
-        log.info("daily copy instance remains: " + dailyProcessorCounter.remainsGetSet(0));
         final String dbname = new RemainDailyDbFinder(locker).findOne("^\\d{4}-\\d{2}-\\d{2}$");
         if (dbname != null) {
           if (dailyProcessorCounter.remainsGetSet(0) > 0) {
@@ -81,7 +80,7 @@ public class LogCheckVerticle extends Verticle {
     });
 
     final RemainsCounter logProcessorCounter = new RemainsCounter(logProcessorInstance);
-    vertx.setPeriodic(300000, new Handler<Long>() {
+    vertx.setPeriodic(30000, new Handler<Long>() {
       public void handle(Long timerID) {
         // logger file check.
         if (logProcessorCounter.remainsGetSet(0) > 0) {

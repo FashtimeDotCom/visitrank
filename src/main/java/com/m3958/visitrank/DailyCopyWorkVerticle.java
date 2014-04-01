@@ -8,13 +8,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
 
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonObject;
-import org.vertx.java.core.logging.Logger;
 import org.vertx.java.platform.Verticle;
 
 import com.m3958.visitrank.LogCheckVerticle.WriteConcernParser;
@@ -49,26 +47,17 @@ public class DailyCopyWorkVerticle extends Verticle {
 
   @Override
   public void start() {
-    final Logger log = container.logger();
     vertx.eventBus().registerHandler(VERTICLE_ADDRESS, new Handler<Message<JsonObject>>() {
       @Override
       public void handle(Message<JsonObject> message) {
         JsonObject body = message.body();
-        log.info("dailydbreadgap in DailyCopyWorkVerticle: " + body.getNumber("dailydbreadgap"));
         String dbname = body.getString(DailyProcessorWorkMsgKey.DBNAME);
-        Calendar rightNow = Calendar.getInstance();
-        int hour = rightNow.get(Calendar.HOUR_OF_DAY);
-        if (hour == 1) {
           MongoClient mongoClient;
           try {
             mongoClient = new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
-
             new DailyCopyProcessor(mongoClient, dbname, body).process();
           } catch (UnknownHostException e) {}
-          message.reply("yes");
-        } else {
-          message.reply("no");
-        }
+          message.reply("done");
       }
     });
   }
@@ -144,9 +133,10 @@ public class DailyCopyWorkVerticle extends Verticle {
           copyDailyDb();
           AppLogger.processLogger.info("process daily copy " + dailyDbname + " end.");
         } catch (IOException e) {}
-      } else {
-        AppLogger.processLogger.info("process daily copy " + dailyDbname + " in progess.");
       }
+//      else {
+//        AppLogger.processLogger.info("process daily copy " + dailyDbname + " in progess.");
+//      }
     }
 
     public void copyDailyDb() throws IOException {

@@ -20,7 +20,6 @@ import org.bson.types.ObjectId;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonObject;
-import org.vertx.java.core.logging.Logger;
 import org.vertx.java.platform.Verticle;
 
 import com.m3958.visitrank.LogCheckVerticle.WriteConcernParser;
@@ -55,12 +54,10 @@ public class LogProcessorWorkVerticle extends Verticle {
 
   @Override
   public void start() {
-    final Logger log = container.logger();
     vertx.eventBus().registerHandler(VERTICLE_ADDRESS, new Handler<Message<JsonObject>>() {
       @Override
       public void handle(Message<JsonObject> message) {
         final JsonObject body = message.body();
-        log.info("logfilereadgap in LogProcessorWorkVerticle: " + body.getNumber("logfilereadgap"));
         final String filename = body.getString(LogProcessorWorkMsgKey.FILE_NAME);
         final String logDir = body.getString(LogProcessorWorkMsgKey.LOG_DIR, "logs");
         final String archiveDir = body.getString(LogProcessorWorkMsgKey.ARCHIVE_DIR, "archives");
