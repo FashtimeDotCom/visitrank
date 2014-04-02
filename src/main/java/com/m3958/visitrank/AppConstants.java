@@ -9,6 +9,8 @@ public class AppConstants {
 
   public static String DAILY_PARTIAL_DIR = "dailycopypartial";
   
+  public static boolean ONLY_LOG = false;
+  
   public static String LINE_SEP = System.getProperty("line.separator");
 
   public static int HTTP_PORT = 8333;
@@ -76,6 +78,8 @@ public class AppConstants {
     DAILY_DB_READ_GAP = config.getInteger("dailydbreadgap", DAILY_DB_READ_GAP);
 
     WRITE_CONCERN = config.getString("writeconcern", WRITE_CONCERN);
+    
+    ONLY_LOG = config.getBoolean("onlylog", ONLY_LOG);
 
   }
 

@@ -46,38 +46,41 @@ public class MainVerticle extends Verticle {
         });
 
     // deploy mongodb
-    JsonObject mongodbCfg = new JsonObject();
-    mongodbCfg.putString("address", AppConstants.MOD_MONGO_PERSIST_ADDRESS)
-        .putString("host", AppConstants.MONGODB_HOST).putString("db_name", "visitrank")
-        .putNumber("port", AppConstants.MONGODB_PORT);
 
-    container.deployModule(AppConstants.MONGODB_MODULE_NAME, mongodbCfg,
-        AppConstants.MONGODB_INSTANCE, new AsyncResultHandler<String>() {
-          @Override
-          public void handle(AsyncResult<String> asyncResult) {
-            if (asyncResult.succeeded()) {
-              log.info("mongo-persistor module has successly deployed:" + asyncResult.result());
-            } else {
-              log.info("mongo-persistor module deploy failure.");
+    if (!AppConstants.ONLY_LOG) {
+      JsonObject mongodbCfg = new JsonObject();
+      mongodbCfg.putString("address", AppConstants.MOD_MONGO_PERSIST_ADDRESS)
+          .putString("host", AppConstants.MONGODB_HOST).putString("db_name", "visitrank")
+          .putNumber("port", AppConstants.MONGODB_PORT);
+
+      container.deployModule(AppConstants.MONGODB_MODULE_NAME, mongodbCfg,
+          AppConstants.MONGODB_INSTANCE, new AsyncResultHandler<String>() {
+            @Override
+            public void handle(AsyncResult<String> asyncResult) {
+              if (asyncResult.succeeded()) {
+                log.info("mongo-persistor module has successly deployed:" + asyncResult.result());
+              } else {
+                log.info("mongo-persistor module deploy failure.");
+              }
             }
-          }
-        });
+          });
 
-    container.deployVerticle("mapreduce_verticle.js", 1);
+      container.deployVerticle("mapreduce_verticle.js", 1);
 
-    JsonObject logCheckCfg =
-        new JsonObject().putNumber("dailyprocessinstance", AppConstants.DAILY_PROCESSOR_INSTANCE)
-            .putNumber("logprocessorinstance", AppConstants.LOG_PROCESSOR_INSTANCE)
-            .putNumber("dailydbreadgap", AppConstants.DAILY_DB_READ_GAP)
-            .putNumber("logfilereadgap", AppConstants.LOGFILE_READ_GAP)
-            .putString("writeconcern", AppConstants.WRITE_CONCERN);
+      JsonObject logCheckCfg =
+          new JsonObject().putNumber("dailyprocessinstance", AppConstants.DAILY_PROCESSOR_INSTANCE)
+              .putNumber("logprocessorinstance", AppConstants.LOG_PROCESSOR_INSTANCE)
+              .putNumber("dailydbreadgap", AppConstants.DAILY_DB_READ_GAP)
+              .putNumber("logfilereadgap", AppConstants.LOGFILE_READ_GAP)
+              .putString("writeconcern", AppConstants.WRITE_CONCERN);
 
-    container.deployVerticle(AppConstants.LOGCHECK_VERTICLE_NAME, logCheckCfg, 1);
+      container.deployVerticle(AppConstants.LOGCHECK_VERTICLE_NAME, logCheckCfg, 1);
 
-    container.deployWorkerVerticle(DailyCopyWorkVerticle.VERTICLE_NAME, new JsonObject(),
-        AppConstants.DAILY_PROCESSOR_INSTANCE, false);
+      container.deployWorkerVerticle(DailyCopyWorkVerticle.VERTICLE_NAME, new JsonObject(),
+          AppConstants.DAILY_PROCESSOR_INSTANCE, false);
 
-    container.deployWorkerVerticle(LogProcessorWorkVerticle.VERTICLE_NAME, new JsonObject(),
-        AppConstants.LOG_PROCESSOR_INSTANCE, false);
+      container.deployWorkerVerticle(LogProcessorWorkVerticle.VERTICLE_NAME, new JsonObject(),
+          AppConstants.LOG_PROCESSOR_INSTANCE, false);
+    }
   }
 }

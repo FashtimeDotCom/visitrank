@@ -156,7 +156,6 @@ public class LogProcessorWorkVerticle extends Verticle {
         mongoClient.close();
 
         moveLogFiles(logfilePath);
-        AppLogger.processLogger.info("process " + filename + " end.");
       } catch (UnsupportedEncodingException | FileNotFoundException e) {
         AppLogger.error.error("cann't create reader from file: " + filename);
       } catch (UnknownHostException e1) {

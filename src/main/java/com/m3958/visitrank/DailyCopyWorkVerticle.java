@@ -127,9 +127,9 @@ public class DailyCopyWorkVerticle extends Verticle {
 
 
     public void process() {
-      AppLogger.processLogger.info("process daily copy " + dailyDbname + " starting.");
       if (isDailyDbComplete()) {
         try {
+          AppLogger.processLogger.info("process daily copy " + dailyDbname + " starting.");
           copyDailyDb();
           AppLogger.processLogger.info("process daily copy " + dailyDbname + " end.");
         } catch (IOException e) {}

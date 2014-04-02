@@ -3,6 +3,8 @@ package com.m3958.visitrank;
 import java.nio.file.Path;
 import java.util.Date;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.vertx.java.core.http.HttpServerRequest;
 import org.vertx.java.core.json.JsonObject;
@@ -13,17 +15,24 @@ public class AppUtils {
 
   private static String tfilename = "t-2014-03-02-1.log";
 
+  private static Pattern dailyDbPtn = Pattern.compile(".*(\\d{4}-\\d{2}-\\d{2})(.*)");
+
   public static String getDailyDbName(String filename) {
-    int idx = filename.lastIndexOf('-');
-    if (idx != -1) {
-      return filename.substring(0, idx);
+    Matcher m = dailyDbPtn.matcher(filename);
+    if (m.matches()) {
+      return m.group(1);
+    } else {
+      return null;
     }
-    return filename;
   }
 
-  public static int getHour(String filename) {
-    String[] ss = filename.split("-");
-    return Integer.parseInt(ss[ss.length - 1].split("\\.")[0]);
+  public static String getHour(String filename) {
+    Matcher m = dailyDbPtn.matcher(filename);
+    if (m.matches()) {
+      return m.group(2);
+    } else {
+      return null;
+    }
   }
 
   public static void main(String[] args) {
@@ -43,7 +52,7 @@ public class AppUtils {
     }
     return 0;
   }
-  
+
   public static JsonObject getParamsHeadersOb(HttpServerRequest req) {
     JsonObject jo = new JsonObject();
 

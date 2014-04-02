@@ -8,5 +8,6 @@
     "mongodbport" : 27017,
     "charset" : "UTF-8",
     "logfilereadgap": 10000,
-    "dailydbreadgap": 10000
+    "dailydbreadgap": 10000,
+    "onlylog": true
 }
