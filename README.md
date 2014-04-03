@@ -94,4 +94,13 @@ cb(33);
 我用其它机器短时测试，并发10000，throughout基本也是10000。对于这个系统来说并发不是瓶颈，主要在于mongodb的插入，如果请求的速度一直大于mongodb的插入，那么数据库的实时性会越来越远。在实际使用中，考虑到后半夜流量变小，mongodb的插入速度会大于前端输入，
 可能会达成平衡。（但不管怎么狡辩，这个瓶颈理论上是存在的。）
 
+
+## 如何在自己的站点运行？
+
+安装java 和 vertx之后，在命令行输入：vertx runmod com.m3958~visitrank~0.0.3 -conf -conf.json
+
+conf.json可复制源文件内的内容，更多配置参数可查看源文件中的AppConstants.java
+
+注意：机器必须联网，因为visitrank是从中央maven库中自动下载的。
+
 用来统计站点的文章访问数，同时记录详细的客户端信息，包括ip，ua。引入的数据可以在后台通过mongodb的MapReduce或者hadoop分析处理。
