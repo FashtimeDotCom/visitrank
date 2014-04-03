@@ -5,7 +5,7 @@
   <groupId>com.m3958</groupId>
   <artifactId>visitrank</artifactId>
   <packaging>jar</packaging>
-  <version>0.0.3-SNAPSHOT</version>
+  <version>0.0.3</version>
   <name>Project - visitrank</name>
   <url>https://github.com/jianglibo/visitrank</url>
   <description>
