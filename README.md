@@ -18,23 +18,23 @@ This app can record page visit,get visit count for page,for category and for sit
 
 ## 注意，只有out=wholesite的请求会将referer保存到数据库中，所以必须确保每个页面都存在这个请求。其它类型的out不会再次将referer保存到数据库中去。也就是说，同一张页面中，只要保证out=wholesite出现一次，其它类型可以多次出现。
 
-## 最简单的版本，同步版本。
+## 最简单的版本，同步版本。（不推荐）
 
 服务器返回类型：
 ```
 document.write(33); //33是计数值。
 ```
 
-1、需要在每个页面的尾部，显示整个网站的访问次数。
+1、需要在需要显示的位置，整个网站的访问次数。
 
 ```
-<script src="http://vr.fh.gov.cn?out=wholesite"></script>
+<script src="http://vr.m3958.com?out=wholesite"></script>
 ```
 
 2、在文章页面显示访问次数.
 
 ```
-<script src="http://vr.fh.gov.cn?out=thispage"></script>
+<script src="http://vr.m3958.com?out=thispage"></script>
 ```
 ## 异步版本
 
@@ -49,13 +49,13 @@ document.write(33); //33是计数值。
 1、需要在每个页面的尾部，显示整个网站的访问次数。
 
 ```
-<script src="http://vr.fh.gov.cn?out=wholesite&domid=site-stats"></script>
+<script src="http://vr.m3958.com?out=wholesite&domid=site-stats"></script>
 ```
 
 2、在文章页面显示访问次数
 
 ```
-<script src="http://vr.fh.gov.cn?out=thispage&domid=page-stat"></script>
+<script src="http://vr.m3958.com?out=thispage&domid=page-stat"></script>
 ```
 
 ## 异步的callback版本，随心所有的控制。
@@ -76,11 +76,11 @@ cb(33);
 1、需要在每个页面的尾部，显示整个网站的访问次数。
 
 ```
-<script src="http://vr.fh.gov.cn?out=wholesite&callback=cb"></script>
+<script src="http://vr.m3958.com?out=wholesite&callback=cb"></script>
 ```
 2、在文章页面显示访问次数
 
 ```
-<script src="http://vr.fh.gov.cn?out=thispage&callback=cb"></script>
+<script src="http://vr.m3958.com?out=thispage&callback=cb"></script>
 ```
 用来统计站点的文章访问数，同时记录详细的客户端信息，包括ip，ua。引入的数据可以在后台通过mongodb的MapReduce或者hadoop分析处理。
