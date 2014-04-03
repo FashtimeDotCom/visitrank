@@ -66,7 +66,7 @@ public class DailyProcessorPartialTest {
     hourlyCol.drop();
     for (int idx = 24; idx > 12; idx--) {
       DBObject dbo =
-          new BasicDBObject().append(AppConstants.MongoNames.HOURLY_JOB_NUMBER_KEY, idx).append(
+          new BasicDBObject().append(AppConstants.MongoNames.HOURLY_JOB_NUMBER_KEY, idx + "").append(
               AppConstants.MongoNames.HOURLY_JOB_STATUS_KEY, "end");
       hourlyCol.insert(dbo);
     }

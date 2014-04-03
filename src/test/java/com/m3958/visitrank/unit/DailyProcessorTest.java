@@ -13,6 +13,8 @@ import org.vertx.java.core.json.JsonObject;
 
 import com.m3958.visitrank.AppConstants;
 import com.m3958.visitrank.DailyCopyWorkVerticle;
+import com.m3958.visitrank.LogCheckVerticle;
+import com.m3958.visitrank.Utils.Locker;
 import com.m3958.visitrank.testutils.TestUtils;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
@@ -81,6 +83,26 @@ public class DailyProcessorTest {
     DB db = mongoClient.getDB(repositoryDbName);
     DBCollection col = db.getCollection(AppConstants.MongoNames.PAGE_VISIT_COL_NAME);
     Assert.assertEquals(0, col.count());
+  }
+  
+  @Test
+  public void t1() throws UnknownHostException {
+    TestUtils.createSampleDailyDb(newerdbname, 10);
+    MongoClient mongoClient = new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
+    DB dailyDb = mongoClient.getDB(dailyDbName);
+
+    DBCollection hourlyCol = dailyDb.getCollection(AppConstants.MongoNames.HOURLY_JOB_COL_NAME);
+    for (int idx = 24; idx > 12; idx--) {
+      DBObject dbo =
+          new BasicDBObject().append(AppConstants.MongoNames.HOURLY_JOB_NUMBER_KEY, idx + "").append(
+              AppConstants.MongoNames.HOURLY_JOB_STATUS_KEY, "end");
+      hourlyCol.insert(dbo);
+    }
+    String dbname = new LogCheckVerticle.RemainDailyDbFinder(new Locker()).findOne("^t-\\d{4}-\\d{2}-\\d{2}$");
+    boolean b = new DailyCopyWorkVerticle.DailyCopyProcessor(mongoClient, dailyDbName, new JsonObject()).isDailyDbComplete();
+    Assert.assertTrue(b);
+    Assert.assertNotNull(dbname);
+    mongoClient.close();
   }
 
   /**

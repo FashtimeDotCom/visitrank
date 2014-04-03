@@ -100,15 +100,20 @@ public class DailyCopyWorkVerticle extends Verticle {
      * 
      * @return
      */
-    private boolean isDailyDbComplete() {
+    public boolean isDailyDbComplete() {
       DB db = mongoClient.getDB(dailyDbname);
       DBCollection coll = db.getCollection(AppConstants.MongoNames.HOURLY_JOB_COL_NAME);
       DBCursor cursor = coll.find();
-      List<Integer> hourlyJobAry = new ArrayList<>();
+      List<String> hourlyJobAry = new ArrayList<>();
       try {
         while (cursor.hasNext()) {
           DBObject item = cursor.next();
-          Integer jobHour = (Integer) item.get(AppConstants.MongoNames.HOURLY_JOB_NUMBER_KEY);
+          String jobHour;
+          try{
+            jobHour = String.valueOf((Integer) item.get(AppConstants.MongoNames.HOURLY_JOB_NUMBER_KEY));
+          }catch(Exception e){
+            jobHour = (String) item.get(AppConstants.MongoNames.HOURLY_JOB_NUMBER_KEY);
+          }
           String status = (String) item.get(AppConstants.MongoNames.HOURLY_JOB_STATUS_KEY);
           if (!"end".equals(status)) {
             return false;

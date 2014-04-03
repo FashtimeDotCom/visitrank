@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -21,6 +20,8 @@ import com.m3958.visitrank.Utils.Locker;
 import com.m3958.visitrank.Utils.RemainsCounter;
 import com.m3958.visitrank.logger.AppLogger;
 import com.mongodb.DB;
+import com.mongodb.DBCollection;
+import com.mongodb.DBCursor;
 import com.mongodb.MongoClient;
 import com.mongodb.WriteConcern;
 
@@ -61,6 +62,7 @@ public class LogCheckVerticle extends Verticle {
       public void handle(Long timerID) {
         // logger file check.
         final String dbname = new RemainDailyDbFinder(locker).findOne("^\\d{4}-\\d{2}-\\d{2}$");
+        log.info("find dailydb:" + dbname);
         if (dbname != null) {
           if (dailyProcessorCounter.remainsGetSet(0) > 0) {
             JsonObject body =
@@ -170,8 +172,11 @@ public class LogCheckVerticle extends Verticle {
         while (it.hasNext()) {
           String dbname = it.next();
           DB db = mongoClient.getDB(dbname);
-          Set<String> cols = db.getCollectionNames();
-          if (cols.size() > 0 && locker.canLockLog(dbname) && it.hasNext()) {
+          DBCollection hourlyCol = db.getCollection(AppConstants.MongoNames.HOURLY_JOB_COL_NAME);
+          DBCursor cursor = hourlyCol.find();
+          boolean hexist = cursor.hasNext();
+          cursor.close();
+          if (hexist && locker.canLockLog(dbname) && it.hasNext()) {
             foundDbName = dbname;
             break;
           }
