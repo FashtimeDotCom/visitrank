@@ -62,8 +62,8 @@ public class LogCheckVerticle extends Verticle {
       public void handle(Long timerID) {
         // logger file check.
         final String dbname = new RemainDailyDbFinder(locker).findOne("^\\d{4}-\\d{2}-\\d{2}$");
-        log.info("find dailydb:" + dbname);
         if (dbname != null) {
+          log.info("find dailydb:" + dbname + ", remain DailyProcessor: " + (dailyProcessorCounter.remainsGetSet(0) - 1));
           if (dailyProcessorCounter.remainsGetSet(0) > 0) {
             JsonObject body =
                 new JsonObject().putString(DailyProcessorWorkMsgKey.DBNAME, dbname).putNumber(
@@ -74,6 +74,10 @@ public class LogCheckVerticle extends Verticle {
                 new Handler<Message<String>>() {
                   @Override
                   public void handle(Message<String> msg) {
+                    String reply = msg.body();
+                    if("done".equals(reply)){
+                      AppLogger.processLogger.info("process daily copy " + dbname + " end.");
+                    }
                     dailyProcessorCounter.remainsGetSet(-1);
                     locker.releaseLock(dbname);
                   }

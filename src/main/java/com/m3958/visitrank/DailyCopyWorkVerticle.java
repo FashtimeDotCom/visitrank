@@ -55,9 +55,15 @@ public class DailyCopyWorkVerticle extends Verticle {
         MongoClient mongoClient;
         try {
           mongoClient = new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
-          new DailyCopyProcessor(mongoClient, dbname, body).process();
+          boolean processed = new DailyCopyProcessor(mongoClient, dbname, body).process();
+          if(processed){
+            message.reply("done");
+          }else{
+            message.reply("undone");
+          }
+          return;
         } catch (UnknownHostException e) {}
-        message.reply("done");
+        message.reply("undone");
       }
     });
   }
@@ -131,14 +137,15 @@ public class DailyCopyWorkVerticle extends Verticle {
     }
 
 
-    public void process() {
+    public boolean process() {
       if (isDailyDbComplete()) {
         try {
           AppLogger.processLogger.info("process daily copy " + dailyDbname + " starting.");
           copyDailyDb();
-          AppLogger.processLogger.info("process daily copy " + dailyDbname + " end.");
+          return true;
         } catch (IOException e) {}
       }
+      return false;
     }
 
     public void copyDailyDb() throws IOException {
