@@ -40,7 +40,7 @@ public class TestUtils {
     mongoClient.close();
   }
 
-  public static void createSampleDailyDb(String dbname, int number) throws UnknownHostException {
+  public static void createSampleDb(String dbname, int items) throws UnknownHostException {
     MongoClient mongoClient;
     mongoClient = new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
     DB db = mongoClient.getDB(dbname);
@@ -51,10 +51,10 @@ public class TestUtils {
         "\",\"ts\":1395291463536,\"headers\":{\"Connection\":\"keep-alive\",\"\":\"\",\"Host\":\"localhost:8333\",\"User-Agent\":\"Apache-HttpClient/4.2.6 (java 1.5)\",\"ip\":\"127.0.0.1\"}}";
 
     List<DBObject> obs = new ArrayList<>();
-    for (int i = 0; i < number; i++) {
+    for (int i = 1; i <= items; i++) {
       DBObject dbo = (DBObject) JSON.parse(sampleItemPre + "?article=" + i + sampleItemFix);
       obs.add(dbo);
-      if (i> 0 && i % 5000 == 0) {
+      if (i % 5000 == 0) {
         col.insert(obs, new WriteConcern(0, 0, false, true, true));
         obs.clear();
       }
@@ -66,7 +66,21 @@ public class TestUtils {
     mongoClient.close();
   }
 
+  public static void createSampleDb(String dbname, List<DBObject> dbos) throws UnknownHostException {
+    MongoClient mongoClient;
+    mongoClient = new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
+    DB db = mongoClient.getDB(dbname);
+    DBCollection col = db.getCollection(AppConstants.MongoNames.PAGE_VISIT_COL_NAME);
+    col.insert(dbos, new WriteConcern(0, 0, false, true, true));
+    mongoClient.close();
+  }
 
+  public static void createSampleDb(String dbname, int items, int repeat)
+      throws UnknownHostException {
+    for (int i = 0; i < repeat; i++) {
+      createSampleDb(dbname, items);
+    }
+  }
 
   public static void deleteDirs(String... dirs) throws IOException {
     for (String dir : dirs) {

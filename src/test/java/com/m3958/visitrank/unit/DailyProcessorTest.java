@@ -40,7 +40,7 @@ public class DailyProcessorTest {
   public void setup() throws IOException {
     TestUtils.deleteDirs(dailyPartialDir);
     TestUtils.dropDb(repositoryDbName);
-    TestUtils.createSampleDailyDb(dailyDbName, 1005);
+    TestUtils.createSampleDb(dailyDbName, 1005);
     TestUtils.dropDb(newerdbname);
   }
 
@@ -75,7 +75,7 @@ public class DailyProcessorTest {
             AppConstants.MongoNames.HOURLY_JOB_STATUS_KEY, "end");
     hourlyCol.insert(dbo);
     
-    TestUtils.createSampleDailyDb(newerdbname, 10);
+    TestUtils.createSampleDb(newerdbname, 10);
     
     new DailyCopyWorkVerticle.DailyCopyProcessor(mongoClient, dailyDbName, repositoryDbName,
         dailyPartialDir,new JsonObject().putNumber("dailydbreadgap", 1000)).process();
@@ -87,7 +87,7 @@ public class DailyProcessorTest {
   
   @Test
   public void t1() throws UnknownHostException {
-    TestUtils.createSampleDailyDb(newerdbname, 10);
+    TestUtils.createSampleDb(newerdbname, 10);
     MongoClient mongoClient = new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
     DB dailyDb = mongoClient.getDB(dailyDbName);
 
@@ -124,7 +124,7 @@ public class DailyProcessorTest {
       hourlyCol.insert(dbo);
     }
     
-    TestUtils.createSampleDailyDb(newerdbname, 10);
+    TestUtils.createSampleDb(newerdbname, 10);
     new DailyCopyWorkVerticle.DailyCopyProcessor(mongoClient, dailyDbName, repositoryDbName,
         dailyPartialDir,new JsonObject().putNumber("dailydbreadgap", 1000)).process();
 

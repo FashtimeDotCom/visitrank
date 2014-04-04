@@ -29,7 +29,7 @@ public class CheckRemainDbTest {
   @Before
   public void setup() throws IOException {
     locker = new Locker();
-    TestUtils.createSampleDailyDb(dailydbname, 10);
+    TestUtils.createSampleDb(dailydbname, 10);
     TestUtils.dropDb(newerdbname);
   }
 
@@ -53,7 +53,7 @@ public class CheckRemainDbTest {
   @Test
   public void t2() throws UnknownHostException {
     //has newerdb.no hourly collection
-    TestUtils.createSampleDailyDb(newerdbname, 10);
+    TestUtils.createSampleDb(newerdbname, 10);
     String fn = new LogCheckVerticle.RemainDailyDbFinder(locker).findOne("t-\\d{4}-\\d{2}-\\d{2}");
     Assert.assertNull(fn);
     locker.releaseLock(dailydbname);
@@ -62,7 +62,7 @@ public class CheckRemainDbTest {
   @Test
   public void t3() throws UnknownHostException {
     //has newerdb.no hourly collection
-    TestUtils.createSampleDailyDb(newerdbname, 10);
+    TestUtils.createSampleDb(newerdbname, 10);
     MongoClient mongoClient = new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
     DB dailyDb = mongoClient.getDB(dailydbname);
 

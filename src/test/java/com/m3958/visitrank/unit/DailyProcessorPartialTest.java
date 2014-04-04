@@ -37,7 +37,7 @@ public class DailyProcessorPartialTest {
     if (!Files.exists(Paths.get(dailyPartialDir, dailyDbName))) {
       TestUtils.deleteDirs(dailyPartialDir);
       TestUtils.dropDb(repositoryDbName);
-      TestUtils.createSampleDailyDb(dailyDbName, 10005);
+      TestUtils.createSampleDb(dailyDbName, 10005);
     }
   }
 
