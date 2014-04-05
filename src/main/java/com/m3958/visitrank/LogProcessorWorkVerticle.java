@@ -23,6 +23,8 @@ import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.platform.Verticle;
 
 import com.m3958.visitrank.LogCheckVerticle.WriteConcernParser;
+import com.m3958.visitrank.Utils.IndexBuilder;
+import com.m3958.visitrank.Utils.LogItem;
 import com.m3958.visitrank.logger.AppLogger;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
@@ -30,7 +32,6 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.WriteConcern;
-import com.mongodb.util.JSON;
 
 /**
  * it's a sync worker verticle. First we start a mongodb connection, readlines from logfile,batchly
@@ -95,6 +96,9 @@ public class LogProcessorWorkVerticle extends Verticle {
         DB db = mongoClient.getDB(AppUtils.getDailyDbName(filename));
         ObjectId hourJobId = insertHourJobStart(db);
         DBCollection coll = db.getCollection(AppConstants.MongoNames.PAGE_VISIT_COL_NAME);
+        
+        coll.createIndex(IndexBuilder.getPageVisitColIndexKeys());
+        
         BufferedReader reader =
             new BufferedReader(new InputStreamReader(new FileInputStream(logfilePath.toFile()),
                 "UTF-8"));
@@ -119,7 +123,8 @@ public class LogProcessorWorkVerticle extends Verticle {
             continue;
           }
           try {
-            dbos.add((DBObject) JSON.parse(line));
+//            dbos.add((DBObject) JSON.parse(line));
+            dbos.add(new LogItem(line).toDbObject());
           } catch (Exception e) {
             AppLogger.error.error("parse exception:" + line);
           }

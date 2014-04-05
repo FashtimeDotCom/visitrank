@@ -10,6 +10,7 @@ import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.core.logging.Logger;
 import org.vertx.java.platform.Verticle;
 
+import com.m3958.visitrank.Utils.IndexBuilder;
 import com.m3958.visitrank.logger.AppLogger;
 
 public class MainVerticle extends Verticle {
@@ -18,7 +19,9 @@ public class MainVerticle extends Verticle {
 
     final Logger log = container.logger();
     AppConstants.initConfigConstants(container.config());
-
+    log.info("check index status ...");
+    IndexBuilder.pageVisitIndex();
+    log.info("check index done");
     AppLogger.urlPersistor.trace("loger started");
 
     JsonObject httpCfg = new JsonObject();

@@ -173,6 +173,7 @@ public class DailyCopyWorkVerticle extends Verticle {
           new OutputStreamWriter(new FileOutputStream(partialLogPath.toFile()), "UTF-8");
       partialWriter.write(partialStart + "," + partialStart + AppConstants.LINE_SEP);
 
+      //sort({$natural: 1})
       DBCursor cursor = dailyColl.find();
       int counter = 0;
       List<DBObject> obs = new ArrayList<>();

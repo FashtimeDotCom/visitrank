@@ -1,7 +1,10 @@
 package com.m3958.visitrank.Utils;
 
+import java.io.IOException;
 import java.util.Date;
 
+import com.m3958.visitrank.uaparser.Client;
+import com.m3958.visitrank.uaparser.Parser;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mongodb.util.JSON;
@@ -27,10 +30,22 @@ public class LogItem {
     tdbo.put(FieldNameAbbreviation.ACCEPT_ABBREV, headers.get(FieldNameAbbreviation.ACCEPT));
     
     tdbo.put(FieldNameAbbreviation.ACCEPT_LANGUAGE_ABBREV, headers.get(FieldNameAbbreviation.ACCEPT_LANGUAGE));
-    tdbo.put(FieldNameAbbreviation.USER_AGENT_ABBREV, headers.get(FieldNameAbbreviation.USER_AGENT));
+    tdbo.put(FieldNameAbbreviation.USER_AGENT_ABBREV, parseUa((String) headers.get(FieldNameAbbreviation.USER_AGENT)));
     tdbo.put(FieldNameAbbreviation.IP, getIp(headers));
     
     return tdbo;
+  }
+  
+  private DBObject parseUa(String uas){
+    DBObject o = new BasicDBObject();
+    Parser uaParser;
+    try {
+      uaParser = new Parser();
+      Client c = uaParser.parse(uas);
+      o = (DBObject) JSON.parse(c.toString());
+    } catch (IOException e) {
+    }
+    return o;
   }
   
   private String getIp(DBObject headers){

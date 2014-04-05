@@ -42,10 +42,9 @@ public class LogItemTest {
     Assert.assertEquals("zh-CN,zh;q=0.8,en;q=0.6,ja;q=0.4,zh-TW;q=0.2",
         dbo.get(FieldNameAbbreviation.ACCEPT_LANGUAGE_ABBREV));
 
-    Assert
-        .assertEquals(
-            "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/33.0.1750.154 Safari/537.36",
-            dbo.get(FieldNameAbbreviation.USER_AGENT_ABBREV));
+    DBObject uaob = (DBObject) dbo.get(FieldNameAbbreviation.USER_AGENT_ABBREV);
+
+    Assert.assertEquals("Windows 7", ((DBObject) uaob.get("os")).get("family"));
 
     Assert.assertEquals("10.74.111.254", dbo.get(FieldNameAbbreviation.IP));
   }

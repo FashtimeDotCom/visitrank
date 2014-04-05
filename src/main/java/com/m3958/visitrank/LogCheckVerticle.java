@@ -22,7 +22,6 @@ import com.m3958.visitrank.Utils.RemainsCounter;
 import com.m3958.visitrank.logger.AppLogger;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
-import com.mongodb.DBCursor;
 import com.mongodb.MongoClient;
 import com.mongodb.WriteConcern;
 
@@ -178,10 +177,8 @@ public class LogCheckVerticle extends Verticle {
           String dbname = it.next();
           DB db = mongoClient.getDB(dbname);
           DBCollection hourlyCol = db.getCollection(AppConstants.MongoNames.HOURLY_JOB_COL_NAME);
-          DBCursor cursor = hourlyCol.find();
-          boolean hexist = cursor.hasNext();
-          cursor.close();
-          if (hexist && it.hasNext() && locker.canLockLog(dbname)) {
+          long hitems = hourlyCol.count();
+          if (hitems > 0 && it.hasNext() && locker.canLockLog(dbname)) {
             foundDbName = dbname;
             break;
           }
