@@ -65,26 +65,26 @@ public class BatchCopyTestNo {
     TestUtils.assertDbItemEqual(repositoryDbName,testNumber);
   }
   
-//  @Test
-//  public void t2() throws UnknownHostException, InterruptedException{
-//    new Ttt(10000, 10000).start();
-//    Thread.sleep(1000);
-//    TestUtils.assertDbItemEqual(repositoryDbName,testNumber);
-//  }
-//  
-//  @Test
-//  public void t3() throws UnknownHostException, InterruptedException{
-//    new Ttt(10000, -1).start();
-//    Thread.sleep(1000);
-//    TestUtils.assertDbItemEqual(repositoryDbName,testNumber);
-//  }
-//  
-//  @Test
-//  public void t4() throws UnknownHostException, InterruptedException{
-//    new Ttt(10000, 10000).start();
-//    Thread.sleep(1000);
-//    TestUtils.assertDbItemEqual(repositoryDbName,testNumber);
-//  }
+  @Test
+  public void t2() throws UnknownHostException, InterruptedException{
+    new Ttt(10000, 10000).start();
+    Thread.sleep(1000);
+    TestUtils.assertDbItemEqual(repositoryDbName,testNumber);
+  }
+  
+  @Test
+  public void t3() throws UnknownHostException, InterruptedException{
+    new Ttt(10000, -1).start();
+    Thread.sleep(1000);
+    TestUtils.assertDbItemEqual(repositoryDbName,testNumber);
+  }
+  
+  @Test
+  public void t4() throws UnknownHostException, InterruptedException{
+    new Ttt(10000, 10000).start();
+    Thread.sleep(1000);
+    TestUtils.assertDbItemEqual(repositoryDbName,testNumber);
+  }
   
   public class Ttt{
     private int gap;
