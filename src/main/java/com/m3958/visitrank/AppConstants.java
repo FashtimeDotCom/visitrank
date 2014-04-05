@@ -1,5 +1,7 @@
 package com.m3958.visitrank;
 
+import java.util.regex.Pattern;
+
 import org.vertx.java.core.json.JsonObject;
 
 public class AppConstants {
@@ -93,4 +95,6 @@ public class AppConstants {
     public static String DAILY_JOB_COL_NAME = "dailyjob";
     public static String DAILY_JOB_STATUS_KEY = "status";
   }
+  
+  public static Pattern dailyDbPtn = Pattern.compile(".*(\\d{4}-\\d{2}-\\d{2})(.*)");
 }

@@ -13,7 +13,9 @@ import org.junit.Test;
 
 import com.m3958.visitrank.AppConstants;
 import com.m3958.visitrank.AppUtils;
+import com.m3958.visitrank.Utils.IndexBuilder;
 import com.m3958.visitrank.testutils.TestUtils;
+import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
@@ -36,19 +38,19 @@ public class BatchCopyTestNo {
   public void setup() throws IOException {
     TestUtils.deleteDirs(logDir, archiveDir);
     TestUtils.createDirs(logDir, archiveDir);
-    TestUtils.dropDb(repositoryDbName);
+//    TestUtils.dropDb(repositoryDbName);
   }
 
   @After
   public void cleanup() throws IOException {
     TestUtils.deleteDirs(logDir, archiveDir);
-    TestUtils.dropDb(repositoryDbName);
+//    TestUtils.dropDb(repositoryDbName);
   }
   
   @BeforeClass
   public static void sss() throws UnknownHostException{
     TestUtils.dropDailyDb(testlogname);
-    TestUtils.createSampleDb(AppUtils.getDailyDbName(testlogname), testNumber);
+    TestUtils.createSampleDb(AppUtils.getDailyDbName(testlogname,TestUtils.dailyDbPtn), testNumber);
   }
   
   @AfterClass
@@ -63,26 +65,26 @@ public class BatchCopyTestNo {
     TestUtils.assertDbItemEqual(repositoryDbName,testNumber);
   }
   
-  @Test
-  public void t2() throws UnknownHostException, InterruptedException{
-    new Ttt(10000, 10000).start();
-    Thread.sleep(1000);
-    TestUtils.assertDbItemEqual(repositoryDbName,testNumber);
-  }
-  
-  @Test
-  public void t3() throws UnknownHostException, InterruptedException{
-    new Ttt(10000, -1).start();
-    Thread.sleep(1000);
-    TestUtils.assertDbItemEqual(repositoryDbName,testNumber);
-  }
-  
-  @Test
-  public void t4() throws UnknownHostException, InterruptedException{
-    new Ttt(10000, 10000).start();
-    Thread.sleep(1000);
-    TestUtils.assertDbItemEqual(repositoryDbName,testNumber);
-  }
+//  @Test
+//  public void t2() throws UnknownHostException, InterruptedException{
+//    new Ttt(10000, 10000).start();
+//    Thread.sleep(1000);
+//    TestUtils.assertDbItemEqual(repositoryDbName,testNumber);
+//  }
+//  
+//  @Test
+//  public void t3() throws UnknownHostException, InterruptedException{
+//    new Ttt(10000, -1).start();
+//    Thread.sleep(1000);
+//    TestUtils.assertDbItemEqual(repositoryDbName,testNumber);
+//  }
+//  
+//  @Test
+//  public void t4() throws UnknownHostException, InterruptedException{
+//    new Ttt(10000, 10000).start();
+//    Thread.sleep(1000);
+//    TestUtils.assertDbItemEqual(repositoryDbName,testNumber);
+//  }
   
   public class Ttt{
     private int gap;
@@ -97,12 +99,15 @@ public class BatchCopyTestNo {
       MongoClient mongoClient;
       mongoClient = new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
 
-      DB dailyDb = mongoClient.getDB(AppUtils.getDailyDbName(testlogname));
+      DB dailyDb = mongoClient.getDB(AppUtils.getDailyDbName(testlogname,TestUtils.dailyDbPtn));
       DBCollection dailyColl = dailyDb.getCollection(AppConstants.MongoNames.PAGE_VISIT_COL_NAME);
 
       DB repositoryDb = mongoClient.getDB(repositoryDbName);
-      DBCollection repositoryCol =
-          repositoryDb.getCollection(AppConstants.MongoNames.PAGE_VISIT_COL_NAME);
+      DBCollection repositoryCol = repositoryDb.createCollection(AppConstants.MongoNames.PAGE_VISIT_COL_NAME, new BasicDBObject());
+      
+//      repositoryDb.getCollection(AppConstants.MongoNames.PAGE_VISIT_COL_NAME);
+      
+      repositoryCol.createIndex(IndexBuilder.getPageVisitColIndexKeys());
       WriteConcern wc = new WriteConcern(0, 0, false, true, true);
 
       DBCursor cursor;

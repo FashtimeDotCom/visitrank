@@ -15,22 +15,27 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.junit.Assert;
 
 import com.m3958.visitrank.AppConstants;
 import com.m3958.visitrank.AppUtils;
+import com.m3958.visitrank.Utils.IndexBuilder;
+import com.m3958.visitrank.Utils.LogItem;
+import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.WriteConcern;
-import com.mongodb.util.JSON;
 
 public class TestUtils {
 
+  public static Pattern dailyDbPtn = Pattern.compile("(.*\\d{4}-\\d{2}-\\d{2})(.*)");
+
   public static void dropDailyDb(String testlogname) throws UnknownHostException {
-    dropDb(AppUtils.getDailyDbName(testlogname));
+    dropDb(AppUtils.getDailyDbName(testlogname, dailyDbPtn));
   }
 
   public static void dropDb(String dbname) throws UnknownHostException {
@@ -44,15 +49,16 @@ public class TestUtils {
     MongoClient mongoClient;
     mongoClient = new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
     DB db = mongoClient.getDB(dbname);
-    DBCollection col = db.getCollection(AppConstants.MongoNames.PAGE_VISIT_COL_NAME);
-
+    DBCollection col =
+        db.createCollection(AppConstants.MongoNames.PAGE_VISIT_COL_NAME, new BasicDBObject());
+    col.createIndex(IndexBuilder.getPageVisitColIndexKeys());
     String sampleItemPre = "{\"url\":\"http://sb.m3958.com";
     String sampleItemFix =
         "\",\"ts\":1395291463536,\"headers\":{\"Connection\":\"keep-alive\",\"\":\"\",\"Host\":\"localhost:8333\",\"User-Agent\":\"Apache-HttpClient/4.2.6 (java 1.5)\",\"ip\":\"127.0.0.1\"}}";
 
     List<DBObject> obs = new ArrayList<>();
     for (int i = 1; i <= items; i++) {
-      DBObject dbo = (DBObject) JSON.parse(sampleItemPre + "?article=" + i + sampleItemFix);
+      DBObject dbo = new LogItem(sampleItemPre + "?article=" + i + sampleItemFix).toDbObject();
       obs.add(dbo);
       if (i % 5000 == 0) {
         col.insert(obs, new WriteConcern(0, 0, false, true, true));
@@ -130,7 +136,7 @@ public class TestUtils {
   }
 
   public static void assertDailyDbItemEqual(String testlogname) throws UnknownHostException {
-    assertDbItemEqual(AppUtils.getDailyDbName(testlogname), 1000l);
+    assertDbItemEqual(AppUtils.getDailyDbName(testlogname,dailyDbPtn), 1000l);
   }
 
   public static void assertDbItemEqual(String dbname, long itemnumber) throws UnknownHostException {

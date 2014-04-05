@@ -13,11 +13,7 @@ import com.m3958.visitrank.Utils.FileTailer;
 
 public class AppUtils {
 
-  private static String tfilename = "t-2014-03-02-1.log";
-
-  private static Pattern dailyDbPtn = Pattern.compile(".*(\\d{4}-\\d{2}-\\d{2})(.*)");
-
-  public static String getDailyDbName(String filename) {
+  public static String getDailyDbName(String filename, Pattern dailyDbPtn) {
     Matcher m = dailyDbPtn.matcher(filename);
     if (m.matches()) {
       return m.group(1);
@@ -26,18 +22,13 @@ public class AppUtils {
     }
   }
 
-  public static String getHour(String filename) {
+  public static String getHour(String filename, Pattern dailyDbPtn) {
     Matcher m = dailyDbPtn.matcher(filename);
     if (m.matches()) {
       return m.group(2);
     } else {
       return null;
     }
-  }
-
-  public static void main(String[] args) {
-    System.out.println(getDailyDbName(tfilename));
-    System.out.println(getHour(tfilename));
   }
 
   public static long getLastPartialPosition(Path partialLogPath) {

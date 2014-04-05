@@ -45,7 +45,7 @@ public class LogProcessorWorkVerticle extends Verticle {
 
   public static String VERTICLE_ADDRESS = "logprocessor";
   public static String VERTICLE_NAME = "com.m3958.visitrank.LogProcessorWorkVerticle";
-  
+
   public static class LogProcessorWorkMsgKey {
     public static String FILE_NAME = "filename";
     public static String LOG_DIR = "logDir";
@@ -93,12 +93,12 @@ public class LogProcessorWorkVerticle extends Verticle {
 
         MongoClient mongoClient =
             new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
-        DB db = mongoClient.getDB(AppUtils.getDailyDbName(filename));
+        DB db = mongoClient.getDB(AppUtils.getDailyDbName(filename, AppConstants.dailyDbPtn));
         ObjectId hourJobId = insertHourJobStart(db);
         DBCollection coll = db.getCollection(AppConstants.MongoNames.PAGE_VISIT_COL_NAME);
-        
+
         coll.createIndex(IndexBuilder.getPageVisitColIndexKeys());
-        
+
         BufferedReader reader =
             new BufferedReader(new InputStreamReader(new FileInputStream(logfilePath.toFile()),
                 "UTF-8"));
@@ -106,13 +106,14 @@ public class LogProcessorWorkVerticle extends Verticle {
         long partialStart = 0;
         if (Files.exists(partialLogPath)) {
           partialStart = AppUtils.getLastPartialPosition(partialLogPath);
-          AppLogger.processLogger.info("process " + filename + " " + partialStart + " continueing.");
+          AppLogger.processLogger
+              .info("process " + filename + " " + partialStart + " continueing.");
         }
 
         OutputStreamWriter partialWriter =
             new OutputStreamWriter(new FileOutputStream(partialLogPath.toFile()), "UTF-8");
         partialWriter.write(partialStart + "," + partialStart + AppConstants.LINE_SEP);
-        
+
 
         List<DBObject> dbos = new ArrayList<>();
         String line;
@@ -123,7 +124,7 @@ public class LogProcessorWorkVerticle extends Verticle {
             continue;
           }
           try {
-//            dbos.add((DBObject) JSON.parse(line));
+            // dbos.add((DBObject) JSON.parse(line));
             dbos.add(new LogItem(line).toDbObject());
           } catch (Exception e) {
             AppLogger.error.error("parse exception:" + line);
@@ -132,12 +133,12 @@ public class LogProcessorWorkVerticle extends Verticle {
           if (counter % gap == 0) {
             partialWriter.write(counter + ",");
             partialWriter.flush();
-            if(wc == null){
+            if (wc == null) {
               coll.insert(dbos);
-            }else{
-              coll.insert(dbos,wc);
+            } else {
+              coll.insert(dbos, wc);
             }
-            
+
             partialWriter.write(counter + AppConstants.LINE_SEP);
             partialWriter.flush();
             dbos = new ArrayList<>();
@@ -146,11 +147,11 @@ public class LogProcessorWorkVerticle extends Verticle {
         if (dbos.size() > 0) {
           partialWriter.write(counter + ",");
           partialWriter.flush();
-          
-          if(wc == null){
+
+          if (wc == null) {
             coll.insert(dbos);
-          }else{
-            coll.insert(dbos,wc);
+          } else {
+            coll.insert(dbos, wc);
           }
           partialWriter.write(counter + AppConstants.LINE_SEP);
           partialWriter.flush();
@@ -190,8 +191,8 @@ public class LogProcessorWorkVerticle extends Verticle {
       DBCollection hourlyCol = db.getCollection(AppConstants.MongoNames.HOURLY_JOB_COL_NAME);
       DBObject dbo =
           new BasicDBObject().append(AppConstants.MongoNames.HOURLY_JOB_NUMBER_KEY,
-              AppUtils.getHour(filename)).append(AppConstants.MongoNames.HOURLY_JOB_STATUS_KEY,
-              "start");
+              AppUtils.getHour(filename, AppConstants.dailyDbPtn)).append(
+              AppConstants.MongoNames.HOURLY_JOB_STATUS_KEY, "start");
       hourlyCol.insert(dbo);
       return (ObjectId) dbo.get("_id");
     }
