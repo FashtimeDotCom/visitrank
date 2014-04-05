@@ -3,6 +3,7 @@ package com.m3958.visitrank;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -63,7 +64,7 @@ public class LogCheckVerticle extends Verticle {
         // logger file check.
         final String dbname = new RemainDailyDbFinder(locker).findOne("^\\d{4}-\\d{2}-\\d{2}$");
         if (dbname != null) {
-          log.info("find dailydb:" + dbname + ", remain DailyProcessor: " + (dailyProcessorCounter.remainsGetSet(0) - 1));
+          log.info("find dailydb:" + dbname + ", remain DailyProcessor: " + (dailyProcessorCounter.remainsGetSet(0) - 1) + " " + new Date().toString());
           if (dailyProcessorCounter.remainsGetSet(0) > 0) {
             JsonObject body =
                 new JsonObject().putString(DailyProcessorWorkMsgKey.DBNAME, dbname).putNumber(
@@ -180,7 +181,7 @@ public class LogCheckVerticle extends Verticle {
           DBCursor cursor = hourlyCol.find();
           boolean hexist = cursor.hasNext();
           cursor.close();
-          if (hexist && locker.canLockLog(dbname) && it.hasNext()) {
+          if (hexist && it.hasNext() && locker.canLockLog(dbname)) {
             foundDbName = dbname;
             break;
           }

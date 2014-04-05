@@ -67,6 +67,37 @@ public class MrTest {
     Assert.assertEquals(3, count);
     mongoClient.close();
   }
+  
+  //twice mapreduce
+  @Test
+  public void t3() throws UnknownHostException, InterruptedException {
+    List<DBObject> obs =
+        getDboList(1396587525833L, 1000 * 60 * 15, 3, "www.m3958.com", "www.fhsafety.gov.cn");
+    TestUtils.createSampleDb(mrsourcedb, obs);
+    MongoClient mongoClient;
+    mongoClient = new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
+    DB db = mongoClient.getDB(mrsourcedb);
+    String mapjs =
+        "function mapFunction() {" + "var key = this.url," + "value = {" + "url : this.url,"
+            + "count : 1" + "};" + "emit(key, value);" + "}";
+    String reducejs =
+        "function reduceFunction(key, values) {" + "var reducedObject = {" + "url : key,"
+            + "count : 0" + "};" +
+
+            "values.forEach(function(value) {" + "reducedObject.count += value.count;" + "});"
+            + "return reducedObject;" + "}";
+    execMapReduce(db, mapjs, reducejs);
+    execMapReduce(db, mapjs, reducejs);
+    DBCollection mrCol = db.getCollection(mrResultColName);
+    DBCursor cur = mrCol.find().limit(1).skip(0);
+    Assert.assertTrue(cur.hasNext());
+    DBObject dbo = cur.next();
+    Assert.assertEquals("http://" + "www.fhsafety.gov.cn"
+        + "/article.ftl?article=111891&ms=84224&section=84153", dbo.get("_id"));
+    long count = ((Double) ((DBObject) dbo.get("value")).get("count")).longValue();
+    Assert.assertEquals(6, count);
+    mongoClient.close();
+  }
 
   private void execMapReduce(DB db, String mapjs, String reducejs) {
     long start = System.currentTimeMillis();
