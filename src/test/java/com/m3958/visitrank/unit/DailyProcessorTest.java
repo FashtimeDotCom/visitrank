@@ -33,14 +33,14 @@ public class DailyProcessorTest {
   private String repositoryDbName = "t-visitrank";
   private String dailyDbName = "t-2014-03-02";
   private String newerdbname = "t-2014-03-03";
-  
+
   private String dailyPartialDir = "t-" + AppConstants.DAILY_PARTIAL_DIR;
 
   @Before
   public void setup() throws IOException {
     TestUtils.deleteDirs(dailyPartialDir);
     TestUtils.dropDb(repositoryDbName);
-    TestUtils.createSampleDb(dailyDbName, 1005);
+    TestUtils.createSampleDb(dailyDbName, 1005, false, 5000);
     TestUtils.dropDb(newerdbname);
   }
 
@@ -74,32 +74,35 @@ public class DailyProcessorTest {
         new BasicDBObject().append(AppConstants.MongoNames.HOURLY_JOB_NUMBER_KEY, 10).append(
             AppConstants.MongoNames.HOURLY_JOB_STATUS_KEY, "end");
     hourlyCol.insert(dbo);
-    
-    TestUtils.createSampleDb(newerdbname, 10);
-    
+
+    TestUtils.createSampleDb(newerdbname, 10, false, 5000);
+
     new DailyCopyWorkVerticle.DailyCopyProcessor(mongoClient, dailyDbName, repositoryDbName,
-        dailyPartialDir,new JsonObject().putNumber("dailydbreadgap", 1000)).process();
+        dailyPartialDir, new JsonObject().putNumber("dailydbreadgap", 1000)).process();
     mongoClient = new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
     DB db = mongoClient.getDB(repositoryDbName);
     DBCollection col = db.getCollection(AppConstants.MongoNames.PAGE_VISIT_COL_NAME);
     Assert.assertEquals(0, col.count());
   }
-  
+
   @Test
   public void t1() throws UnknownHostException {
-    TestUtils.createSampleDb(newerdbname, 10);
+    TestUtils.createSampleDb(newerdbname, 10, false, 5000);
     MongoClient mongoClient = new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
     DB dailyDb = mongoClient.getDB(dailyDbName);
 
     DBCollection hourlyCol = dailyDb.getCollection(AppConstants.MongoNames.HOURLY_JOB_COL_NAME);
     for (int idx = 24; idx > 12; idx--) {
       DBObject dbo =
-          new BasicDBObject().append(AppConstants.MongoNames.HOURLY_JOB_NUMBER_KEY, idx + "").append(
-              AppConstants.MongoNames.HOURLY_JOB_STATUS_KEY, "end");
+          new BasicDBObject().append(AppConstants.MongoNames.HOURLY_JOB_NUMBER_KEY, idx + "")
+              .append(AppConstants.MongoNames.HOURLY_JOB_STATUS_KEY, "end");
       hourlyCol.insert(dbo);
     }
-    String dbname = new LogCheckVerticle.RemainDailyDbFinder(new Locker()).findOne("^t-\\d{4}-\\d{2}-\\d{2}$");
-    boolean b = new DailyCopyWorkVerticle.DailyCopyProcessor(mongoClient, dailyDbName, new JsonObject()).isDailyDbComplete();
+    String dbname =
+        new LogCheckVerticle.RemainDailyDbFinder(new Locker()).findOne("^t-\\d{4}-\\d{2}-\\d{2}$");
+    boolean b =
+        new DailyCopyWorkVerticle.DailyCopyProcessor(mongoClient, dailyDbName, new JsonObject())
+            .isDailyDbComplete();
     Assert.assertTrue(b);
     Assert.assertNotNull(dbname);
     mongoClient.close();
@@ -123,10 +126,10 @@ public class DailyProcessorTest {
               AppConstants.MongoNames.HOURLY_JOB_STATUS_KEY, "end");
       hourlyCol.insert(dbo);
     }
-    
-    TestUtils.createSampleDb(newerdbname, 10);
+
+    TestUtils.createSampleDb(newerdbname, 10, false, 5000);
     new DailyCopyWorkVerticle.DailyCopyProcessor(mongoClient, dailyDbName, repositoryDbName,
-        dailyPartialDir,new JsonObject().putNumber("dailydbreadgap", 1000)).process();
+        dailyPartialDir, new JsonObject().putNumber("dailydbreadgap", 1000)).process();
 
     mongoClient = new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
     DB db = mongoClient.getDB(repositoryDbName);

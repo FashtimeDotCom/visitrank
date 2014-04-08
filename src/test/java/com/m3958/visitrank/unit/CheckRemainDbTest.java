@@ -21,15 +21,15 @@ import com.mongodb.MongoClient;
 public class CheckRemainDbTest {
 
   private String dailydbname = "t-2014-03-02";
-  
+
   private String newerdbname = "t-2014-03-03";
-  
+
   private Locker locker;
 
   @Before
   public void setup() throws IOException {
     locker = new Locker();
-    TestUtils.createSampleDb(dailydbname, 10);
+    TestUtils.createSampleDb(dailydbname, 10, false,5000);
     TestUtils.dropDb(newerdbname);
   }
 
@@ -44,25 +44,25 @@ public class CheckRemainDbTest {
 
   @Test
   public void t1() throws UnknownHostException {
-    //has no newerdb.
+    // has no newerdb.
     String fn = new LogCheckVerticle.RemainDailyDbFinder(locker).findOne("t-\\d{4}-\\d{2}-\\d{2}");
     Assert.assertNull(fn);
     locker.releaseLock(dailydbname);
   }
-  
+
   @Test
   public void t2() throws UnknownHostException {
-    //has newerdb.no hourly collection
-    TestUtils.createSampleDb(newerdbname, 10);
+    // has newerdb.no hourly collection
+    TestUtils.createSampleDb(newerdbname, 10, false,5000);
     String fn = new LogCheckVerticle.RemainDailyDbFinder(locker).findOne("t-\\d{4}-\\d{2}-\\d{2}");
     Assert.assertNull(fn);
     locker.releaseLock(dailydbname);
   }
-  
+
   @Test
   public void t3() throws UnknownHostException {
-    //has newerdb.no hourly collection
-    TestUtils.createSampleDb(newerdbname, 10);
+    // has newerdb.no hourly collection
+    TestUtils.createSampleDb(newerdbname, 10, false,5000);
     MongoClient mongoClient = new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
     DB dailyDb = mongoClient.getDB(dailydbname);
 

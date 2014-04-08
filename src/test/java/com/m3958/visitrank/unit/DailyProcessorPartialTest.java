@@ -37,7 +37,7 @@ public class DailyProcessorPartialTest {
     if (!Files.exists(Paths.get(dailyPartialDir, dailyDbName))) {
       TestUtils.deleteDirs(dailyPartialDir);
       TestUtils.dropDb(repositoryDbName);
-      TestUtils.createSampleDb(dailyDbName, 10005);
+      TestUtils.createSampleDb(dailyDbName, 10005, false,5000);
     }
   }
 
@@ -62,16 +62,16 @@ public class DailyProcessorPartialTest {
     DB dailyDb = mongoClient.getDB(dailyDbName);
 
     DBCollection hourlyCol = dailyDb.getCollection(AppConstants.MongoNames.HOURLY_JOB_COL_NAME);
-    //must drop,or complete status detect will wrong.
+    // must drop,or complete status detect will wrong.
     hourlyCol.drop();
     for (int idx = 24; idx > 12; idx--) {
       DBObject dbo =
-          new BasicDBObject().append(AppConstants.MongoNames.HOURLY_JOB_NUMBER_KEY, idx + "").append(
-              AppConstants.MongoNames.HOURLY_JOB_STATUS_KEY, "end");
+          new BasicDBObject().append(AppConstants.MongoNames.HOURLY_JOB_NUMBER_KEY, idx + "")
+              .append(AppConstants.MongoNames.HOURLY_JOB_STATUS_KEY, "end");
       hourlyCol.insert(dbo);
     }
     new DailyCopyWorkVerticle.DailyCopyProcessor(mongoClient, dailyDbName, repositoryDbName,
-        dailyPartialDir,new JsonObject().putNumber("dailydbreadgap", 1000)).process();
+        dailyPartialDir, new JsonObject().putNumber("dailydbreadgap", 1000)).process();
     mongoClient = new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
     DB db = mongoClient.getDB(repositoryDbName);
     DBCollection col = db.getCollection(AppConstants.MongoNames.PAGE_VISIT_COL_NAME);

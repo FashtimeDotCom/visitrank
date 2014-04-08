@@ -3,7 +3,6 @@ package com.m3958.visitrank.unit;
 import java.io.IOException;
 import java.net.UnknownHostException;
 
-
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -19,20 +18,20 @@ import com.mongodb.MongoClient;
 public class DropDbTest {
 
   private String testdb = "tttdb";
-  
+
   @Before
   public void setup() throws IOException {
     TestUtils.dropDb(testdb);
-    TestUtils.createSampleDb(testdb, 10);
+    TestUtils.createSampleDb(testdb, 10, false, 5000);
   }
 
   @After
   public void cleanup() throws IOException {
     TestUtils.dropDb(testdb);
   }
-  
+
   @Test
-  public void t1() throws UnknownHostException{
+  public void t1() throws UnknownHostException {
     MongoClient mongoClient;
     mongoClient = new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
     DB db = mongoClient.getDB(testdb);
@@ -43,9 +42,9 @@ public class DropDbTest {
     mongoClient.close();
     Assert.assertFalse(hexist);
   }
-  
+
   @Test
-  public void t2() throws UnknownHostException{
+  public void t2() throws UnknownHostException {
     TestUtils.dropDb(testdb);
     MongoClient mongoClient;
     mongoClient = new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
@@ -57,5 +56,5 @@ public class DropDbTest {
     mongoClient.close();
     Assert.assertFalse(hexist);
   }
-  
+
 }

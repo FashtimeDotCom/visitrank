@@ -23,6 +23,7 @@ import com.m3958.visitrank.AppConstants;
 import com.m3958.visitrank.AppUtils;
 import com.m3958.visitrank.Utils.IndexBuilder;
 import com.m3958.visitrank.Utils.LogItem;
+import com.m3958.visitrank.Utils.LogItemParser;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
@@ -45,7 +46,9 @@ public class TestUtils {
     mongoClient.close();
   }
 
-  public static void createSampleDb(String dbname, int items) throws UnknownHostException {
+  public static void createSampleDb(String dbname, int items, boolean journal,int step)
+      throws UnknownHostException {
+    long start = System.currentTimeMillis();
     MongoClient mongoClient;
     mongoClient = new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
     DB db = mongoClient.getDB(dbname);
@@ -56,20 +59,28 @@ public class TestUtils {
     String sampleItemFix =
         "\",\"ts\":1395291463536,\"headers\":{\"Connection\":\"keep-alive\",\"\":\"\",\"Host\":\"localhost:8333\",\"User-Agent\":\"Apache-HttpClient/4.2.6 (java 1.5)\",\"ip\":\"127.0.0.1\"}}";
 
-    List<DBObject> obs = new ArrayList<>();
+    List<DBObject> obs;
+    List<LogItem> logItems = new ArrayList<>();
+//    LogItemParser logItemParser = new LogItemParser(100);
     for (int i = 1; i <= items; i++) {
-      DBObject dbo = new LogItem(sampleItemPre + "?article=" + i + sampleItemFix).toDbObject();
-      obs.add(dbo);
-      if (i % 5000 == 0) {
-        col.insert(obs, new WriteConcern(0, 0, false, true, true));
+      logItems.add(new LogItem(sampleItemPre + "?article=" + i + sampleItemFix));
+      if (i % step == 0) {
+        obs = new LogItemParser(100).getLogItems(logItems);
+        col.insert(obs, new WriteConcern(0, 0, false, journal, true));
+        logItems.clear();
         obs.clear();
       }
     }
 
-    if (obs.size() > 0) {
-      col.insert(obs, new WriteConcern(0, 0, false, true, true));
+    if (logItems.size() > 0) {
+      obs = new LogItemParser(100).getLogItems(logItems);
+      col.insert(obs, new WriteConcern(0, 0, false, journal, true));
+      logItems.clear();
+      obs.clear();
     }
     mongoClient.close();
+    System.out.print(System.currentTimeMillis() - start);
+    System.out.println(" ms, create sampledb.");
   }
 
   public static void createSampleDb(String dbname, List<DBObject> dbos) throws UnknownHostException {
@@ -81,10 +92,10 @@ public class TestUtils {
     mongoClient.close();
   }
 
-  public static void createSampleDb(String dbname, int items, int repeat)
+  public static void createSampleDb(String dbname, int items, int repeat, boolean journal)
       throws UnknownHostException {
     for (int i = 0; i < repeat; i++) {
-      createSampleDb(dbname, items);
+      createSampleDb(dbname, items, journal,5000);
     }
   }
 
@@ -136,7 +147,7 @@ public class TestUtils {
   }
 
   public static void assertDailyDbItemEqual(String testlogname) throws UnknownHostException {
-    assertDbItemEqual(AppUtils.getDailyDbName(testlogname,dailyDbPtn), 1000l);
+    assertDbItemEqual(AppUtils.getDailyDbName(testlogname, dailyDbPtn), 1000l);
   }
 
   public static void assertDbItemEqual(String dbname, long itemnumber) throws UnknownHostException {

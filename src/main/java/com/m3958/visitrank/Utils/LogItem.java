@@ -2,6 +2,7 @@ package com.m3958.visitrank.Utils;
 
 import java.io.IOException;
 import java.util.Date;
+import java.util.concurrent.Callable;
 
 import com.m3958.visitrank.uaparser.Client;
 import com.m3958.visitrank.uaparser.Parser;
@@ -9,7 +10,7 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mongodb.util.JSON;
 
-public class LogItem {
+public class LogItem implements Callable<DBObject>{
 
   private String line;
   
@@ -59,6 +60,11 @@ public class LogItem {
       }
     }
     return (String) headers.get(FieldNameAbbreviation.IP);
+  }
+
+  @Override
+  public DBObject call() throws Exception {
+    return transform((DBObject) JSON.parse(line));
   }
   
 }

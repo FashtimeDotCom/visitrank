@@ -25,6 +25,7 @@ import org.vertx.java.platform.Verticle;
 import com.m3958.visitrank.LogCheckVerticle.WriteConcernParser;
 import com.m3958.visitrank.Utils.IndexBuilder;
 import com.m3958.visitrank.Utils.LogItem;
+import com.m3958.visitrank.Utils.LogItemParser;
 import com.m3958.visitrank.logger.AppLogger;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
@@ -115,7 +116,9 @@ public class LogProcessorWorkVerticle extends Verticle {
         partialWriter.write(partialStart + "," + partialStart + AppConstants.LINE_SEP);
 
 
-        List<DBObject> dbos = new ArrayList<>();
+        List<DBObject> dbos;
+        List<LogItem> logItems = new ArrayList<>();
+        
         String line;
         long counter = 0;
         while ((line = reader.readLine()) != null) {
@@ -124,8 +127,7 @@ public class LogProcessorWorkVerticle extends Verticle {
             continue;
           }
           try {
-            // dbos.add((DBObject) JSON.parse(line));
-            dbos.add(new LogItem(line).toDbObject());
+            logItems.add(new LogItem(line));
           } catch (Exception e) {
             AppLogger.error.error("parse exception:" + line);
           }
@@ -133,21 +135,22 @@ public class LogProcessorWorkVerticle extends Verticle {
           if (counter % gap == 0) {
             partialWriter.write(counter + ",");
             partialWriter.flush();
+            dbos = new LogItemParser(100).getLogItems(logItems);
             if (wc == null) {
               coll.insert(dbos);
             } else {
               coll.insert(dbos, wc);
             }
-
             partialWriter.write(counter + AppConstants.LINE_SEP);
             partialWriter.flush();
-            dbos = new ArrayList<>();
+            logItems.clear();
+            dbos.clear();
           }
         }
-        if (dbos.size() > 0) {
+        if (logItems.size() > 0) {
           partialWriter.write(counter + ",");
           partialWriter.flush();
-
+          dbos = new LogItemParser(100).getLogItems(logItems);
           if (wc == null) {
             coll.insert(dbos);
           } else {
@@ -155,6 +158,8 @@ public class LogProcessorWorkVerticle extends Verticle {
           }
           partialWriter.write(counter + AppConstants.LINE_SEP);
           partialWriter.flush();
+          logItems.clear();
+          dbos.clear();
         }
         reader.close();
         partialWriter.close();

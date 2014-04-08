@@ -36,51 +36,51 @@ public class LogBatchInsertTestNo {
     TestUtils.dropDailyDb(testlogname);
   }
   
-//  @Test
-//  public void t() throws UnknownHostException{
-//    JsonObject cfg = new JsonObject().putNumber("gap", 20000);
-//    long start = System.currentTimeMillis();
-//    LogProcessor lp = new LogProcessor(logDir, archiveDir, testlogname, cfg);
-//    lp.process();
-//    System.out.println("gap 20000,write concern:");
-//    System.out.print(System.currentTimeMillis() - start);
-//    System.out.println(" ms");
-//  }
+  @Test
+  public void t() throws UnknownHostException{
+    JsonObject cfg = new JsonObject().putNumber("gap", 20000);
+    long start = System.currentTimeMillis();
+    LogProcessor lp = new LogProcessor(logDir, archiveDir, testlogname, cfg);
+    lp.process();
+    System.out.println("gap 20000,write concern:");
+    System.out.print(System.currentTimeMillis() - start);
+    System.out.println(" ms");
+  }
   
-//  @Test
-//  public void twconcern() throws UnknownHostException{
-//    JsonObject cfg = new JsonObject().putNumber("gap", 10000);
-//    long start = System.currentTimeMillis();
-//    LogProcessor lp = new LogProcessor(logDir, archiveDir, testlogname, cfg);
-//    lp.process();
-//    System.out.println("gap 10000,write concern:");
-//    System.out.print(System.currentTimeMillis() - start);
-//    System.out.println(" ms");
-//  }
+  @Test
+  public void twconcern() throws UnknownHostException{
+    JsonObject cfg = new JsonObject().putNumber("gap", 10000);
+    long start = System.currentTimeMillis();
+    LogProcessor lp = new LogProcessor(logDir, archiveDir, testlogname, cfg);
+    lp.process();
+    System.out.println("gap 10000,write concern:");
+    System.out.print(System.currentTimeMillis() - start);
+    System.out.println(" ms");
+  }
   
 
   
-//  @Test
-//  public void twconcern0() throws UnknownHostException{
-//    JsonObject cfg = new JsonObject().putNumber("gap", 10000);
-//    long start = System.currentTimeMillis();
-//    LogProcessor lp = new LogProcessor(logDir, archiveDir, testlogname, cfg);
-//    lp.process();
-//    System.out.println("gap 10000,write concern:");
-//    System.out.print(System.currentTimeMillis() - start);
-//    System.out.println(" ms");
-//  }
+  @Test
+  public void twconcern0() throws UnknownHostException{
+    JsonObject cfg = new JsonObject().putNumber("gap", 10000);
+    long start = System.currentTimeMillis();
+    LogProcessor lp = new LogProcessor(logDir, archiveDir, testlogname, cfg);
+    lp.process();
+    System.out.println("gap 10000,write concern:");
+    System.out.print(System.currentTimeMillis() - start);
+    System.out.println(" ms");
+  }
   
-//  @Test
-//  public void twconcern2() throws UnknownHostException{
-//    JsonObject cfg = new JsonObject().putNumber("gap", 1000);
-//    long start = System.currentTimeMillis();
-//    LogProcessor lp = new LogProcessor(logDir, archiveDir, testlogname, cfg);
-//    lp.process();
-//    System.out.println("gap 1000,write concern:");
-//    System.out.print(System.currentTimeMillis() - start);
-//    System.out.println(" ms");
-//  }
+  @Test
+  public void twconcern2() throws UnknownHostException{
+    JsonObject cfg = new JsonObject().putNumber("gap", 1000);
+    long start = System.currentTimeMillis();
+    LogProcessor lp = new LogProcessor(logDir, archiveDir, testlogname, cfg);
+    lp.process();
+    System.out.println("gap 1000,write concern:");
+    System.out.print(System.currentTimeMillis() - start);
+    System.out.println(" ms");
+  }
   
   @Test
   public void tnowconcern1() throws UnknownHostException{
