@@ -14,14 +14,15 @@
 			</PatternLayout>
 		</File>
 
-		<RollingFile name="RollingFile" fileName="logs/app.log" append="false" 
+		<RollingFile name="RollingFile" fileName="logs/app.log"
 			filePattern="logs/$${date:yyyy-MM-dd}-%d{HH-mm}.log"> <!-- -%i的作用是在周期内，另一個triggering產生作用的時候計數 -->
 			<PatternLayout>
 				<Pattern>%m%n</Pattern>
 			</PatternLayout>
 			<Policies>
-				<TimeBasedTriggeringPolicy interval="15"	modulate="true" />
-			<!-- <SizeBasedTriggeringPolicy size="1 KB" />  -->
+				<TimeBasedTriggeringPolicy interval="15"
+					modulate="true" />
+				<!-- <SizeBasedTriggeringPolicy size="1 KB" /> -->
 			</Policies>
 		</RollingFile>
 		<File name="DeployError" fileName="monitorlogs/derr.log">
@@ -30,6 +31,17 @@
 					%m%n </Pattern>
 			</PatternLayout>
 		</File>
+
+		<RollingFile name="PartialFile" fileName="partiallog/partial.log"
+			filePattern="partiallog/partial-%i.log">
+			<PatternLayout>
+				<Pattern>%m%n</Pattern>
+			</PatternLayout>
+			<Policies>
+				<SizeBasedTriggeringPolicy size="1 MB" />
+			</Policies>
+			<DefaultRolloverStrategy max="2" />
+		</RollingFile>
 
 	</Appenders>
 
@@ -44,6 +56,10 @@
 
 		<Logger name="processLogger" level="info" additivity="false">
 			<AppenderRef ref="ProcessLogger" />
+		</Logger>
+
+		<Logger name="partialLogger" level="info" additivity="false">
+			<AppenderRef ref="PartialFile" />
 		</Logger>
 
 		<Root level="info">
