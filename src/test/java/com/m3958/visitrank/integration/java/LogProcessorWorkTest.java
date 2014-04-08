@@ -19,6 +19,7 @@ package com.m3958.visitrank.integration.java;
 import static org.vertx.testtools.VertxAssert.assertTrue;
 
 import java.io.IOException;
+import java.util.regex.Pattern;
 
 import org.junit.Test;
 import org.vertx.java.core.AsyncResult;
@@ -29,6 +30,7 @@ import org.vertx.java.core.json.JsonObject;
 import org.vertx.testtools.TestVerticle;
 import org.vertx.testtools.VertxAssert;
 
+import com.m3958.visitrank.AppConstants;
 import com.m3958.visitrank.LogProcessorWorkVerticle;
 import com.m3958.visitrank.LogProcessorWorkVerticle.LogProcessorWorkMsgKey;
 import com.m3958.visitrank.testutils.TestUtils;
@@ -69,6 +71,8 @@ public class LogProcessorWorkTest extends TestVerticle {
     } catch (IOException e) {
       e.printStackTrace();
     }
+    
+    AppConstants.dailyDbPtn = Pattern.compile("(.*\\d{4}-\\d{2}-\\d{2})(.*)");
 
     final JsonObject body =
         new JsonObject().putString(LogProcessorWorkMsgKey.FILE_NAME, testlogname)

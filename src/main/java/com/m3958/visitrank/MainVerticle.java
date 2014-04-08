@@ -75,7 +75,8 @@ public class MainVerticle extends Verticle {
               .putNumber("logprocessorinstance", AppConstants.LOG_PROCESSOR_INSTANCE)
               .putNumber("dailydbreadgap", AppConstants.DAILY_DB_READ_GAP)
               .putNumber("logfilereadgap", AppConstants.LOGFILE_READ_GAP)
-              .putString("writeconcern", AppConstants.WRITE_CONCERN);
+              .putString("writeconcern", AppConstants.WRITE_CONCERN)
+              .putNumber("logitempoolsize", AppConstants.LOGITEM_POOL_SIZE);
 
       container.deployVerticle(AppConstants.LOGCHECK_VERTICLE_NAME, logCheckCfg, 1);
 

@@ -24,7 +24,6 @@ import com.m3958.visitrank.AppUtils;
 import com.m3958.visitrank.Utils.IndexBuilder;
 import com.m3958.visitrank.Utils.LogItem;
 import com.m3958.visitrank.Utils.LogItemParser;
-import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
@@ -53,7 +52,7 @@ public class TestUtils {
     mongoClient = new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
     DB db = mongoClient.getDB(dbname);
     DBCollection col =
-        db.createCollection(AppConstants.MongoNames.PAGE_VISIT_COL_NAME, new BasicDBObject());
+        db.getCollection(AppConstants.MongoNames.PAGE_VISIT_COL_NAME);
     col.createIndex(IndexBuilder.getPageVisitColIndexKeys());
     String sampleItemPre = "{\"url\":\"http://sb.m3958.com";
     String sampleItemFix =
@@ -61,7 +60,6 @@ public class TestUtils {
 
     List<DBObject> obs;
     List<LogItem> logItems = new ArrayList<>();
-//    LogItemParser logItemParser = new LogItemParser(100);
     for (int i = 1; i <= items; i++) {
       logItems.add(new LogItem(sampleItemPre + "?article=" + i + sampleItemFix));
       if (i % step == 0) {

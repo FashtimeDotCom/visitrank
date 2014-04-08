@@ -5,6 +5,7 @@ import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Paths;
+import java.util.regex.Pattern;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -49,8 +50,9 @@ public class PartialLogTest {
 
   @Test
   public void t() throws UnknownHostException {
+    AppConstants.dailyDbPtn = Pattern.compile("(.*\\d{4}-\\d{2}-\\d{2})(.*)");
     new LogProcessorWorkVerticle.LogProcessor(logDir, archiveDir, testlogname,
-        new JsonObject().putNumber("logfilereadgap", 10)).process();
+        new JsonObject().putNumber("logfilereadgap", 10), 100).process();
     Assert.assertTrue(Files.exists(Paths.get(archiveDir), LinkOption.NOFOLLOW_LINKS));
     Assert.assertTrue(Files.exists(Paths.get(archiveDir, testlogname), LinkOption.NOFOLLOW_LINKS));
     TestUtils.assertDailyDbItemEqual(testlogname);

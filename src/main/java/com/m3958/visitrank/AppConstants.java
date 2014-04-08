@@ -14,6 +14,8 @@ public class AppConstants {
   public static boolean ONLY_LOG = false;
   
   public static String LINE_SEP = System.getProperty("line.separator");
+  
+  public static int LOGITEM_POOL_SIZE = 100;
 
   public static int HTTP_PORT = 8333;
   public static int HTTP_INSTANCE = 1;
@@ -82,6 +84,8 @@ public class AppConstants {
     WRITE_CONCERN = config.getString("writeconcern", WRITE_CONCERN);
     
     ONLY_LOG = config.getBoolean("onlylog", ONLY_LOG);
+    
+    LOGITEM_POOL_SIZE = config.getInteger("logitempoolsize", LOGITEM_POOL_SIZE);
 
   }
 

@@ -52,6 +52,7 @@ public class LogProcessorWorkVerticle extends Verticle {
     public static String LOG_DIR = "logDir";
     public static String ARCHIVE_DIR = "archiveDir";
     public static String REPLY = "reply";
+    public static String LOGITEM_POOL_SIZE = "logitempoolsize";
   }
 
   @Override
@@ -63,7 +64,8 @@ public class LogProcessorWorkVerticle extends Verticle {
         final String filename = body.getString(LogProcessorWorkMsgKey.FILE_NAME);
         final String logDir = body.getString(LogProcessorWorkMsgKey.LOG_DIR, "logs");
         final String archiveDir = body.getString(LogProcessorWorkMsgKey.ARCHIVE_DIR, "archives");
-        new LogProcessor(logDir, archiveDir, filename, body).process();
+        final int logitemPoolSize = body.getInteger(LogProcessorWorkMsgKey.LOGITEM_POOL_SIZE, 100);
+        new LogProcessor(logDir, archiveDir, filename, body, logitemPoolSize).process();
         message.reply("done");
       }
     });
@@ -78,12 +80,16 @@ public class LogProcessorWorkVerticle extends Verticle {
 
     private JsonObject writeconcern;
 
-    public LogProcessor(String logDir, String archiveDir, String filename, JsonObject cfg) {
+    private int logitemPoolSize;
+
+    public LogProcessor(String logDir, String archiveDir, String filename, JsonObject cfg,
+        int logitemPoolSize) {
       this.logDir = logDir;
       this.archiveDir = archiveDir;
       this.filename = filename;
       this.gap = cfg.getLong("logfilereadgap", 1000);
       this.writeconcern = cfg.getObject("writeconcern");
+      this.logitemPoolSize = logitemPoolSize;
     }
 
     public void process() {
@@ -118,7 +124,7 @@ public class LogProcessorWorkVerticle extends Verticle {
 
         List<DBObject> dbos;
         List<LogItem> logItems = new ArrayList<>();
-        
+
         String line;
         long counter = 0;
         while ((line = reader.readLine()) != null) {
@@ -135,7 +141,7 @@ public class LogProcessorWorkVerticle extends Verticle {
           if (counter % gap == 0) {
             partialWriter.write(counter + ",");
             partialWriter.flush();
-            dbos = new LogItemParser(100).getLogItems(logItems);
+            dbos = new LogItemParser(logitemPoolSize).getLogItems(logItems);
             if (wc == null) {
               coll.insert(dbos);
             } else {
@@ -150,7 +156,7 @@ public class LogProcessorWorkVerticle extends Verticle {
         if (logItems.size() > 0) {
           partialWriter.write(counter + ",");
           partialWriter.flush();
-          dbos = new LogItemParser(100).getLogItems(logItems);
+          dbos = new LogItemParser(logitemPoolSize).getLogItems(logItems);
           if (wc == null) {
             coll.insert(dbos);
           } else {
