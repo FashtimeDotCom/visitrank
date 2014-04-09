@@ -18,3 +18,4 @@ archives/
 monitorlogs/
 logs/app.log
 testlogs/
+partiallog/
