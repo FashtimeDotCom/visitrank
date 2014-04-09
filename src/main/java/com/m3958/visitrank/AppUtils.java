@@ -3,13 +3,16 @@ package com.m3958.visitrank;
 import java.nio.file.Path;
 import java.util.Date;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.vertx.java.core.http.HttpServerRequest;
 import org.vertx.java.core.json.JsonObject;
 
-import com.m3958.visitrank.Utils.FileTailer;
+import com.m3958.visitrank.Utils.FileLineReader;
+import com.mongodb.DB;
+import com.mongodb.MongoClient;
 
 public class AppUtils {
 
@@ -32,7 +35,7 @@ public class AppUtils {
   }
 
   public static long getLastPartialPosition(Path partialLogPath) {
-    String[] lines = new FileTailer(partialLogPath.toString()).getLines(1);
+    String[] lines = new FileLineReader(partialLogPath.toString()).getLastLines(1);
     if (lines.length == 1) {
       String[] ss = lines[0].split(",");
       if (ss.length == 2) { // 1000,1000 means 1000 has write to mongodb.
@@ -68,5 +71,15 @@ public class AppUtils {
     jo.putNumber("ts", new Date().getTime()).putObject("headers", headerJo);
 
     return jo;
+  }
+
+  public static boolean colExist(MongoClient mongoClient, DB db, String colname) {
+    Set<String> cols = db.getCollectionNames();
+    for (String c : cols) {
+      if (colname.equals(c)) {
+        return true;
+      }
+    }
+    return false;
   }
 }

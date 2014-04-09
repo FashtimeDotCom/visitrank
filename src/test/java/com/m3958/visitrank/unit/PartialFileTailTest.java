@@ -14,7 +14,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.m3958.visitrank.Utils.FileTailer;
+import com.m3958.visitrank.Utils.FileLineReader;
 
 public class PartialFileTailTest {
 
@@ -37,35 +37,35 @@ public class PartialFileTailTest {
   @Test
   public void t1() throws IOException {
     createFileEmpty();
-    String[] ss = new FileTailer(tp.toString()).getLines(1);
+    String[] ss = new FileLineReader(tp.toString()).getLastLines(1);
     Assert.assertEquals(0, ss.length);
   }
 
   @Test
   public void t2() throws IOException {
     createFileEndWithNl();
-    String[] ss = new FileTailer(tp.toString()).getLines(1);
+    String[] ss = new FileLineReader(tp.toString()).getLastLines(1);
     Assert.assertEquals("world", ss[0]);
   }
 
   @Test
   public void t4() throws IOException {
     createFileEndWithNl1();
-    String[] ss = new FileTailer(tp.toString()).getLines(1);
+    String[] ss = new FileLineReader(tp.toString()).getLastLines(1);
     Assert.assertEquals("world", ss[0]);
   }
 
   @Test
   public void t5() throws IOException {
     createFileEndWithNlChinese();
-    String[] ss = new FileTailer(tp.toString()).getLines(1);
+    String[] ss = new FileLineReader(tp.toString()).getLastLines(1);
     Assert.assertEquals("哈巴", ss[0]);
   }
 
   @Test
   public void t6() throws IOException {
     createFileEndWithNlChinese();
-    String[] ss = new FileTailer(tp.toString()).getLines(2);
+    String[] ss = new FileLineReader(tp.toString()).getLastLines(2);
     Assert.assertEquals("狗", ss[0]);
     Assert.assertEquals("哈巴", ss[1]);
   }
@@ -73,7 +73,7 @@ public class PartialFileTailTest {
   @Test
   public void t7() throws IOException {
     createFileOneline();
-    String[] ss = new FileTailer(tp.toString()).getLines(2);
+    String[] ss = new FileLineReader(tp.toString()).getLastLines(2);
     Assert.assertEquals(1, ss.length);
     Assert.assertEquals("hello", ss[0]);
   }
@@ -95,7 +95,7 @@ public class PartialFileTailTest {
   @Test
   public void t3() throws IOException {
     createFileNoEndNl();
-    String[] ss = new FileTailer(tp.toString()).getLines(1);
+    String[] ss = new FileLineReader(tp.toString()).getLastLines(1);
     Assert.assertEquals("world", ss[0]);
   }
 

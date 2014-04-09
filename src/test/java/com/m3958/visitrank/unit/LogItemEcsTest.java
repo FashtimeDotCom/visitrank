@@ -2,7 +2,6 @@ package com.m3958.visitrank.unit;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Callable;
 import java.util.concurrent.CompletionService;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorCompletionService;
@@ -21,7 +20,7 @@ public class LogItemEcsTest {
 
   private static ExecutorService initedPool;
 
-  private static int initPoolSize = 100;
+  private static int initPoolSize = 10;
 
   @BeforeClass
   public static void classSetup() {
@@ -36,29 +35,39 @@ public class LogItemEcsTest {
   @Test
   public void t9() throws InterruptedException, ExecutionException {
     long start = System.currentTimeMillis();
-    ecsPatternRun(10000);
+    ecsPatternRun(10000 * 10);
     System.out.println("ecs execute 10000: " + (System.currentTimeMillis() - start));
   }
 
   private void ecsPatternRun(int testNum) {
     CompletionService<DBObject> ecs = new ExecutorCompletionService<DBObject>(initedPool);
-    List<LogItem> logItems = new ArrayList<>();
-    for (int i = 0; i < testNum; i++) {
-      logItems.add(new LogItem(TestConstants.logItemSample));
-    }
 
-    for (Callable<DBObject> s : logItems)
-      ecs.submit(s);
-    int n = logItems.size();
-    for (int i = 0; i < n; ++i) {
+    List<DBObject> results = new ArrayList<>();
+    
+    for (int i = 0; i < testNum; i++) {
+      ecs.submit(new LogItem(TestConstants.logItemSample));
+    }
+    int counter = 0;
+    for (int i = 0; i < testNum; ++i) {
       DBObject r = null;
       try {
         r = ecs.take().get();
       } catch (InterruptedException | ExecutionException e) {
+        e.printStackTrace();
       }
       if (r != null) {
-//        System.out.println(r);
+        counter++;
+        results.add(r);
+        if(counter % 999 == 0){
+          System.out.println("at position:" + counter);
+          results.clear();
+        }
       }
     }
+    
+    if(results.size() > 0){
+      System.out.println("last position:" + counter);
+    }
+    
   }
 }

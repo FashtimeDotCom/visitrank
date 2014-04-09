@@ -4,13 +4,13 @@
 	<Appenders>
 		<File name="errorLog" fileName="monitorlogs/error.log">
 			<PatternLayout>
-				<Pattern>%d{HH:mm:ss.SSS} - %m%n</Pattern>
+				<Pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} - %m%n</Pattern>
 			</PatternLayout>
 		</File>
 
 		<File name="ProcessLogger" fileName="monitorlogs/process.log">
 			<PatternLayout>
-				<Pattern>%d{HH:mm:ss.SSS} - %m%n</Pattern>
+				<Pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} - %m%n</Pattern>
 			</PatternLayout>
 		</File>
 

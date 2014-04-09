@@ -3,10 +3,8 @@ package com.m3958.visitrank;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.UnknownHostException;
 import java.nio.file.Files;
@@ -16,7 +14,6 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.bson.types.ObjectId;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonObject;
@@ -26,8 +23,8 @@ import com.m3958.visitrank.LogCheckVerticle.WriteConcernParser;
 import com.m3958.visitrank.Utils.IndexBuilder;
 import com.m3958.visitrank.Utils.LogItem;
 import com.m3958.visitrank.Utils.LogItemParser;
+import com.m3958.visitrank.Utils.PartialUtil;
 import com.m3958.visitrank.logger.AppLogger;
-import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
@@ -98,10 +95,11 @@ public class LogProcessorWorkVerticle2 extends Verticle {
         Path logfilePath = Paths.get(logDir, filename);
         Path partialLogPath = Paths.get(logDir, filename + AppConstants.PARTIAL_POSTFIX);
 
+
+
         MongoClient mongoClient =
             new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
-        DB db = mongoClient.getDB(AppUtils.getDailyDbName(filename, AppConstants.dailyDbPtn));
-        ObjectId hourJobId = insertHourJobStart(db);
+        DB db = mongoClient.getDB(AppConstants.MongoNames.REPOSITORY_DB_NAME);
         DBCollection coll = db.getCollection(AppConstants.MongoNames.PAGE_VISIT_COL_NAME);
 
         coll.createIndex(IndexBuilder.getPageVisitColIndexKeys());
@@ -109,29 +107,28 @@ public class LogProcessorWorkVerticle2 extends Verticle {
         BufferedReader reader =
             new BufferedReader(new InputStreamReader(new FileInputStream(logfilePath.toFile()),
                 "UTF-8"));
-        // skip partial appened.
-        long partialStart = 0;
+        long lastInsertPosition = -1;
         if (Files.exists(partialLogPath)) {
-          partialStart = AppUtils.getLastPartialPosition(partialLogPath);
-          AppLogger.processLogger
-              .info("process " + filename + " " + partialStart + " continueing.");
+          lastInsertPosition =
+              PartialUtil.findLastPosition(logfilePath);
+        } else {
+          Files.createFile(partialLogPath);
         }
-
-        OutputStreamWriter partialWriter =
-            new OutputStreamWriter(new FileOutputStream(partialLogPath.toFile()), "UTF-8");
-        partialWriter.write(partialStart + "," + partialStart + AppConstants.LINE_SEP);
-
 
         List<DBObject> dbos;
         List<LogItem> logItems = new ArrayList<>();
 
+
         String line;
+
+        if (lastInsertPosition != -1) {
+          while ((line = reader.readLine()) != null && lastInsertPosition > 0) {
+            lastInsertPosition--;
+          }
+        }
+
         long counter = 0;
         while ((line = reader.readLine()) != null) {
-          if (counter < partialStart) {
-            counter++;
-            continue;
-          }
           try {
             logItems.add(new LogItem(line));
           } catch (Exception e) {
@@ -139,37 +136,30 @@ public class LogProcessorWorkVerticle2 extends Verticle {
           }
           counter++;
           if (counter % gap == 0) {
-            partialWriter.write(counter + ",");
-            partialWriter.flush();
             dbos = new LogItemParser(logitemPoolSize).getLogItems(logItems);
             if (wc == null) {
               coll.insert(dbos);
             } else {
               coll.insert(dbos, wc);
             }
-            partialWriter.write(counter + AppConstants.LINE_SEP);
-            partialWriter.flush();
             logItems.clear();
             dbos.clear();
           }
         }
         if (logItems.size() > 0) {
-          partialWriter.write(counter + ",");
-          partialWriter.flush();
           dbos = new LogItemParser(logitemPoolSize).getLogItems(logItems);
           if (wc == null) {
             coll.insert(dbos);
           } else {
             coll.insert(dbos, wc);
           }
-          partialWriter.write(counter + AppConstants.LINE_SEP);
-          partialWriter.flush();
           logItems.clear();
           dbos.clear();
         }
         reader.close();
-        partialWriter.close();
-        updateHourJobEnd(db, hourJobId);
+
+        Files.delete(partialLogPath);
+
         mongoClient.close();
 
         moveLogFiles(logfilePath);
@@ -196,23 +186,6 @@ public class LogProcessorWorkVerticle2 extends Verticle {
           LinkOption.NOFOLLOW_LINKS)) {
         Files.delete(Paths.get(logDir, filename + AppConstants.PARTIAL_POSTFIX));
       }
-    }
-
-    private ObjectId insertHourJobStart(DB db) {
-      DBCollection hourlyCol = db.getCollection(AppConstants.MongoNames.HOURLY_JOB_COL_NAME);
-      DBObject dbo =
-          new BasicDBObject().append(AppConstants.MongoNames.HOURLY_JOB_NUMBER_KEY,
-              AppUtils.getHour(filename, AppConstants.dailyDbPtn)).append(
-              AppConstants.MongoNames.HOURLY_JOB_STATUS_KEY, "start");
-      hourlyCol.insert(dbo);
-      return (ObjectId) dbo.get("_id");
-    }
-
-    private void updateHourJobEnd(DB db, ObjectId id) {
-      DBCollection hourlyCol = db.getCollection(AppConstants.MongoNames.HOURLY_JOB_COL_NAME);
-      DBObject dbo = hourlyCol.findOne(new BasicDBObject("_id", id));
-      dbo.put(AppConstants.MongoNames.HOURLY_JOB_STATUS_KEY, "end");
-      hourlyCol.update(new BasicDBObject("_id", id), dbo);
     }
   }
 }
