@@ -1,10 +1,8 @@
 package com.m3958.visitrank;
 
-import java.io.BufferedReader;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.RandomAccessFile;
 import java.io.UnsupportedEncodingException;
 import java.net.UnknownHostException;
 import java.nio.file.Files;
@@ -20,6 +18,7 @@ import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.platform.Verticle;
 
 import com.m3958.visitrank.LogCheckVerticle.WriteConcernParser;
+import com.m3958.visitrank.Utils.FileLineReader.FindLineResult;
 import com.m3958.visitrank.Utils.IndexBuilder;
 import com.m3958.visitrank.Utils.LogItem;
 import com.m3958.visitrank.Utils.LogItemParser;
@@ -95,8 +94,6 @@ public class LogProcessorWorkVerticle2 extends Verticle {
         Path logfilePath = Paths.get(logDir, filename);
         Path partialLogPath = Paths.get(logDir, filename + AppConstants.PARTIAL_POSTFIX);
 
-
-
         MongoClient mongoClient =
             new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
         DB db = mongoClient.getDB(AppConstants.MongoNames.REPOSITORY_DB_NAME);
@@ -104,10 +101,9 @@ public class LogProcessorWorkVerticle2 extends Verticle {
 
         coll.createIndex(IndexBuilder.getPageVisitColIndexKeys());
 
-        BufferedReader reader =
-            new BufferedReader(new InputStreamReader(new FileInputStream(logfilePath.toFile()),
-                "UTF-8"));
-        long lastInsertPosition = -1;
+        RandomAccessFile raf = new RandomAccessFile(logfilePath.toFile(), "r");
+        
+        FindLineResult lastInsertPosition = null;
         if (Files.exists(partialLogPath)) {
           lastInsertPosition =
               PartialUtil.findLastPosition(logfilePath);
@@ -118,17 +114,18 @@ public class LogProcessorWorkVerticle2 extends Verticle {
         List<DBObject> dbos;
         List<LogItem> logItems = new ArrayList<>();
 
-
-        String line;
-
-        if (lastInsertPosition != -1) {
-          while ((line = reader.readLine()) != null && lastInsertPosition > 0) {
-            lastInsertPosition--;
+        if (lastInsertPosition != null) {
+          raf.seek(lastInsertPosition.getStart());
+          if(lastInsertPosition.isNeedSkipOne()){
+            String skipline = raf.readLine();
+            if(skipline == null || skipline.isEmpty()){
+              skipline = raf.readLine();
+            }
           }
         }
-
+        String line;
         long counter = 0;
-        while ((line = reader.readLine()) != null) {
+        while ((line = raf.readLine()) != null) {
           try {
             logItems.add(new LogItem(line));
           } catch (Exception e) {
@@ -156,7 +153,7 @@ public class LogProcessorWorkVerticle2 extends Verticle {
           logItems.clear();
           dbos.clear();
         }
-        reader.close();
+        raf.close();
 
         Files.delete(partialLogPath);
 

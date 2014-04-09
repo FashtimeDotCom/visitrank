@@ -3,9 +3,12 @@ package com.m3958.visitrank.unit;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.RandomAccessFile;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -94,10 +97,10 @@ public class FileLineReaderTest {
   
   @Test
   public void t7() throws IOException, InterruptedException{
-    long times = 10000*1000;
+    long times = 10000;
     writesome(times);
     Thread.sleep(100);
-    long i = 47800;
+    long i = 7800;
     long start = System.currentTimeMillis();
     FileLineReader flr = new FileLineReader(tf.toString());
     FindLineResult result = flr.getLogItem("xx" + i, i);
@@ -111,6 +114,61 @@ public class FileLineReaderTest {
     for(long i=0;i<10;i++){
       findAll(i);
     }
+  }
+  
+  @Test
+  public void t9() throws FileNotFoundException{
+    writesome(100);
+    FileLineReader flr = new FileLineReader(tf.toString());
+    String[] ss = flr.getLastLines(2);
+    Assert.assertEquals("xx98", new JsonObject(ss[0]).getString("u"));
+    Assert.assertEquals(99, (int)new JsonObject(ss[1]).getInteger("t"));
+  }
+  
+  @Test
+  public void t10() throws FileNotFoundException{
+    writesome(1);
+    FileLineReader flr = new FileLineReader(tf.toString());
+    String[] ss = flr.getLastLines(2);
+    Assert.assertEquals("xx0", new JsonObject(ss[0]).getString("u"));
+    Assert.assertEquals(1, ss.length);
+  }
+  
+  @Test
+  public void t11() throws IOException, InterruptedException{
+    long times = 10000;
+    writesome(times);
+    Thread.sleep(100);
+    long i = 7800;
+    FileLineReader flr = new FileLineReader(tf.toString());
+    FindLineResult result = flr.getLogItem("xx" + i, i);
+    
+    RandomAccessFile arf = new RandomAccessFile(tf.toFile(), "r");
+    //it maybe read an empty line;
+    arf.seek(result.getStart());
+    String line = arf.readLine();
+    if(line == null || line.isEmpty()){
+      line = arf.readLine();
+    }
+    arf.close();
+    
+    Assert.assertEquals(getT(result.getLine()),(long)new JsonObject(line).getLong("t") );
+  }
+  
+  @Test
+  public void t12() throws IOException{
+    writesome(10);
+    RandomAccessFile arf = new RandomAccessFile(tf.toFile(), "r");
+    String line;
+    
+    List<String> lines = new ArrayList<>();
+    while((line = arf.readLine()) != null){
+      lines.add(line);
+    }
+    arf.close();
+    Assert.assertEquals(10, lines.size());
+    Assert.assertEquals(0,(long)new JsonObject(lines.get(0)).getLong("t") );
+    Assert.assertEquals(9,(long)new JsonObject(lines.get(9)).getLong("t") );
   }
   
   private void findAll(long i) throws IOException{

@@ -12,9 +12,9 @@ import org.vertx.java.core.json.JsonObject;
 public class FileLineReader {
 
   private RandomAccessFile fileHandler;
-  
-//  private long filePointer;
-  
+
+  // private long filePointer;
+
   private long fileLength;
   private long gap;
 
@@ -41,7 +41,6 @@ public class FileLineReader {
 
   public String[] getLastLinesIncludeEmpty(int howmuch) {
     try {
-      long fileLength = fileHandler.length();
       if (fileLength == 0) {
         return new String[] {};
       }
@@ -51,7 +50,7 @@ public class FileLineReader {
       for (int idx = maxIdx; idx > -1; idx--) {
         FindLineResult flr = readOneLine(startPoint);
         startPoint = flr.getStart();
-        if(flr != null){
+        if (flr != null) {
           lns[idx] = flr.getLine();
         }
       }
@@ -97,7 +96,7 @@ public class FileLineReader {
     return r;
   }
 
-  private FindLineResult getLogItemPosition(String u, long t, long position) throws IOException {
+  private FindLineResult getLogItemPosition(String url, long ts, long position) throws IOException {
     long p;
     if (position == -1) {
       p = this.fileLength / 2;
@@ -118,15 +117,56 @@ public class FileLineReader {
       return null;
     }
     JsonObject jo = new JsonObject(lr.getLine());
-    if (u.equals(jo.getString("u")) && t == jo.getLong("t")) {
+    if (url.equals(jo.getString("url")) && ts == jo.getLong("ts")) {
       return lr;
     } else {
-      if (t > jo.getLong("t")) {
-        return getLogItemPosition(u, t, p + gap);
+      if (ts > jo.getLong("ts")) {
+        return getLogItemPosition(url, ts, p + gap);
+      } else if (ts < jo.getLong("ts")) {
+        return getLogItemPosition(url, ts, p - gap);
       } else {
-        return getLogItemPosition(u, t, p - gap);
+        // if ts are equal.target will be at somewhere nearby.
+        FindLineResult r = getNearBy(url, ts, p, 1);
+        if (r == null) {
+          r = getNearBy(url, ts, p, -1);
+        }
+        return r;
       }
     }
+  }
+
+  private FindLineResult getNearBy(String url, long ts, long p, int direction) throws IOException {
+    fileHandler.seek(p);
+    if (direction == 1) {
+      FindLineResult r = getLineByPosition(p, false);
+      if (r != null) {
+        JsonObject jo = new JsonObject(r.getLine());
+        if (ts == jo.getLong("ts") && url.equals(jo.getString("url"))) {
+          return r;
+        }
+      }
+      String line;
+      while ((line = fileHandler.readLine()) != null) {
+        if (line.isEmpty()) {
+          continue;
+        }
+        JsonObject jo = new JsonObject(line);
+        if (ts == jo.getLong("ts") && url.equals(jo.getString("url"))) {
+          return new FindLineResult(line, fileHandler.getFilePointer(), false);
+        }
+      }
+    } else {
+      FindLineResult r;
+      long pp = p;
+      while ((r = getLineByPosition(pp, false)) != null) {
+        JsonObject jo = new JsonObject(r.getLine());
+        if (ts == jo.getLong("ts") && url.equals(jo.getString("url"))) {
+          return r;
+        }
+        pp = r.getStart();
+      }
+    }
+    return null;
   }
 
   public FindLineResult getLineByPosition(long fpPosition) throws IOException {
@@ -140,7 +180,7 @@ public class FileLineReader {
       lr = null;
     } else {
       long startPoint = fpPosition;
-      // seek foward to newline or end of file.
+      // seek foward to newline or end of file,when stop,it's before newline.
       for (; startPoint < fileLength; startPoint++) {
         fileHandler.seek(startPoint);
         byte readByte = fileHandler.readByte();
@@ -192,16 +232,21 @@ public class FileLineReader {
       bytes[idx] = lb.get(maxIdx - idx);
     }
     String lastLine = new String(bytes, "UTF-8");
-    return new FindLineResult(lastLine, filePointer + 1);
+    // when end,fp position is before newline;
+    return new FindLineResult(lastLine, filePointer, true);
   }
 
   public static class FindLineResult {
     private String line;
     private long start;
 
-    public FindLineResult(String line, long start) {
+    private boolean needSkipOne;
+
+
+    public FindLineResult(String line, long start, boolean needSkipOne) {
       this.line = line;
       this.setStart(start);
+      this.setNeedSkipOne(needSkipOne);
     }
 
     public String getLine() {
@@ -223,6 +268,14 @@ public class FileLineReader {
     @Override
     public String toString() {
       return line + " - " + start;
+    }
+
+    public boolean isNeedSkipOne() {
+      return needSkipOne;
+    }
+
+    public void setNeedSkipOne(boolean needSkipOne) {
+      this.needSkipOne = needSkipOne;
     }
   }
 }

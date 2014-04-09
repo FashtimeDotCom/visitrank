@@ -121,7 +121,7 @@ public class TestUtils {
       throws UnsupportedEncodingException, FileNotFoundException {
     String sampleItemPre = "{\"url\":\"http://sb.m3958.com";
     String sampleItemFix =
-        "\",\"ts\":1396173397887,\"headers\":{\"Connection\":\"keep-alive\",\"\":\"\",\"Host\":\"localhost:8333\",\"User-Agent\":\"Apache-HttpClient/4.2.6 (java 1.5)\",\"ip\":\"127.0.0.1\"}}";
+        "\",\"ts\":1396173397887,\"zh\":\"中文\",\"headers\":{\"Connection\":\"keep-alive\",\"\":\"\",\"Host\":\"localhost:8333\",\"User-Agent\":\"Apache-HttpClient/4.2.6 (java 1.5)\",\"ip\":\"127.0.0.1\"}}";
 
     PrintWriter out =
         new PrintWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(new File(

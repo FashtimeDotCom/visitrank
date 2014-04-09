@@ -1,18 +1,11 @@
 package com.m3958.visitrank.Utils;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.RandomAccessFile;
-import java.io.UnsupportedEncodingException;
-import java.net.UnknownHostException;
-import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Date;
 
-import com.fasterxml.jackson.databind.ser.std.StdJdkSerializers.FileSerializer;
 import com.m3958.visitrank.AppConstants;
+import com.m3958.visitrank.Utils.FileLineReader.FindLineResult;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
@@ -22,7 +15,7 @@ import com.mongodb.MongoClient;
 
 public class PartialUtil {
 
-  public static long findLastPosition(Path logfile) throws UnknownHostException {
+  public static FindLineResult findLastPosition(Path logfile) throws IOException {
     MongoClient mongoClient = new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
     DB db = mongoClient.getDB(AppConstants.MongoNames.REPOSITORY_DB_NAME);
     DBCollection coll = db.getCollection(AppConstants.MongoNames.PAGE_VISIT_COL_NAME);
@@ -32,10 +25,12 @@ public class PartialUtil {
     if (cursor.hasNext()) {
       DBObject dbo = cursor.next();
       cursor.close();
-//      return searchFile(logfile, dbo);
+      FileLineReader flr = new FileLineReader(logfile);
+      Date d = (Date) dbo.get("t");
+      return flr.getLogItem((String)dbo.get("u"), d.getTime());
     }
     mongoClient.close();
-    return 0;
+    return null;
   }
 
 }
