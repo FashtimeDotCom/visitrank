@@ -17,12 +17,12 @@ import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.platform.Verticle;
 
-import com.m3958.visitrank.LogCheckVerticle.WriteConcernParser;
 import com.m3958.visitrank.Utils.FileLineReader.FindLineResult;
 import com.m3958.visitrank.Utils.IndexBuilder;
 import com.m3958.visitrank.Utils.LogItem;
 import com.m3958.visitrank.Utils.LogItemParser;
 import com.m3958.visitrank.Utils.PartialUtil;
+import com.m3958.visitrank.Utils.WriteConcernParser;
 import com.m3958.visitrank.logger.AppLogger;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
@@ -41,7 +41,7 @@ import com.mongodb.WriteConcern;
 public class LogProcessorWorkVerticle2 extends Verticle {
 
   public static String VERTICLE_ADDRESS = "logprocessor";
-  public static String VERTICLE_NAME = "com.m3958.visitrank.LogProcessorWorkVerticle";
+  public static String VERTICLE_NAME = "com.m3958.visitrank.LogProcessorWorkVerticle2";
 
   public static class LogProcessorWorkMsgKey {
     public static String FILE_NAME = "filename";
@@ -127,6 +127,7 @@ public class LogProcessorWorkVerticle2 extends Verticle {
         long counter = 0;
         while ((line = raf.readLine()) != null) {
           try {
+            line = AppUtils.toUtf(line);
             logItems.add(new LogItem(line));
           } catch (Exception e) {
             AppLogger.error.error("parse exception:" + line);

@@ -64,7 +64,7 @@ public class FileLineReaderTest {
     writesome(1);
     FileLineReader flr = new FileLineReader(tf.toString());
     FindLineResult lr = flr.getLineByPosition(tf.toFile().length() / 2);
-    Assert.assertEquals(0, getT(lr.getLine()));
+    Assert.assertEquals(0, getTs(lr.getLine()));
   }
   
   /**
@@ -76,7 +76,7 @@ public class FileLineReaderTest {
     writesome(2);
     FileLineReader flr = new FileLineReader(tf.toString());
     FindLineResult lr = flr.getLineByPosition(tf.toFile().length() / 2);
-    Assert.assertEquals(1, getT(lr.getLine()));
+    Assert.assertEquals(1, getTs(lr.getLine()));
   }
   
   @Test
@@ -84,7 +84,7 @@ public class FileLineReaderTest {
     writesome(2);
     FileLineReader flr = new FileLineReader(tf.toString());
     FindLineResult result = flr.getLogItem("xx0", 0);
-    Assert.assertEquals(0, getT(result.getLine()));
+    Assert.assertEquals(0, getTs(result.getLine()));
   }
   
   @Test
@@ -92,7 +92,7 @@ public class FileLineReaderTest {
     writesome(2);
     FileLineReader flr = new FileLineReader(tf.toString());
     FindLineResult result = flr.getLogItem("xx1", 1);
-    Assert.assertEquals(1, getT(result.getLine()));
+    Assert.assertEquals(1, getTs(result.getLine()));
   }
   
   @Test
@@ -105,7 +105,7 @@ public class FileLineReaderTest {
     FileLineReader flr = new FileLineReader(tf.toString());
     FindLineResult result = flr.getLogItem("xx" + i, i);
     System.out.println("cost: " + (System.currentTimeMillis() - start) + "ms, in " + times);
-    Assert.assertEquals(i, getT(result.getLine()));
+    Assert.assertEquals(i, getTs(result.getLine()));
   }
   
   @Test
@@ -121,8 +121,8 @@ public class FileLineReaderTest {
     writesome(100);
     FileLineReader flr = new FileLineReader(tf.toString());
     String[] ss = flr.getLastLines(2);
-    Assert.assertEquals("xx98", new JsonObject(ss[0]).getString("u"));
-    Assert.assertEquals(99, (int)new JsonObject(ss[1]).getInteger("t"));
+    Assert.assertEquals("xx98", new JsonObject(ss[0]).getString("url"));
+    Assert.assertEquals(99, (int)new JsonObject(ss[1]).getInteger("ts"));
   }
   
   @Test
@@ -130,7 +130,7 @@ public class FileLineReaderTest {
     writesome(1);
     FileLineReader flr = new FileLineReader(tf.toString());
     String[] ss = flr.getLastLines(2);
-    Assert.assertEquals("xx0", new JsonObject(ss[0]).getString("u"));
+    Assert.assertEquals("xx0", new JsonObject(ss[0]).getString("url"));
     Assert.assertEquals(1, ss.length);
   }
   
@@ -152,7 +152,7 @@ public class FileLineReaderTest {
     }
     arf.close();
     
-    Assert.assertEquals(getT(result.getLine()),(long)new JsonObject(line).getLong("t") );
+    Assert.assertEquals(getTs(result.getLine()),(long)new JsonObject(line).getLong("ts") );
   }
   
   @Test
@@ -167,28 +167,28 @@ public class FileLineReaderTest {
     }
     arf.close();
     Assert.assertEquals(10, lines.size());
-    Assert.assertEquals(0,(long)new JsonObject(lines.get(0)).getLong("t") );
-    Assert.assertEquals(9,(long)new JsonObject(lines.get(9)).getLong("t") );
+    Assert.assertEquals(0,(long)new JsonObject(lines.get(0)).getLong("ts") );
+    Assert.assertEquals(9,(long)new JsonObject(lines.get(9)).getLong("ts") );
   }
   
   private void findAll(long i) throws IOException{
     FileLineReader flr = new FileLineReader(tf.toString());
     FindLineResult result = flr.getLogItem("xx"+ i, i);
-    Assert.assertEquals(i, getT(result.getLine()));
+    Assert.assertEquals(i, getTs(result.getLine()));
 
   }
   
-  private long getT(String line){
+  private long getTs(String line){
     JsonObject jo = new JsonObject(line);
-    return jo.getLong("t");
+    return jo.getLong("ts");
   }
   
   private void writesome(long num) throws FileNotFoundException{
     PrintWriter pw = new PrintWriter(tf.toFile());
     for (int i = 0; i < num; i++) {
       DBObject dbo = new BasicDBObject();
-      dbo.put("u", "xx" + i);
-      dbo.put("t", Long.valueOf(i));
+      dbo.put("url", "xx" + i);
+      dbo.put("ts", Long.valueOf(i));
       pw.println(dbo.toString());
     }
     pw.close();

@@ -1,5 +1,6 @@
 package com.m3958.visitrank;
 
+import java.io.UnsupportedEncodingException;
 import java.nio.file.Path;
 import java.util.Date;
 import java.util.Map;
@@ -81,5 +82,14 @@ public class AppUtils {
       }
     }
     return false;
+  }
+  
+  public static String toUtf(String wrongs) throws UnsupportedEncodingException{
+      char[] buffer = wrongs.toCharArray();
+      byte[] b = new byte[buffer.length];
+      for (int i = 0; i < b.length; i++) {
+        b[i] = (byte) buffer[i];
+      }
+      return new String(b,"UTF-8");
   }
 }

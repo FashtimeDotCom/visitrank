@@ -27,7 +27,7 @@ public class MainVerticle extends Verticle {
     JsonObject httpCfg = new JsonObject();
     httpCfg.putNumber("port", AppConstants.HTTP_PORT);
 
-    container.deployVerticle(AppConstants.COUNTER_VERTICLE_NAME, httpCfg,
+    container.deployVerticle(CounterVerticle.VERTICLE_NAME, httpCfg,
         AppConstants.HTTP_INSTANCE);
 
     // deploy redis
@@ -78,12 +78,12 @@ public class MainVerticle extends Verticle {
               .putString("writeconcern", AppConstants.WRITE_CONCERN)
               .putNumber("logitempoolsize", AppConstants.LOGITEM_POOL_SIZE);
 
-      container.deployVerticle(AppConstants.LOGCHECK_VERTICLE_NAME, logCheckCfg, 1);
+      container.deployVerticle(LogCheckVerticle2.VERTICLE_NAME, logCheckCfg, 1);
 
-      container.deployWorkerVerticle(DailyCopyWorkVerticle.VERTICLE_NAME, new JsonObject(),
-          AppConstants.DAILY_PROCESSOR_INSTANCE, false);
+//      container.deployWorkerVerticle(DailyCopyWorkVerticle.VERTICLE_NAME, new JsonObject(),
+//          AppConstants.DAILY_PROCESSOR_INSTANCE, false);
 
-      container.deployWorkerVerticle(LogProcessorWorkVerticle.VERTICLE_NAME, new JsonObject(),
+      container.deployWorkerVerticle(LogProcessorWorkVerticle2.VERTICLE_NAME, new JsonObject(),
           AppConstants.LOG_PROCESSOR_INSTANCE, false);
     }
   }

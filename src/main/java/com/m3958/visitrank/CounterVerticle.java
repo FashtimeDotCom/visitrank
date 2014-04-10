@@ -16,6 +16,8 @@ import com.m3958.visitrank.httpentry.WholeSiteCountProceesor;
  * 
  */
 public class CounterVerticle extends Verticle {
+  
+  public static String VERTICLE_NAME = "com.m3958.visitrank.CounterVerticle";
 
   /**
    * 如果默认是referer的主机名，那么siteid将不再是必须，反而可以引入sitegroup概念，从而增加系统的灵活性。

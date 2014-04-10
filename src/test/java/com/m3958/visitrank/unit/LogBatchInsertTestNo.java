@@ -9,8 +9,8 @@ import org.junit.Test;
 import org.vertx.java.core.json.JsonObject;
 
 import com.m3958.visitrank.AppConstants;
-import com.m3958.visitrank.LogCheckVerticle.WriteConcernParser;
 import com.m3958.visitrank.LogProcessorWorkVerticle.LogProcessor;
+import com.m3958.visitrank.Utils.WriteConcernParser;
 import com.m3958.visitrank.testutils.TestUtils;
 
 public class LogBatchInsertTestNo {

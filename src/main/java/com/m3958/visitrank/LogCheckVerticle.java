@@ -1,13 +1,10 @@
 package com.m3958.visitrank;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.eventbus.Message;
@@ -18,12 +15,13 @@ import org.vertx.java.platform.Verticle;
 import com.m3958.visitrank.DailyCopyWorkVerticle.DailyProcessorWorkMsgKey;
 import com.m3958.visitrank.LogProcessorWorkVerticle.LogProcessorWorkMsgKey;
 import com.m3958.visitrank.Utils.Locker;
+import com.m3958.visitrank.Utils.RemainLogFileFinder;
 import com.m3958.visitrank.Utils.RemainsCounter;
+import com.m3958.visitrank.Utils.WriteConcernParser;
 import com.m3958.visitrank.logger.AppLogger;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.MongoClient;
-import com.mongodb.WriteConcern;
 
 /**
  * We run one instance of this verticle,so don't worry about concurrency problem.
@@ -32,9 +30,11 @@ import com.mongodb.WriteConcern;
  * 
  */
 public class LogCheckVerticle extends Verticle {
+  
+  public static String VERTICLE_NAME = "com.m3958.visitrank.LogCheckVerticle";
 
   private Locker locker = new Locker();
-
+  
   @Override
   public void start() {
     final Logger log = container.logger();
@@ -47,14 +47,15 @@ public class LogCheckVerticle extends Verticle {
 
     int logProcessorInstance = jo.getInteger("logprocessorinstance", 5);
     int dailyProcessorInstance = jo.getInteger("dailyprocessinstance", 3);
-    
+
     log.info("logProcessorInstance: " + logProcessorInstance);
     log.info("dailyProcessorInstance: " + dailyProcessorInstance);
-    
+
     log.info("logfilereadgap: " + logfilereadgap);
     log.info("dailydbreadgap: " + dailydbreadgap);
-    
-    final JsonObject writeConcern = new WriteConcernParser(jo.getString("writeconcern","")).parse();
+
+    final JsonObject writeConcern =
+        new WriteConcernParser(jo.getString("writeconcern", "")).parse();
     log.info(writeConcern);
 
     final RemainsCounter dailyProcessorCounter = new RemainsCounter(dailyProcessorInstance);
@@ -63,11 +64,13 @@ public class LogCheckVerticle extends Verticle {
         // logger file check.
         final String dbname = new RemainDailyDbFinder(locker).findOne("^\\d{4}-\\d{2}-\\d{2}$");
         if (dbname != null) {
-          log.info("find dailydb:" + dbname + ", remain DailyProcessor: " + (dailyProcessorCounter.remainsGetSet(0) - 1) + " " + new Date().toString());
+          log.info("find dailydb:" + dbname + ", remain DailyProcessor: "
+              + (dailyProcessorCounter.remainsGetSet(0) - 1) + " " + new Date().toString());
           if (dailyProcessorCounter.remainsGetSet(0) > 0) {
             JsonObject body =
-                new JsonObject().putString(DailyProcessorWorkMsgKey.DBNAME, dbname).putNumber(
-                    "dailydbreadgap", dailydbreadgap).putObject("writeConcern", writeConcern);
+                new JsonObject().putString(DailyProcessorWorkMsgKey.DBNAME, dbname)
+                    .putNumber("dailydbreadgap", dailydbreadgap)
+                    .putObject("writeConcern", writeConcern);
 
             dailyProcessorCounter.remainsGetSet(1);
             vertx.eventBus().send(DailyCopyWorkVerticle.VERTICLE_ADDRESS, body,
@@ -75,7 +78,7 @@ public class LogCheckVerticle extends Verticle {
                   @Override
                   public void handle(Message<String> msg) {
                     String reply = msg.body();
-                    if("done".equals(reply)){
+                    if ("done".equals(reply)) {
                       AppLogger.processLogger.info("process daily copy " + dbname + " end.");
                     }
                     dailyProcessorCounter.remainsGetSet(-1);
@@ -119,33 +122,6 @@ public class LogCheckVerticle extends Verticle {
       }
     });
     log.info("First this is printed");
-  }
-
-  public static class RemainLogFileFinder {
-    private String logDirStr;
-
-    private static Pattern fptn = Pattern.compile(".*\\d{4}-\\d{2}-\\d{2}.*\\.log");
-
-    private Locker locker;
-
-    public RemainLogFileFinder(String logDirStr, Locker locker) {
-      this.logDirStr = logDirStr;
-      this.locker = locker;
-    }
-
-    public String findOne() {
-      File logDir = new File(logDirStr);
-      String[] files = logDir.list();
-      for (String f : files) {
-        Matcher m = fptn.matcher(f);
-        if (f.endsWith("log") && m.matches()) { // find log file.
-          if (locker.canLockLog(f)) {
-            return f;
-          }
-        }
-      }
-      return null;
-    }
   }
 
   public static class RemainDailyDbFinder {
@@ -192,37 +168,4 @@ public class LogCheckVerticle extends Verticle {
     }
   }
 
-  public static class WriteConcernParser {
-    private String raw;
-
-    public WriteConcernParser(String raw) {
-      this.raw = raw;
-    }
-
-    public JsonObject parse() {
-      if (raw.isEmpty()) {
-        return null;
-      }
-      // WriteConcern(int w, int wtimeout, boolean fsync, boolean j, boolean continueOnInsertError)
-      String[] ss = raw.split(",");
-      JsonObject jo = new JsonObject();
-      jo.putNumber("w", Integer.parseInt(ss[0], 10));
-      jo.putNumber("wtimeout", Long.parseLong(ss[1], 10));
-      jo.putBoolean("fsync", "true".equals(ss[2]) ? true : false);
-      jo.putBoolean("j", "true".equals(ss[3]) ? true : false);
-      jo.putBoolean("continueOnInsertError", "true".equals(ss[4]) ? true : false);
-      return jo;
-    }
-
-    public static WriteConcern getWriteConcern(JsonObject jo){
-      if (jo != null) {
-        return
-            new WriteConcern(jo.getInteger("w"), jo.getInteger("wtimeout"),
-                jo.getBoolean("fsync"), jo.getBoolean("j"),
-                jo.getBoolean("continueOnInsertError"));
-      }else{
-        return null;
-      }
-    }
-  }
 }

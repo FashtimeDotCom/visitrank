@@ -17,6 +17,7 @@ import org.vertx.testtools.TestVerticle;
 import org.vertx.testtools.VertxAssert;
 
 import com.m3958.visitrank.AppConstants;
+import com.m3958.visitrank.CounterVerticle;
 
 public class BrowserRequestTest extends TestVerticle {
   
@@ -102,7 +103,7 @@ public class BrowserRequestTest extends TestVerticle {
     startTests();
     AppConstants.HTTP_INSTANCE = 1;
     AppConstants.HTTP_PORT = 8334;
-    container.deployVerticle(AppConstants.COUNTER_VERTICLE_NAME, new AsyncResultHandler<String>() {
+    container.deployVerticle(CounterVerticle.VERTICLE_NAME, new AsyncResultHandler<String>() {
       @Override
       public void handle(AsyncResult<String> asyncResult) {
         assertTrue(asyncResult.succeeded());
