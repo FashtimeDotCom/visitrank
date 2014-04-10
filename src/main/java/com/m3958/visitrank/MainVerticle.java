@@ -22,15 +22,19 @@ import com.m3958.visitrank.logger.AppLogger;
 public class MainVerticle extends Verticle {
 
   public void start() {
+    final Logger log = container.logger();
     Path applog = Paths.get("logs", "app.log");
+    
     if (Files.exists(applog)) {
       try {
-        Files.copy(applog, Paths.get("logs",new RemainLogFileFinder("logs").nextLogName()));
+        String np = new RemainLogFileFinder("logs").nextLogName();
+        log.info("copy log.app to: " + np);
+        Files.copy(applog, Paths.get("logs",np));
       } catch (IOException e) {
         e.printStackTrace();
       }
     }
-    final Logger log = container.logger();
+    
     AppConstants.initConfigConstants(container.config());
     log.info("check index status ...");
     IndexBuilder.pageVisitIndex();
