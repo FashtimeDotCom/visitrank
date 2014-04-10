@@ -19,7 +19,7 @@ public class RemainLogFileFinder {
     this.logDirStr = logDirStr;
     this.locker = locker;
   }
-  
+
   public RemainLogFileFinder(String logDirStr) {
     this.logDirStr = logDirStr;
   }
@@ -64,9 +64,7 @@ public class RemainLogFileFinder {
     for (String f : files) {
       Matcher m = fptn.matcher(f);
       if (f.endsWith("log") && m.matches()) { // find log file.
-        if (locker.canLockLog(f)) {
-          lf = f;
-        }
+        lf = f;
       }
     }
     if (lf == null) {
@@ -75,9 +73,9 @@ public class RemainLogFileFinder {
     } else {
       char c = lf.charAt(lf.length() - 5);
       c++;
-      String s = lf.substring(0,lf.length() - 5);
+      String s = lf.substring(0, lf.length() - 5);
       return new StringBuffer().append(s).append(c).append(".log").toString();
-      
+
     }
   }
 }
