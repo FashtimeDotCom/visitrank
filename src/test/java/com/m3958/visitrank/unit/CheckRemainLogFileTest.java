@@ -88,9 +88,19 @@ public class CheckRemainLogFileTest {
   public void t5() throws IOException{
     samples(1);
     Locker locker = new Locker();
+    Path p1 = Paths.get(logDir,"t-2014-03-03-09.log");
+    Files.createFile(p1);
     RemainLogFileFinder rlf = new RemainLogFileFinder(logDir, locker);
-    Assert.assertEquals("t-2014-03-02-02.log", rlf.nextLogName());
+    Assert.assertEquals("t-2014-03-03-0a.log", rlf.nextLogName());
+    Files.delete(p1);
     samples(-1);
+  }
+  @Test
+  public void t6(){
+    System.out.println((int)'0');
+    System.out.println((int)'9');
+    System.out.println((int)'a');
+    System.out.println((int)'z');
   }
   
   private void samples(int c) throws IOException{

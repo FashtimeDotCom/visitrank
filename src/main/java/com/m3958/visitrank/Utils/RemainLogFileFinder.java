@@ -72,7 +72,13 @@ public class RemainLogFileFinder {
       return sdf.format(new Date()) + ".log";
     } else {
       char c = lf.charAt(lf.length() - 5);
-      c++;
+      if (c == '9') {
+        c = 'a';
+      } else if (c == 'z') {
+        c = '0';
+      } else {
+        c++;
+      }
       String s = lf.substring(0, lf.length() - 5);
       return new StringBuffer().append(s).append(c).append(".log").toString();
 
