@@ -84,6 +84,15 @@ public class CheckRemainLogFileTest {
     samples(-1);
   }
   
+  @Test
+  public void t5() throws IOException{
+    samples(1);
+    Locker locker = new Locker();
+    RemainLogFileFinder rlf = new RemainLogFileFinder(logDir, locker);
+    Assert.assertEquals("t-2014-03-02-02.log", rlf.nextLogName());
+    samples(-1);
+  }
+  
   private void samples(int c) throws IOException{
     Path p1 = Paths.get(logDir,"2014-03-03-01.log");
     Path p2 = Paths.get(logDir,"2014-03-02-05.log");
