@@ -1,7 +1,6 @@
 package com.m3958.visitrank.unit;
 
 import java.io.IOException;
-import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
@@ -54,11 +53,10 @@ public class DailyProcessorTest {
 
   /**
    * hourlydb not completed,even newerdb exist,repositoryDb should not change.
-   * 
-   * @throws UnknownHostException
+   * @throws IOException 
    */
   @Test
-  public void t() throws UnknownHostException {
+  public void t() throws IOException {
     MongoClient mongoClient = new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
     DB dailyDb = mongoClient.getDB(dailyDbName);
 
@@ -86,7 +84,7 @@ public class DailyProcessorTest {
   }
 
   @Test
-  public void t1() throws UnknownHostException {
+  public void t1() throws IOException {
     TestUtils.createSampleDb(newerdbname, 10, false, 5000);
     MongoClient mongoClient = new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
     DB dailyDb = mongoClient.getDB(dailyDbName);
@@ -111,11 +109,10 @@ public class DailyProcessorTest {
   /**
    * hourlyjob completed, and has newerdb exists,item will insert to repository db.and partial file
    * will delete, dailydb will delete.
-   * 
-   * @throws UnknownHostException
+   * @throws IOException 
    */
   @Test
-  public void t2() throws UnknownHostException {
+  public void t2() throws IOException {
     MongoClient mongoClient = new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
     DB dailyDb = mongoClient.getDB(dailyDbName);
 

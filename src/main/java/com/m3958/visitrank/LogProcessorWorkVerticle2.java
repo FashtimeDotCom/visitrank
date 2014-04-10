@@ -24,6 +24,7 @@ import com.m3958.visitrank.Utils.LogItemParser;
 import com.m3958.visitrank.Utils.PartialUtil;
 import com.m3958.visitrank.Utils.WriteConcernParser;
 import com.m3958.visitrank.logger.AppLogger;
+import com.m3958.visitrank.uaparser.Parser;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
@@ -102,11 +103,10 @@ public class LogProcessorWorkVerticle2 extends Verticle {
         coll.createIndex(IndexBuilder.getPageVisitColIndexKeys());
 
         RandomAccessFile raf = new RandomAccessFile(logfilePath.toFile(), "r");
-        
+
         FindLineResult lastInsertPosition = null;
         if (Files.exists(partialLogPath)) {
-          lastInsertPosition =
-              PartialUtil.findLastPosition(logfilePath);
+          lastInsertPosition = PartialUtil.findLastPosition(logfilePath);
         } else {
           Files.createFile(partialLogPath);
         }
@@ -116,19 +116,20 @@ public class LogProcessorWorkVerticle2 extends Verticle {
 
         if (lastInsertPosition != null) {
           raf.seek(lastInsertPosition.getStart());
-          if(lastInsertPosition.isNeedSkipOne()){
+          if (lastInsertPosition.isNeedSkipOne()) {
             String skipline = raf.readLine();
-            if(skipline == null || skipline.isEmpty()){
+            if (skipline == null || skipline.isEmpty()) {
               skipline = raf.readLine();
             }
           }
         }
+        Parser uaParser = new Parser();
         String line;
         long counter = 0;
         while ((line = raf.readLine()) != null) {
           try {
             line = AppUtils.toUtf(line);
-            logItems.add(new LogItem(line));
+            logItems.add(new LogItem(uaParser, line));
           } catch (Exception e) {
             AppLogger.error.error("parse exception:" + line);
           }

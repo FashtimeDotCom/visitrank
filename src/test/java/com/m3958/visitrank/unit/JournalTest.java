@@ -1,7 +1,7 @@
 package com.m3958.visitrank.unit;
 
 
-import java.net.UnknownHostException;
+import java.io.IOException;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -13,7 +13,7 @@ public class JournalTest {
   private int times = 1000;
 
   @Test
-  public void t1() throws UnknownHostException, InterruptedException {
+  public void t1() throws InterruptedException, IOException {
     System.out.println("journal true,step 5000:");
     TestUtils.createSampleDb("ttt", times, true, 5000);
     Thread.sleep(100);
@@ -22,7 +22,7 @@ public class JournalTest {
   }
 
   @Test
-  public void t2() throws UnknownHostException, InterruptedException {
+  public void t2() throws InterruptedException, IOException {
     System.out.println("journal false,step 5000:");
     TestUtils.createSampleDb("ttt", times, false, 5000);
     Thread.sleep(100);
@@ -31,7 +31,7 @@ public class JournalTest {
   }
 
   @Test
-  public void t3() throws UnknownHostException, InterruptedException {
+  public void t3() throws InterruptedException, IOException {
     System.out.println("journal true,step 5000:");
     TestUtils.createSampleDb("ttt", times, true, 5000);
     Thread.sleep(100);
@@ -40,7 +40,7 @@ public class JournalTest {
   }
 
   @Test
-  public void t4() throws UnknownHostException, InterruptedException {
+  public void t4() throws InterruptedException, IOException {
     System.out.println("journal false,step 5000:");
     TestUtils.createSampleDb("ttt", times, false, 5000);
     Thread.sleep(100);
@@ -49,7 +49,7 @@ public class JournalTest {
   }
   
   @Test
-  public void t5() throws UnknownHostException, InterruptedException {
+  public void t5() throws InterruptedException, IOException {
     System.out.println("journal false,step 1:");
     TestUtils.createSampleDb("ttt", times, false, 1);
     Thread.sleep(100);
@@ -58,7 +58,7 @@ public class JournalTest {
   }
   
   @Test
-  public void t6() throws UnknownHostException, InterruptedException {
+  public void t6() throws InterruptedException, IOException {
     System.out.println("journal false,step 10:");
     TestUtils.createSampleDb("ttt", times, false, 10);
     Thread.sleep(100);

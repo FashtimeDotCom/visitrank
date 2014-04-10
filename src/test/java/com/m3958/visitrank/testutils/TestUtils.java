@@ -24,6 +24,7 @@ import com.m3958.visitrank.AppUtils;
 import com.m3958.visitrank.Utils.IndexBuilder;
 import com.m3958.visitrank.Utils.LogItem;
 import com.m3958.visitrank.Utils.LogItemParser;
+import com.m3958.visitrank.uaparser.Parser;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
@@ -45,14 +46,14 @@ public class TestUtils {
     mongoClient.close();
   }
 
-  public static void createSampleDb(String dbname, int items, boolean journal,int step)
-      throws UnknownHostException {
+  public static void createSampleDb(String dbname, int items, boolean journal, int step)
+      throws IOException {
     long start = System.currentTimeMillis();
+    Parser uaParser = new Parser();
     MongoClient mongoClient;
     mongoClient = new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
     DB db = mongoClient.getDB(dbname);
-    DBCollection col =
-        db.getCollection(AppConstants.MongoNames.PAGE_VISIT_COL_NAME);
+    DBCollection col = db.getCollection(AppConstants.MongoNames.PAGE_VISIT_COL_NAME);
     col.createIndex(IndexBuilder.getPageVisitColIndexKeys());
     String sampleItemPre = "{\"url\":\"http://sb.m3958.com";
     String sampleItemFix =
@@ -61,7 +62,7 @@ public class TestUtils {
     List<DBObject> obs;
     List<LogItem> logItems = new ArrayList<>();
     for (int i = 1; i <= items; i++) {
-      logItems.add(new LogItem(sampleItemPre + "?article=" + i + sampleItemFix));
+      logItems.add(new LogItem(uaParser, sampleItemPre + "?article=" + i + sampleItemFix));
       if (i % step == 0) {
         obs = new LogItemParser(100).getLogItems(logItems);
         col.insert(obs, new WriteConcern(0, 0, false, journal, true));
@@ -91,9 +92,9 @@ public class TestUtils {
   }
 
   public static void createSampleDb(String dbname, int items, int repeat, boolean journal)
-      throws UnknownHostException {
+      throws IOException {
     for (int i = 0; i < repeat; i++) {
-      createSampleDb(dbname, items, journal,5000);
+      createSampleDb(dbname, items, journal, 5000);
     }
   }
 

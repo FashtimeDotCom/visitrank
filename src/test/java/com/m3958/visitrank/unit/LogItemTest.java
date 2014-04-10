@@ -1,5 +1,6 @@
 package com.m3958.visitrank.unit;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -16,6 +17,7 @@ import org.junit.Test;
 import com.m3958.visitrank.Utils.FieldNameAbbreviation;
 import com.m3958.visitrank.Utils.LogItem;
 import com.m3958.visitrank.integration.java.TestConstants;
+import com.m3958.visitrank.uaparser.Parser;
 import com.mongodb.DBObject;
 
 public class LogItemTest {
@@ -38,8 +40,9 @@ public class LogItemTest {
 
 
   @Test
-  public void t1() {
-    DBObject dbo = new LogItem(TestConstants.logItemSample).toDbObject();
+  public void t1() throws IOException {
+    Parser uaParser = new Parser();
+    DBObject dbo = new LogItem(uaParser, TestConstants.logItemSample).toDbObject();
     Assert.assertEquals("http://www.fhsafety.gov.cn/article.ftl?article=112167&ms=84224",
         dbo.get(FieldNameAbbreviation.URL_ABBREV));
 
@@ -58,33 +61,34 @@ public class LogItemTest {
   }
 
   @Test
-  public void t2() {
+  public void t2() throws IOException {
+    Parser uaParser = new Parser();
     long start = System.currentTimeMillis();
     List<DBObject> dbos = new ArrayList<>();
     for (int i = 0; i < testNum; i++) {
-      dbos.add(new LogItem(TestConstants.logItemSample).toDbObject());
+      dbos.add(new LogItem(uaParser, TestConstants.logItemSample).toDbObject());
     }
     System.out.print(System.currentTimeMillis() - start);
     System.out.println("ms,serial execute.");
   }
 
   @Test
-  public void t3() throws InterruptedException, ExecutionException {
+  public void t3() throws InterruptedException, ExecutionException, IOException {
     poolExecute(testNum, 10, false);
   }
 
   @Test
-  public void t4() throws InterruptedException, ExecutionException {
+  public void t4() throws InterruptedException, ExecutionException, IOException {
     poolExecute(testNum, 100, false);
   }
 
   @Test
-  public void t5() throws InterruptedException, ExecutionException {
+  public void t5() throws InterruptedException, ExecutionException, IOException {
     poolExecute(10000, 200, false);
   }
 
   @Test
-  public void t6() throws InterruptedException, ExecutionException {
+  public void t6() throws InterruptedException, ExecutionException, IOException {
     poolExecute(10000, initPoolSize, true);
   }
 
@@ -101,10 +105,11 @@ public class LogItemTest {
     Executors.newFixedThreadPool(1000);
     System.out.println("create execute 1000: " + (System.currentTimeMillis() - start));
   }
-  
+
   private void poolExecute(int testNum, int poolSize, boolean useInitedPool)
-      throws InterruptedException, ExecutionException {
+      throws InterruptedException, ExecutionException, IOException {
     long start = System.currentTimeMillis();
+    Parser uaParser = new Parser();
     ExecutorService executorPool;
     if (useInitedPool) {
       executorPool = initedPool;
@@ -115,7 +120,7 @@ public class LogItemTest {
 
     List<LogItem> logItems = new ArrayList<>();
     for (int i = 0; i < testNum; i++) {
-      logItems.add(new LogItem(TestConstants.logItemSample));
+      logItems.add(new LogItem(uaParser, TestConstants.logItemSample));
     }
     List<Future<DBObject>> futures = executorPool.invokeAll(logItems);
     executorPool.shutdown();

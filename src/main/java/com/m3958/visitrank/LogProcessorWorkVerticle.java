@@ -27,6 +27,7 @@ import com.m3958.visitrank.Utils.LogItem;
 import com.m3958.visitrank.Utils.LogItemParser;
 import com.m3958.visitrank.Utils.WriteConcernParser;
 import com.m3958.visitrank.logger.AppLogger;
+import com.m3958.visitrank.uaparser.Parser;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
@@ -124,7 +125,7 @@ public class LogProcessorWorkVerticle extends Verticle {
 
         List<DBObject> dbos;
         List<LogItem> logItems = new ArrayList<>();
-
+        Parser uaParser = new Parser();
         String line;
         long counter = 0;
         while ((line = reader.readLine()) != null) {
@@ -133,7 +134,7 @@ public class LogProcessorWorkVerticle extends Verticle {
             continue;
           }
           try {
-            logItems.add(new LogItem(line));
+            logItems.add(new LogItem(uaParser, line));
           } catch (Exception e) {
             AppLogger.error.error("parse exception:" + line);
           }

@@ -48,7 +48,7 @@ public class BatchCopyTestNo {
   }
 
   @BeforeClass
-  public static void sss() throws UnknownHostException {
+  public static void sss() throws IOException {
     TestUtils.dropDailyDb(testlogname);
     TestUtils.createSampleDb(AppUtils.getDailyDbName(testlogname, TestUtils.dailyDbPtn),
         testNumber, false, 500);
