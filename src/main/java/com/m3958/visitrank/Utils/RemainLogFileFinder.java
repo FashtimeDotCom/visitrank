@@ -2,6 +2,7 @@ package com.m3958.visitrank.Utils;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -27,7 +28,7 @@ public class RemainLogFileFinder {
   public String findOne() {
     File logDir = new File(logDirStr);
     String[] files = logDir.list();
-
+    Arrays.sort(files);
     String pf = findLogHasPartial(files);
 
     if (pf != null) {
@@ -60,6 +61,7 @@ public class RemainLogFileFinder {
   public String nextLogName() {
     File logDir = new File(logDirStr);
     String[] files = logDir.list();
+    Arrays.sort(files);
     String lf = null;
     for (String f : files) {
       Matcher m = fptn.matcher(f);
