@@ -34,7 +34,17 @@ public class WholeSiteCountProceesor {
   public void process() {
 
     String host = HostExtractor.getHost(referer);
-
+    String pr = req.params().get("pr");
+    
+    //when pr is not null,it will only record content,send empty string back;
+    if (pr != null) {
+      JsonObject pjo = AppUtils.getParamsHeadersOb(req);
+      pjo.removeField("out");
+      AppLogger.urlPersistor.info(pjo);
+      new ResponseGenerator(req, "").sendResponse();
+      return;
+    }
+    
     JsonObject wholeSiteCountCmd;
     wholeSiteCountCmd = new INCR(host).getCmd();
 
@@ -44,10 +54,9 @@ public class WholeSiteCountProceesor {
             JsonObject redisResultBody = message.body();
             if ("ok".equals(redisResultBody.getString("status"))) {
 
-              JsonObject pjo = AppUtils.getParamsHeadersOb(req);
-              pjo.removeField("record");
-              pjo.removeField("out");
-              AppLogger.urlPersistor.info(pjo);
+//              JsonObject pjo = AppUtils.getParamsHeadersOb(req);
+//              pjo.removeField("out");
+//              AppLogger.urlPersistor.info(pjo);
 
               String value;
               try {

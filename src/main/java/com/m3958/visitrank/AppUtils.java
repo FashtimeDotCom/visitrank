@@ -48,6 +48,7 @@ public class AppUtils {
     return 0;
   }
 
+  //TODO move uaparser to here
   public static JsonObject getParamsHeadersOb(HttpServerRequest req) {
     JsonObject jo = new JsonObject();
 

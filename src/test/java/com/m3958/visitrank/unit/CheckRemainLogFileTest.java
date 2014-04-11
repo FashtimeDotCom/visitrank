@@ -55,6 +55,7 @@ public class CheckRemainLogFileTest {
     Path d = Paths.get(logDir);
 
     String[] ss = d.toFile().list();
+    Arrays.sort(ss);
     Assert.assertEquals("2014-03-02-05.log", ss[0]);
     Assert.assertEquals("2014-03-03-01.log", ss[3]);
     samples(-1);
