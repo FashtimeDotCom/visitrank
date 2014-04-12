@@ -10,7 +10,7 @@ public class AppLogger {
   public static final Logger deployError = LogManager.getLogger("deployLogger");
   public static final Logger processLogger = LogManager.getLogger("processLogger");
   
-  public static final Logger paritalLogger = LogManager.getLogger("partialLogger");
+//  public static final Logger paritalLogger = LogManager.getLogger("partialLogger");
   
   public static final Logger error = LogManager.getLogger("errorLog");
 

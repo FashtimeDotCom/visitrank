@@ -8,6 +8,7 @@ package com.m3958.visitrank.integration.java;
 import static org.vertx.testtools.VertxAssert.assertNotNull;
 import static org.vertx.testtools.VertxAssert.assertTrue;
 
+import org.junit.Assert;
 import org.junit.Test;
 import org.vertx.java.core.AsyncResult;
 import org.vertx.java.core.AsyncResultHandler;
@@ -20,6 +21,11 @@ import com.m3958.visitrank.testutils.HttpTestVerticleResponseHandler;
 /**
  */
 public class HttpVerticleTest extends TestVerticle {
+  
+  @Test
+  public void t(){
+    Assert.assertTrue(true);
+  }
 
  
   @Test

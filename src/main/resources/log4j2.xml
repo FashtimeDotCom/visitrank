@@ -33,6 +33,7 @@
 			</PatternLayout>
 		</File>
 
+<!-- 
 		<RollingFile name="PartialFile" fileName="partiallog/partial.log"
 			filePattern="partiallog/partial-%i.log">
 			<PatternLayout>
@@ -43,7 +44,7 @@
 			</Policies>
 			<DefaultRolloverStrategy max="2" />
 		</RollingFile>
-
+ -->
 	</Appenders>
 
 	<Loggers>
@@ -58,11 +59,11 @@
 		<Logger name="processLogger" level="info" additivity="false">
 			<AppenderRef ref="ProcessLogger" />
 		</Logger>
-
+<!-- 
 		<Logger name="partialLogger" level="info" additivity="false">
 			<AppenderRef ref="PartialFile" />
 		</Logger>
-
+ -->
 		<Root level="info">
 			<AppenderRef ref="errorLog" />
 		</Root>
