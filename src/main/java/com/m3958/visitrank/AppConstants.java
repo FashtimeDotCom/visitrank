@@ -24,6 +24,8 @@ public class AppConstants {
   public static int MONGODB_PORT = 27017;
   public static int MONGODB_INSTANCE = 1;
   public static int SAVETO_MONGO_INSTANCE = 1;
+  
+  public static int LOG_SAVER_INSTANCE = 10;
 
   public static int DAILY_PROCESSOR_INSTANCE = 1;
 

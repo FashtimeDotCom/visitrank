@@ -15,6 +15,7 @@ import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.platform.Verticle;
 
+import com.m3958.visitrank.Utils.AppUtils;
 import com.m3958.visitrank.Utils.WriteConcernParser;
 import com.m3958.visitrank.logger.AppLogger;
 import com.mongodb.DB;
@@ -39,7 +40,7 @@ import com.mongodb.WriteConcern;
 public class DailyCopyWorkVerticle extends Verticle {
 
   public static String VERTICLE_ADDRESS = "move_daily_db_address";
-  public static String VERTICLE_NAME = "com.m3958.visitrank.DailyCopyWorkVerticle";
+  public static String VERTICLE_NAME = DailyCopyWorkVerticle.class.getName();
 
   public static class DailyProcessorWorkMsgKey {
     public static String DBNAME = "dbname";

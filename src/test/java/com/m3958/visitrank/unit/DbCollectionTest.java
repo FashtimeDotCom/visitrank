@@ -6,7 +6,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.m3958.visitrank.AppConstants;
-import com.m3958.visitrank.AppUtils;
+import com.m3958.visitrank.Utils.AppUtils;
 import com.mongodb.DB;
 import com.mongodb.MongoClient;
 

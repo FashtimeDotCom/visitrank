@@ -1,4 +1,4 @@
-package com.m3958.visitrank;
+package com.m3958.visitrank.Utils;
 
 import java.io.UnsupportedEncodingException;
 import java.nio.file.Path;
@@ -11,7 +11,7 @@ import java.util.regex.Pattern;
 import org.vertx.java.core.http.HttpServerRequest;
 import org.vertx.java.core.json.JsonObject;
 
-import com.m3958.visitrank.Utils.FileLineReader;
+import com.m3958.visitrank.AppConstants;
 import com.mongodb.DB;
 import com.mongodb.MongoClient;
 
@@ -48,7 +48,12 @@ public class AppUtils {
     return 0;
   }
 
-  //TODO move uaparser to here
+  /**
+   * this method record everything from client.
+   * 
+   * @param req
+   * @return
+   */
   public static JsonObject getParamsHeadersOb(HttpServerRequest req) {
     JsonObject jo = new JsonObject();
 
@@ -58,7 +63,7 @@ public class AppUtils {
       String key = header.getKey();
       String value = header.getValue();
       if ("referer".equalsIgnoreCase(key)) {
-        jo.putString("url", value);
+        jo.putString(FieldNameAbbreviation.URL, value);
       } else {
         headerJo.putString(key, value);
       }
@@ -70,7 +75,8 @@ public class AppUtils {
       jo.putString(key, value);
     }
     headerJo.putString("ip", req.remoteAddress().getAddress().getHostAddress());
-    jo.putNumber("ts", new Date().getTime()).putObject("headers", headerJo);
+    jo.putNumber(FieldNameAbbreviation.TS, new Date().getTime()).putObject("headers",
+        headerJo);
 
     return jo;
   }
@@ -84,13 +90,14 @@ public class AppUtils {
     }
     return false;
   }
-  
-  public static String toUtf(String wrongs) throws UnsupportedEncodingException{
-      char[] buffer = wrongs.toCharArray();
-      byte[] b = new byte[buffer.length];
-      for (int i = 0; i < b.length; i++) {
-        b[i] = (byte) buffer[i];
-      }
-      return new String(b,"UTF-8");
+
+  public static String toUtf(String wrongs) throws UnsupportedEncodingException {
+    char[] buffer = wrongs.toCharArray();
+    byte[] b = new byte[buffer.length];
+    for (int i = 0; i < b.length; i++) {
+      b[i] = (byte) buffer[i];
+    }
+    return new String(b, "UTF-8");
   }
+
 }

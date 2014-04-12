@@ -18,18 +18,17 @@ import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.platform.Verticle;
 
 import com.m3958.visitrank.Utils.FileLineReader.FindLineResult;
+import com.m3958.visitrank.Utils.AppUtils;
 import com.m3958.visitrank.Utils.IndexBuilder;
-import com.m3958.visitrank.Utils.LogItem;
-import com.m3958.visitrank.Utils.LogItemParser;
 import com.m3958.visitrank.Utils.PartialUtil;
 import com.m3958.visitrank.Utils.WriteConcernParser;
 import com.m3958.visitrank.logger.AppLogger;
-import com.m3958.visitrank.uaparser.Parser;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.WriteConcern;
+import com.mongodb.util.JSON;
 
 /**
  * it's a sync worker verticle. First we start a mongodb connection, readlines from logfile,batchly
@@ -42,7 +41,7 @@ import com.mongodb.WriteConcern;
 public class LogProcessorWorkVerticle2 extends Verticle {
 
   public static String VERTICLE_ADDRESS = "logprocessor";
-  public static String VERTICLE_NAME = "com.m3958.visitrank.LogProcessorWorkVerticle2";
+  public static String VERTICLE_NAME = LogProcessorWorkVerticle2.class.getName();
 
   public static class LogProcessorWorkMsgKey {
     public static String FILE_NAME = "filename";
@@ -77,8 +76,6 @@ public class LogProcessorWorkVerticle2 extends Verticle {
 
     private JsonObject writeconcern;
 
-    private int logitemPoolSize;
-
     public LogProcessor(String logDir, String archiveDir, String filename, JsonObject cfg,
         int logitemPoolSize) {
       this.logDir = logDir;
@@ -86,7 +83,6 @@ public class LogProcessorWorkVerticle2 extends Verticle {
       this.filename = filename;
       this.gap = cfg.getLong("logfilereadgap", 1000);
       this.writeconcern = cfg.getObject("writeconcern");
-      this.logitemPoolSize = logitemPoolSize;
     }
 
     public void process() {
@@ -104,55 +100,49 @@ public class LogProcessorWorkVerticle2 extends Verticle {
 
         RandomAccessFile raf = new RandomAccessFile(logfilePath.toFile(), "r");
 
-        FindLineResult lastInsertPosition = null;
+        FindLineResult partialFileFindResult = null;
         if (Files.exists(partialLogPath)) {
-          lastInsertPosition = PartialUtil.findLastPosition(logfilePath);
+          partialFileFindResult = PartialUtil.findLastPosition(logfilePath);
         } else {
           Files.createFile(partialLogPath);
         }
 
-        List<DBObject> dbos;
-        List<LogItem> logItems = new ArrayList<>();
+        List<DBObject> dbos = new ArrayList<>();
 
-        if (lastInsertPosition != null) {
-          raf.seek(lastInsertPosition.getStart());
-          if (lastInsertPosition.isNeedSkipOne()) {
+        if (partialFileFindResult != null) {
+          raf.seek(partialFileFindResult.getStart());
+          if (partialFileFindResult.isNeedSkipOne()) {
             String skipline = raf.readLine();
             if (skipline == null || skipline.isEmpty()) {
               skipline = raf.readLine();
             }
           }
         }
-        Parser uaParser = new Parser();
         String line;
         long counter = 0;
         while ((line = raf.readLine()) != null) {
           try {
             line = AppUtils.toUtf(line);
-            logItems.add(new LogItem(uaParser, line));
+            dbos.add((DBObject) JSON.parse(line));
           } catch (Exception e) {
             AppLogger.error.error("parse exception:" + line);
           }
           counter++;
           if (counter % gap == 0) {
-            dbos = new LogItemParser(logitemPoolSize).getLogItems(logItems);
             if (wc == null) {
               coll.insert(dbos);
             } else {
               coll.insert(dbos, wc);
             }
-            logItems.clear();
             dbos.clear();
           }
         }
-        if (logItems.size() > 0) {
-          dbos = new LogItemParser(logitemPoolSize).getLogItems(logItems);
+        if (dbos.size() > 0) {
           if (wc == null) {
             coll.insert(dbos);
           } else {
             coll.insert(dbos, wc);
           }
-          logItems.clear();
           dbos.clear();
         }
         raf.close();

@@ -3,7 +3,6 @@ package com.m3958.visitrank.Utils;
 import java.net.UnknownHostException;
 
 import com.m3958.visitrank.AppConstants;
-import com.m3958.visitrank.AppUtils;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;

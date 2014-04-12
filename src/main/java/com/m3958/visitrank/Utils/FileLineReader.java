@@ -13,8 +13,6 @@ public class FileLineReader {
 
   private RandomAccessFile fileHandler;
 
-  // private long filePointer;
-
   private long fileLength;
   private long gap;
 
@@ -89,6 +87,9 @@ public class FileLineReader {
   // }
 
   public FindLineResult getLogItem(String u, long t) throws IOException {
+    if (fileHandler.length() == 0) {
+      return null;
+    }
     FindLineResult r = getLogItemPosition(u, t, -1);
     if (fileHandler != null) try {
       fileHandler.close();

@@ -23,7 +23,7 @@ public class LogCheckVerticle2 extends Verticle {
 
   private Locker locker = new Locker();
   
-  public static String VERTICLE_NAME = "com.m3958.visitrank.LogCheckVerticle2";
+  public static String VERTICLE_NAME = LogCheckVerticle2.class.getName();
 
   @Override
   public void start() {

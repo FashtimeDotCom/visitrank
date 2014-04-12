@@ -22,9 +22,8 @@ import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.platform.Verticle;
 
+import com.m3958.visitrank.Utils.AppUtils;
 import com.m3958.visitrank.Utils.IndexBuilder;
-import com.m3958.visitrank.Utils.LogItem;
-import com.m3958.visitrank.Utils.LogItemParser;
 import com.m3958.visitrank.Utils.WriteConcernParser;
 import com.m3958.visitrank.logger.AppLogger;
 import com.m3958.visitrank.uaparser.Parser;
@@ -34,6 +33,7 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.WriteConcern;
+import com.mongodb.util.JSON;
 
 /**
  * it's a sync worker verticle. First we start a mongodb connection, readlines from logfile,batchly
@@ -46,7 +46,7 @@ import com.mongodb.WriteConcern;
 public class LogProcessorWorkVerticle extends Verticle {
 
   public static String VERTICLE_ADDRESS = "logprocessor";
-  public static String VERTICLE_NAME = "com.m3958.visitrank.LogProcessorWorkVerticle";
+  public static String VERTICLE_NAME = LogProcessorWorkVerticle.class.getName();
 
   public static class LogProcessorWorkMsgKey {
     public static String FILE_NAME = "filename";
@@ -123,8 +123,8 @@ public class LogProcessorWorkVerticle extends Verticle {
         partialWriter.write(partialStart + "," + partialStart + AppConstants.LINE_SEP);
 
 
-        List<DBObject> dbos;
-        List<LogItem> logItems = new ArrayList<>();
+        List<DBObject> dbos = new ArrayList<>();
+//        List<LogItem> logItems = new ArrayList<>();
         Parser uaParser = new Parser();
         String line;
         long counter = 0;
@@ -134,7 +134,8 @@ public class LogProcessorWorkVerticle extends Verticle {
             continue;
           }
           try {
-            logItems.add(new LogItem(uaParser, line));
+//            logItems.add(new LogItem(uaParser, line));
+            dbos.add((DBObject) JSON.parse(line));
           } catch (Exception e) {
             AppLogger.error.error("parse exception:" + line);
           }
@@ -142,7 +143,7 @@ public class LogProcessorWorkVerticle extends Verticle {
           if (counter % gap == 0) {
             partialWriter.write(counter + ",");
             partialWriter.flush();
-            dbos = new LogItemParser(logitemPoolSize).getLogItems(logItems);
+//            dbos = new LogItemParser(logitemPoolSize).getLogItems(logItems);
             if (wc == null) {
               coll.insert(dbos);
             } else {
@@ -150,14 +151,14 @@ public class LogProcessorWorkVerticle extends Verticle {
             }
             partialWriter.write(counter + AppConstants.LINE_SEP);
             partialWriter.flush();
-            logItems.clear();
+//            logItems.clear();
             dbos.clear();
           }
         }
-        if (logItems.size() > 0) {
+        if (dbos.size() > 0) {
           partialWriter.write(counter + ",");
           partialWriter.flush();
-          dbos = new LogItemParser(logitemPoolSize).getLogItems(logItems);
+//          dbos = new LogItemParser(logitemPoolSize).getLogItems(logItems);
           if (wc == null) {
             coll.insert(dbos);
           } else {
@@ -165,7 +166,7 @@ public class LogProcessorWorkVerticle extends Verticle {
           }
           partialWriter.write(counter + AppConstants.LINE_SEP);
           partialWriter.flush();
-          logItems.clear();
+//          logItems.clear();
           dbos.clear();
         }
         reader.close();

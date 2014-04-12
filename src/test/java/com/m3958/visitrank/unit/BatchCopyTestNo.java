@@ -12,7 +12,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.m3958.visitrank.AppConstants;
-import com.m3958.visitrank.AppUtils;
+import com.m3958.visitrank.Utils.AppUtils;
 import com.m3958.visitrank.Utils.IndexBuilder;
 import com.m3958.visitrank.testutils.TestUtils;
 import com.mongodb.BasicDBObject;

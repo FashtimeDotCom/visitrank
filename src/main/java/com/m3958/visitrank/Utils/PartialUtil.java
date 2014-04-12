@@ -26,8 +26,8 @@ public class PartialUtil {
       DBObject dbo = cursor.next();
       cursor.close();
       FileLineReader flr = new FileLineReader(logfile);
-      Date d = (Date) dbo.get("t");
-      return flr.getLogItem((String)dbo.get("u"), d.getTime());
+      Date d = (Date) dbo.get(FieldNameAbbreviation.TS);
+      return flr.getLogItem((String)dbo.get(FieldNameAbbreviation.URL), d.getTime());
     }
     mongoClient.close();
     return null;

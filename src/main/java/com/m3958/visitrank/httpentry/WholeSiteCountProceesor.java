@@ -8,10 +8,10 @@ import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.core.logging.Logger;
 
 import com.m3958.visitrank.AppConstants;
-import com.m3958.visitrank.AppUtils;
+import com.m3958.visitrank.LogSaverVerticle;
 import com.m3958.visitrank.ResponseGenerator;
+import com.m3958.visitrank.Utils.AppUtils;
 import com.m3958.visitrank.Utils.HostExtractor;
-import com.m3958.visitrank.logger.AppLogger;
 import com.m3958.visitrank.rediscmd.INCR;
 
 public class WholeSiteCountProceesor {
@@ -39,9 +39,8 @@ public class WholeSiteCountProceesor {
     //when pr is not null,it will only record content,send empty string back;
     if (pr != null) {
       JsonObject pjo = AppUtils.getParamsHeadersOb(req);
-      pjo.removeField("out");
-      AppLogger.urlPersistor.info(pjo);
-      new ResponseGenerator(req, "").sendResponse();
+      this.eb.send(LogSaverVerticle.RECEIVER_ADDR, pjo);
+      req.response().end("");
       return;
     }
     
@@ -53,10 +52,6 @@ public class WholeSiteCountProceesor {
           public void handle(Message<JsonObject> message) {
             JsonObject redisResultBody = message.body();
             if ("ok".equals(redisResultBody.getString("status"))) {
-
-//              JsonObject pjo = AppUtils.getParamsHeadersOb(req);
-//              pjo.removeField("out");
-//              AppLogger.urlPersistor.info(pjo);
 
               String value;
               try {

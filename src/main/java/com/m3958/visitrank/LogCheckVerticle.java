@@ -31,7 +31,7 @@ import com.mongodb.MongoClient;
  */
 public class LogCheckVerticle extends Verticle {
   
-  public static String VERTICLE_NAME = "com.m3958.visitrank.LogCheckVerticle";
+  public static String VERTICLE_NAME = LogCheckVerticle.class.getName();
 
   private Locker locker = new Locker();
   

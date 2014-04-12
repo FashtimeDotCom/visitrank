@@ -43,6 +43,8 @@ public class MainVerticle extends Verticle {
 
     JsonObject httpCfg = new JsonObject();
     httpCfg.putNumber("port", AppConstants.HTTP_PORT);
+    
+    container.deployVerticle(LogSaverVerticle.VERTICLE_NAME, httpCfg, AppConstants.LOG_SAVER_INSTANCE);
 
     container.deployVerticle(CounterVerticle.VERTICLE_NAME, httpCfg, AppConstants.HTTP_INSTANCE);
 

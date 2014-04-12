@@ -18,9 +18,10 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import org.junit.Assert;
+import org.vertx.java.core.json.JsonObject;
 
 import com.m3958.visitrank.AppConstants;
-import com.m3958.visitrank.AppUtils;
+import com.m3958.visitrank.Utils.AppUtils;
 import com.m3958.visitrank.Utils.IndexBuilder;
 import com.m3958.visitrank.Utils.LogItem;
 import com.m3958.visitrank.Utils.LogItemParser;
@@ -30,6 +31,7 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.WriteConcern;
+import com.mongodb.util.JSON;
 
 public class TestUtils {
 
@@ -59,22 +61,24 @@ public class TestUtils {
     String sampleItemFix =
         "\",\"ts\":1395291463536,\"headers\":{\"Connection\":\"keep-alive\",\"\":\"\",\"Host\":\"localhost:8333\",\"User-Agent\":\"Apache-HttpClient/4.2.6 (java 1.5)\",\"ip\":\"127.0.0.1\"}}";
 
-    List<DBObject> obs;
-    List<LogItem> logItems = new ArrayList<>();
+    List<DBObject> obs = new ArrayList<>();
+//    List<LogItem> logItems = new ArrayList<>();
     for (int i = 1; i <= items; i++) {
-      logItems.add(new LogItem(uaParser, sampleItemPre + "?article=" + i + sampleItemFix));
+      String s = sampleItemPre + "?article=" + i + sampleItemFix;
+      JsonObject jo = new LogItem(new JsonObject(s)).transform(uaParser);
+      obs.add((DBObject) JSON.parse(jo.toString()));
       if (i % step == 0) {
-        obs = new LogItemParser(100).getLogItems(logItems);
+//        obs = new LogItemParser(100).getLogItems(logItems);
         col.insert(obs, new WriteConcern(0, 0, false, journal, true));
-        logItems.clear();
+//        logItems.clear();
         obs.clear();
       }
     }
 
-    if (logItems.size() > 0) {
-      obs = new LogItemParser(100).getLogItems(logItems);
+    if (obs.size() > 0) {
+//      obs = new LogItemParser(100).getLogItems(logItems);
       col.insert(obs, new WriteConcern(0, 0, false, journal, true));
-      logItems.clear();
+//      logItems.clear();
       obs.clear();
     }
     mongoClient.close();

@@ -14,8 +14,8 @@ public class IndexBuilder {
   
   public static DBObject getPageVisitColIndexKeys(){
     DBObject indexer = new BasicDBObject();
-    indexer.put(FieldNameAbbreviation.URL_ABBREV, 1);
-    indexer.put(FieldNameAbbreviation.TS_ABBREV, -1);
+    indexer.put(FieldNameAbbreviation.URL, 1);
+    indexer.put(FieldNameAbbreviation.TS, -1);
     return indexer;
   }
 
