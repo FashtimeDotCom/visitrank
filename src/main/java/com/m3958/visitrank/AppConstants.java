@@ -82,6 +82,8 @@ public class AppConstants {
     ONLY_LOG = config.getBoolean("onlylog", ONLY_LOG);
     
     LOGITEM_POOL_SIZE = config.getInteger("logitempoolsize", LOGITEM_POOL_SIZE);
+    
+    LOG_SAVER_INSTANCE = config.getInteger("logsaverinstance", LOG_SAVER_INSTANCE);
 
   }
 
