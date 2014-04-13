@@ -13,7 +13,7 @@ import com.m3958.visitrank.integration.java.TestConstants;
  */
 public class HttpTestVerticle extends Verticle {
 
-  public static String VERTICLE_NAME = "com.m3958.visitrank.testutils.HttpTestVerticle";
+  public static String VERTICLE_NAME = HttpTestVerticle.class.getName();
 
   public void start() {
     vertx.createHttpServer().requestHandler(new Handler<HttpServerRequest>() {

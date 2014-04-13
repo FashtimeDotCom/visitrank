@@ -23,6 +23,8 @@ public class BrowserRequestTest extends TestVerticle {
   
   private String callbackPtnStr = "^abc\\(\\d+\\);$";
   
+  private String whholeSiteCallbackPtnStr = "^abc\\(\\d+\\);\\(func.*";
+  
   private String dwPtnStr = "document.write\\(\\d+\\);$";
 
   @Test
@@ -56,14 +58,14 @@ public class BrowserRequestTest extends TestVerticle {
         vertx.createHttpClient().setHost("localhost").setPort(AppConstants.HTTP_PORT);
 
     HttpClientRequest request =
-        client.get("/?&record=true&callback=abc", new Handler<HttpClientResponse>() {
+        client.get("/?&out=wholesite&callback=abc", new Handler<HttpClientResponse>() {
           @Override
           public void handle(HttpClientResponse resp) {
             assertEquals(200, resp.statusCode());
             resp.bodyHandler(new Handler<Buffer>() {
               @Override
               public void handle(Buffer respStr) {
-                assertTrue(respStr.toString().matches(callbackPtnStr));
+                assertTrue(respStr.toString().matches(whholeSiteCallbackPtnStr));
                 VertxAssert.testComplete();
               }
             });
@@ -80,7 +82,7 @@ public class BrowserRequestTest extends TestVerticle {
         vertx.createHttpClient().setHost("localhost").setPort(AppConstants.HTTP_PORT);
 
     HttpClientRequest request =
-        client.get("/?&record=true", new Handler<HttpClientResponse>() {
+        client.get("/", new Handler<HttpClientResponse>() {
           @Override
           public void handle(HttpClientResponse resp) {
             assertEquals(200, resp.statusCode());

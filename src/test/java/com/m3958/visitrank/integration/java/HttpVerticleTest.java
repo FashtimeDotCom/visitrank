@@ -8,34 +8,35 @@ package com.m3958.visitrank.integration.java;
 import static org.vertx.testtools.VertxAssert.assertNotNull;
 import static org.vertx.testtools.VertxAssert.assertTrue;
 
+import java.io.IOException;
+
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.fluent.Request;
 import org.junit.Assert;
 import org.junit.Test;
 import org.vertx.java.core.AsyncResult;
 import org.vertx.java.core.AsyncResultHandler;
 import org.vertx.java.core.http.HttpClient;
 import org.vertx.testtools.TestVerticle;
+import org.vertx.testtools.VertxAssert;
 
+import com.m3958.visitrank.AppConstants;
 import com.m3958.visitrank.testutils.HttpTestVerticle;
 import com.m3958.visitrank.testutils.HttpTestVerticleResponseHandler;
 
 /**
  */
 public class HttpVerticleTest extends TestVerticle {
-  
-  @Test
-  public void t(){
-    Assert.assertTrue(true);
-  }
 
- 
   @Test
-  public void t1() {
-    HttpClient client =
-        vertx.createHttpClient().setPort(TestConstants.HTTP_PORT).setHost("localhost")
-            .setMaxPoolSize(10);
+  public void t1() throws ClientProtocolException, IOException {
 
-    String url = "/?dowhat=url&xx=uu";
-    client.getNow(url, new HttpTestVerticleResponseHandler(container));
+    String c =
+        Request.Get("http://localhost:" + TestConstants.HTTP_PORT + "?out=wholesite&dowhat=url").execute()
+            .returnContent().asString();
+    System.out.println(c);
+    Assert.assertTrue(c.startsWith("http://"));
+    VertxAssert.testComplete();
   }
 
 
@@ -47,19 +48,17 @@ public class HttpVerticleTest extends TestVerticle {
     // Deploy the module - the System property `vertx.modulename` will
     // contain the name of the module so you
     // don't have to hardecode it in your tests
-    container.logger().info(System.getProperty("vertx.modulename"));
-    container.deployVerticle(HttpTestVerticle.VERTICLE_NAME,
-        new AsyncResultHandler<String>() {
-          @Override
-          public void handle(AsyncResult<String> asyncResult) {
-            // Deployment is asynchronous and this this handler will
-            // be called when it's complete (or failed)
-            assertTrue(asyncResult.succeeded());
-            assertNotNull("deploymentID should not be null", asyncResult.result());
-            // If deployed correctly then start the tests!
-            startTests();
-          }
-        });
+    container.deployVerticle(HttpTestVerticle.VERTICLE_NAME, new AsyncResultHandler<String>() {
+      @Override
+      public void handle(AsyncResult<String> asyncResult) {
+        // Deployment is asynchronous and this this handler will
+        // be called when it's complete (or failed)
+        assertTrue(asyncResult.succeeded());
+        assertNotNull("deploymentID should not be null", asyncResult.result());
+        // If deployed correctly then start the tests!
+        startTests();
+      }
+    });
   }
 
 }
