@@ -1,7 +1,11 @@
 package com.m3958.visitrank.Utils;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Date;
 import java.util.Map;
 import java.util.Set;
@@ -75,8 +79,7 @@ public class AppUtils {
       jo.putString(key, value);
     }
     headerJo.putString("ip", req.remoteAddress().getAddress().getHostAddress());
-    jo.putNumber(FieldNameAbbreviation.TS, new Date().getTime()).putObject("headers",
-        headerJo);
+    jo.putNumber(FieldNameAbbreviation.TS, new Date().getTime()).putObject("headers", headerJo);
 
     return jo;
   }
@@ -98,6 +101,26 @@ public class AppUtils {
       b[i] = (byte) buffer[i];
     }
     return new String(b, "UTF-8");
+  }
+
+  public static void moveLogFiles(String logDir, String archiveDir, String filename,
+      Path logfilePath) throws IOException {
+    Path archiedPath = Paths.get(archiveDir);
+    if (!archiedPath.toFile().exists()) {
+      Files.createDirectories(archiedPath);
+    }
+
+    Path tp = archiedPath.resolve(filename);
+    while (Files.exists(tp)) {
+      tp = Paths.get(tp.toString() + ".duplicated");
+    }
+
+    Files.move(logfilePath, tp);
+
+    if (Files.exists(Paths.get(logDir, filename + AppConstants.PARTIAL_POSTFIX),
+        LinkOption.NOFOLLOW_LINKS)) {
+      Files.delete(Paths.get(logDir, filename + AppConstants.PARTIAL_POSTFIX));
+    }
   }
 
 }

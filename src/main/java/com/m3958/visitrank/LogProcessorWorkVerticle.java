@@ -19,6 +19,7 @@ import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.platform.Verticle;
 
+import com.m3958.visitrank.Utils.AppUtils;
 import com.m3958.visitrank.Utils.IndexBuilder;
 import com.m3958.visitrank.Utils.PartialUtil;
 import com.m3958.visitrank.Utils.WriteConcernParser;
@@ -148,29 +149,13 @@ public class LogProcessorWorkVerticle extends Verticle {
 
         mongoClient.close();
 
-        moveLogFiles(logfilePath);
+        AppUtils.moveLogFiles(logDir, archiveDir, filename, logfilePath);
       } catch (UnsupportedEncodingException | FileNotFoundException e) {
         AppLogger.error.error("cann't create reader from file: " + filename);
       } catch (UnknownHostException e1) {
         AppLogger.error.error("cann't connect to mongo host: " + filename);
       } catch (IOException e) {
         e.printStackTrace();
-      }
-    }
-
-    private void moveLogFiles(Path logfilePath) throws IOException {
-      Path archiedPath = Paths.get(archiveDir);
-      if (!archiedPath.toFile().exists()) {
-        Files.createDirectories(archiedPath);
-      }
-      if (Files.exists(archiedPath.resolve(filename), LinkOption.NOFOLLOW_LINKS)) {
-        Files.move(logfilePath, archiedPath.resolve(filename + ".duplicated"));
-      } else {
-        Files.move(logfilePath, archiedPath.resolve(filename));
-      }
-      if (Files.exists(Paths.get(logDir, filename + AppConstants.PARTIAL_POSTFIX),
-          LinkOption.NOFOLLOW_LINKS)) {
-        Files.delete(Paths.get(logDir, filename + AppConstants.PARTIAL_POSTFIX));
       }
     }
   }
