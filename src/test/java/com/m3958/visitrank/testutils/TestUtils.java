@@ -24,7 +24,6 @@ import com.m3958.visitrank.AppConstants;
 import com.m3958.visitrank.Utils.AppUtils;
 import com.m3958.visitrank.Utils.IndexBuilder;
 import com.m3958.visitrank.Utils.LogItem;
-import com.m3958.visitrank.Utils.LogItemParser;
 import com.m3958.visitrank.uaparser.Parser;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;

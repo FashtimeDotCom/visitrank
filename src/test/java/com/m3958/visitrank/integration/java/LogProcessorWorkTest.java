@@ -49,14 +49,16 @@ public class LogProcessorWorkTest extends TestVerticle {
   private String testlogname = "t-2014-03-02-01.log";
   private String logDir = "testlogs";
   private String archiveDir = "tarchives";
+  
+  private String repoDbName = "t-visitrank";
 
 
   @Test
   public void t() throws IOException {
-    TestUtils.assertDailyDbItemEqual(testlogname);
+    TestUtils.assertDbItemEqual(repoDbName,1000);
 
     TestUtils.deleteDirs(logDir, archiveDir);
-    TestUtils.dropDailyDb(testlogname);
+    TestUtils.dropDb(repoDbName);
     VertxAssert.testComplete();
   }
 
@@ -65,7 +67,7 @@ public class LogProcessorWorkTest extends TestVerticle {
     initialize();
     try {
       TestUtils.deleteDirs(logDir, archiveDir);
-      TestUtils.dropDailyDb(testlogname);
+      TestUtils.dropDb(repoDbName);
       TestUtils.createDirs(logDir, archiveDir);
       TestUtils.createSampleLogs(logDir, testlogname, 1000);
     } catch (IOException e) {
@@ -73,6 +75,7 @@ public class LogProcessorWorkTest extends TestVerticle {
     }
     
     AppConstants.dailyDbPtn = Pattern.compile("(.*\\d{4}-\\d{2}-\\d{2})(.*)");
+    AppConstants.MongoNames.REPOSITORY_DB_NAME = repoDbName;
 
     final JsonObject body =
         new JsonObject().putString(LogProcessorWorkMsgKey.FILE_NAME, testlogname)

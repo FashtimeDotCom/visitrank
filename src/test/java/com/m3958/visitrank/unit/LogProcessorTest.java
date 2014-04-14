@@ -5,7 +5,6 @@ import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Paths;
-import java.util.regex.Pattern;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -22,28 +21,31 @@ public class LogProcessorTest {
   private String testlogname = "t-2014-03-02-01.log";
   private String logDir = "testlogs";
   private String archiveDir = "tarchives";
+  private String testRepoDb = "t-visitrank";
 
   @Before
   public void setup() throws IOException {
-    TestUtils.deleteDirs(logDir, archiveDir);
-    TestUtils.dropDailyDb(testlogname);
-    TestUtils.createDirs(logDir, archiveDir);
-    TestUtils.createSampleLogs(logDir, testlogname, 1000);
+    if(!Files.exists(Paths.get(logDir,testlogname + AppConstants.PARTIAL_POSTFIX))){
+      TestUtils.deleteDirs(logDir, archiveDir);
+      TestUtils.dropDb(testRepoDb);
+      TestUtils.createDirs(logDir, archiveDir);
+      TestUtils.createSampleLogs(logDir, testlogname, 1000);
+    }
   }
 
   @After
   public void cleanup() throws IOException {
     TestUtils.deleteDirs(logDir, archiveDir);
-    TestUtils.dropDailyDb(testlogname);
+    TestUtils.dropDb(testRepoDb);
   }
 
   @Test
   public void t() throws UnknownHostException {
-    AppConstants.dailyDbPtn = Pattern.compile("(.*\\d{4}-\\d{2}-\\d{2})(.*)");
+    AppConstants.MongoNames.REPOSITORY_DB_NAME = "t-visitrank";
     new LogProcessorWorkVerticle.LogProcessor(logDir, archiveDir, testlogname,
-        new JsonObject().putNumber("logfilereadgap", 1000), 100).process();
+        new JsonObject().putNumber("logfilereadgap", 100), 100).process();
     Assert.assertTrue(Files.exists(Paths.get(archiveDir), LinkOption.NOFOLLOW_LINKS));
     Assert.assertTrue(Files.exists(Paths.get(archiveDir, testlogname), LinkOption.NOFOLLOW_LINKS));
-    TestUtils.assertDailyDbItemEqual(testlogname);
+    TestUtils.assertDbItemEqual(testRepoDb,1000);
   }
 }

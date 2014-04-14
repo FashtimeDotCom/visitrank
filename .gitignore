@@ -10,6 +10,7 @@
 build/
 target/
 
+*.log
 logs/app.log
 mods/
 logs/

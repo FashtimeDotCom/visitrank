@@ -96,12 +96,12 @@ public class MainVerticle extends Verticle {
               .putString("writeconcern", AppConstants.WRITE_CONCERN)
               .putNumber("logitempoolsize", AppConstants.LOGITEM_POOL_SIZE);
 
-      container.deployVerticle(LogCheckVerticle2.VERTICLE_NAME, logCheckCfg, 1);
+      container.deployVerticle(LogCheckVerticle.VERTICLE_NAME, logCheckCfg, 1);
 
       // container.deployWorkerVerticle(DailyCopyWorkVerticle.VERTICLE_NAME, new JsonObject(),
       // AppConstants.DAILY_PROCESSOR_INSTANCE, false);
 
-      container.deployWorkerVerticle(LogProcessorWorkVerticle2.VERTICLE_NAME, new JsonObject(),
+      container.deployWorkerVerticle(LogProcessorWorkVerticle.VERTICLE_NAME, new JsonObject(),
           AppConstants.LOG_PROCESSOR_INSTANCE, false);
     }
   }

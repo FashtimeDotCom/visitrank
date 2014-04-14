@@ -3,10 +3,8 @@ package com.m3958.visitrank;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.UnknownHostException;
 import java.nio.file.Files;
@@ -16,18 +14,15 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.bson.types.ObjectId;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.platform.Verticle;
 
-import com.m3958.visitrank.Utils.AppUtils;
 import com.m3958.visitrank.Utils.IndexBuilder;
+import com.m3958.visitrank.Utils.PartialUtil;
 import com.m3958.visitrank.Utils.WriteConcernParser;
 import com.m3958.visitrank.logger.AppLogger;
-import com.m3958.visitrank.uaparser.Parser;
-import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
@@ -81,8 +76,6 @@ public class LogProcessorWorkVerticle extends Verticle {
 
     private JsonObject writeconcern;
 
-    private int logitemPoolSize;
-
     public LogProcessor(String logDir, String archiveDir, String filename, JsonObject cfg,
         int logitemPoolSize) {
       this.logDir = logDir;
@@ -90,7 +83,6 @@ public class LogProcessorWorkVerticle extends Verticle {
       this.filename = filename;
       this.gap = cfg.getLong("logfilereadgap", 1000);
       this.writeconcern = cfg.getObject("writeconcern");
-      this.logitemPoolSize = logitemPoolSize;
     }
 
     public void process() {
@@ -101,8 +93,7 @@ public class LogProcessorWorkVerticle extends Verticle {
 
         MongoClient mongoClient =
             new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
-        DB db = mongoClient.getDB(AppUtils.getDailyDbName(filename, AppConstants.dailyDbPtn));
-        ObjectId hourJobId = insertHourJobStart(db);
+        DB db = mongoClient.getDB(AppConstants.MongoNames.REPOSITORY_DB_NAME);
         DBCollection coll = db.getCollection(AppConstants.MongoNames.PAGE_VISIT_COL_NAME);
 
         coll.createIndex(IndexBuilder.getPageVisitColIndexKeys());
@@ -110,68 +101,51 @@ public class LogProcessorWorkVerticle extends Verticle {
         BufferedReader reader =
             new BufferedReader(new InputStreamReader(new FileInputStream(logfilePath.toFile()),
                 "UTF-8"));
-        // skip partial appened.
-        long partialStart = 0;
+
+
+        long start = 0;
         if (Files.exists(partialLogPath)) {
-          partialStart = AppUtils.getLastPartialPosition(partialLogPath);
-          AppLogger.processLogger
-              .info("process " + filename + " " + partialStart + " continueing.");
+          start = PartialUtil.findLastProcessDbObject(logfilePath);
+        } else {
+          Files.createFile(partialLogPath);
         }
 
-        OutputStreamWriter partialWriter =
-            new OutputStreamWriter(new FileOutputStream(partialLogPath.toFile()), "UTF-8");
-        partialWriter.write(partialStart + "," + partialStart + AppConstants.LINE_SEP);
-
-
         List<DBObject> dbos = new ArrayList<>();
-//        List<LogItem> logItems = new ArrayList<>();
-        Parser uaParser = new Parser();
+
         String line;
         long counter = 0;
         while ((line = reader.readLine()) != null) {
-          if (counter < partialStart) {
+          if (counter < start) {
             counter++;
             continue;
           }
           try {
-//            logItems.add(new LogItem(uaParser, line));
             dbos.add((DBObject) JSON.parse(line));
           } catch (Exception e) {
             AppLogger.error.error("parse exception:" + line);
           }
           counter++;
           if (counter % gap == 0) {
-            partialWriter.write(counter + ",");
-            partialWriter.flush();
-//            dbos = new LogItemParser(logitemPoolSize).getLogItems(logItems);
             if (wc == null) {
               coll.insert(dbos);
             } else {
               coll.insert(dbos, wc);
             }
-            partialWriter.write(counter + AppConstants.LINE_SEP);
-            partialWriter.flush();
-//            logItems.clear();
             dbos.clear();
           }
         }
         if (dbos.size() > 0) {
-          partialWriter.write(counter + ",");
-          partialWriter.flush();
-//          dbos = new LogItemParser(logitemPoolSize).getLogItems(logItems);
           if (wc == null) {
             coll.insert(dbos);
           } else {
             coll.insert(dbos, wc);
           }
-          partialWriter.write(counter + AppConstants.LINE_SEP);
-          partialWriter.flush();
-//          logItems.clear();
           dbos.clear();
         }
         reader.close();
-        partialWriter.close();
-        updateHourJobEnd(db, hourJobId);
+
+        Files.delete(partialLogPath);
+
         mongoClient.close();
 
         moveLogFiles(logfilePath);
@@ -198,23 +172,6 @@ public class LogProcessorWorkVerticle extends Verticle {
           LinkOption.NOFOLLOW_LINKS)) {
         Files.delete(Paths.get(logDir, filename + AppConstants.PARTIAL_POSTFIX));
       }
-    }
-
-    private ObjectId insertHourJobStart(DB db) {
-      DBCollection hourlyCol = db.getCollection(AppConstants.MongoNames.HOURLY_JOB_COL_NAME);
-      DBObject dbo =
-          new BasicDBObject().append(AppConstants.MongoNames.HOURLY_JOB_NUMBER_KEY,
-              AppUtils.getHour(filename, AppConstants.dailyDbPtn)).append(
-              AppConstants.MongoNames.HOURLY_JOB_STATUS_KEY, "start");
-      hourlyCol.insert(dbo);
-      return (ObjectId) dbo.get("_id");
-    }
-
-    private void updateHourJobEnd(DB db, ObjectId id) {
-      DBCollection hourlyCol = db.getCollection(AppConstants.MongoNames.HOURLY_JOB_COL_NAME);
-      DBObject dbo = hourlyCol.findOne(new BasicDBObject("_id", id));
-      dbo.put(AppConstants.MongoNames.HOURLY_JOB_STATUS_KEY, "end");
-      hourlyCol.update(new BasicDBObject("_id", id), dbo);
     }
   }
 }
