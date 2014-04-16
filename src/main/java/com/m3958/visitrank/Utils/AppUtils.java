@@ -67,7 +67,7 @@ public class AppUtils {
       String key = header.getKey();
       String value = header.getValue();
       if ("referer".equalsIgnoreCase(key)) {
-        jo.putString(FieldNameAbbreviation.URL, value);
+        jo.putString(FieldNameAbbreviation.PageVisit.URL, value);
       } else {
         headerJo.putString(key, value);
       }
@@ -79,7 +79,7 @@ public class AppUtils {
       jo.putString(key, value);
     }
     headerJo.putString("ip", req.remoteAddress().getAddress().getHostAddress());
-    jo.putNumber(FieldNameAbbreviation.TS, new Date().getTime()).putObject("headers", headerJo);
+    jo.putNumber(FieldNameAbbreviation.PageVisit.TS, new Date().getTime()).putObject("headers", headerJo);
 
     return jo;
   }

@@ -94,6 +94,9 @@ public class AppConstants {
     public static String HOURLY_JOB_NUMBER_KEY = "hournumber";
     public static String HOURLY_JOB_STATUS_KEY = "status";
 
+    public static String META_DB_NAME = "visitrank-meta";
+    public static String HOST_NAME_COLLECTION_NAME = "hostname";
+    
     public static String DAILY_JOB_COL_NAME = "dailyjob";
     public static String DAILY_JOB_STATUS_KEY = "status";
   }

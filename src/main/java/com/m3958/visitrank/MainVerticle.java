@@ -36,9 +36,15 @@ public class MainVerticle extends Verticle {
     }
     
     AppConstants.initConfigConstants(container.config());
-    log.info("check index status ...");
+    
+    log.info("check pagevisit index status ...");
     IndexBuilder.pageVisitIndex();
-    log.info("check index done");
+    log.info("check pagevisit index done");
+    
+    log.info("check hostname index status ...");
+    IndexBuilder.hostNameIndex();
+    log.info("check hostname index done");
+    
     AppLogger.urlPersistor.trace("loger started");
 
     JsonObject httpCfg = new JsonObject();
@@ -65,9 +71,7 @@ public class MainVerticle extends Verticle {
             }
           }
         });
-
     // deploy mongodb
-
     if (!AppConstants.ONLY_LOG) {
       JsonObject mongodbCfg = new JsonObject();
       mongodbCfg.putString("address", AppConstants.MOD_MONGO_PERSIST_ADDRESS)

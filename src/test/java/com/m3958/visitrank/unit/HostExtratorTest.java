@@ -35,5 +35,16 @@ public class HostExtratorTest {
     Assert.assertEquals("www.m3958.com", HostExtractor.getHost(url44));
     Assert.assertEquals("www.m3958.com", HostExtractor.getHost(url5));
     Assert.assertEquals("www.m3958.com", HostExtractor.getHost(url55));
+    
+    Assert.assertEquals("/", HostExtractor.getUri(url1));
+    Assert.assertEquals("/", HostExtractor.getUri(url11));
+    Assert.assertEquals("/?abc=xxx", HostExtractor.getUri(url2));
+    Assert.assertEquals("/?abc=xxx", HostExtractor.getUri(url22));
+    Assert.assertEquals("/abc", HostExtractor.getUri(url3));
+    Assert.assertEquals("/abc", HostExtractor.getUri(url33));
+    Assert.assertEquals("/abc?u=x", HostExtractor.getUri(url4));
+    Assert.assertEquals("/abc?u=x", HostExtractor.getUri(url44));
+    Assert.assertEquals("/?abc=uuu/6677", HostExtractor.getUri(url5));
+    Assert.assertEquals("/?abc=uuu/6677", HostExtractor.getUri(url55));
   }
 }

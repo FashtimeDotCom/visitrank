@@ -14,12 +14,12 @@ public class LogItem {
 
   public JsonObject transform(Parser uaparser) {
     JsonObject headers = item.getObject("headers");
-    String ua = headers.getString(FieldNameAbbreviation.USER_AGENT);
+    String ua = headers.getString(FieldNameAbbreviation.PageVisit.USER_AGENT);
     UaParserClientWrapper uawrap = new UaParserClientWrapper(uaparser.parse(ua));
-    headers.putObject(FieldNameAbbreviation.USER_AGENT, uawrap.toJson());
-    item.putString(FieldNameAbbreviation.IP, getIp(headers));
+    headers.putObject(FieldNameAbbreviation.PageVisit.USER_AGENT, uawrap.toJson());
+    item.putString(FieldNameAbbreviation.PageVisit.IP, getIp(headers));
     item.removeField("out");
-    headers.removeField(FieldNameAbbreviation.IP);
+    headers.removeField(FieldNameAbbreviation.PageVisit.IP);
     return item;
   }
 
@@ -33,6 +33,6 @@ public class LogItem {
         }
       }
     }
-    return headers.getString(FieldNameAbbreviation.IP);
+    return headers.getString(FieldNameAbbreviation.PageVisit.IP);
   }
 }

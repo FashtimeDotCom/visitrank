@@ -4,7 +4,6 @@ import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.Reader;
 import java.nio.file.Path;
 import java.util.Date;
 
@@ -32,8 +31,8 @@ public class PartialUtil {
       DBObject dbo = cursor.next();
       cursor.close();
       FileLineReader flr = new FileLineReader(logfile);
-      Date d = (Date) dbo.get(FieldNameAbbreviation.TS);
-      return flr.getLogItem((String) dbo.get(FieldNameAbbreviation.URL), d.getTime());
+      Date d = (Date) dbo.get(FieldNameAbbreviation.PageVisit.TS);
+      return flr.getLogItem((String) dbo.get(FieldNameAbbreviation.PageVisit.URL), d.getTime());
     }
     mongoClient.close();
     return null;
@@ -50,8 +49,8 @@ public class PartialUtil {
     if (cursor.hasNext()) {
       DBObject dbo = cursor.next();
       cursor.close();
-      String url = (String) dbo.get(FieldNameAbbreviation.URL);
-      long ts = ((Date) dbo.get(FieldNameAbbreviation.TS)).getTime();
+      String url = (String) dbo.get(FieldNameAbbreviation.PageVisit.URL);
+      long ts = ((Date) dbo.get(FieldNameAbbreviation.PageVisit.TS)).getTime();
       BufferedReader reader =
           new BufferedReader(new InputStreamReader(new FileInputStream(logfile.toFile()), "UTF-8"));
       String line;
@@ -59,8 +58,8 @@ public class PartialUtil {
       while ((line = reader.readLine()) != null) {
         count++;
         JsonObject jo = new JsonObject(line);
-        if (jo.getString(FieldNameAbbreviation.URL).equals(url)
-            && ts == jo.getLong(FieldNameAbbreviation.TS)) {
+        if (jo.getString(FieldNameAbbreviation.PageVisit.URL).equals(url)
+            && ts == jo.getLong(FieldNameAbbreviation.PageVisit.TS)) {
           reader.close();
           return count;
         }
