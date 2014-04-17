@@ -14,6 +14,8 @@ public class RemainLogFileFinder {
 
   private static Pattern fptn = Pattern.compile(".*\\d{4}-\\d{2}-\\d{2}.*\\.log");
 
+  private static Pattern incptn = Pattern.compile("(.*\\d{4}-\\d{2}-\\d{2}-)(\\d+)\\.log");
+
   private Locker locker;
 
   public RemainLogFileFinder(String logDirStr, Locker locker) {
@@ -71,18 +73,27 @@ public class RemainLogFileFinder {
     }
     if (lf == null) {
       SimpleDateFormat sdf = new SimpleDateFormat("yyy-MM-dd");
-      return sdf.format(new Date()) + ".log";
+      return sdf.format(new Date()) + "-1.log";
     } else {
-      char c = lf.charAt(lf.length() - 5);
-      if (c == '9') {
-        c = 'a';
-      } else if (c == 'z') {
-        c = '0';
+      Matcher m = incptn.matcher(lf);
+      System.out.println(lf);
+      if (m.matches()) {
+        int i = Integer.parseInt(m.group(2), 10) + 1;
+        return m.group(1) + i + ".log";
       } else {
-        c++;
+        SimpleDateFormat sdf = new SimpleDateFormat("yyy-MM-dd");
+        return sdf.format(new Date()) + "-1.log";
       }
-      String s = lf.substring(0, lf.length() - 5);
-      return new StringBuffer().append(s).append(c).append(".log").toString();
+      // char c = lf.charAt(lf.length() - 5);
+      // if (c == '9') {
+      // c = 'a';
+      // } else if (c == 'z') {
+      // c = '0';
+      // } else {
+      // c++;
+      // }
+      // String s = lf.substring(0, lf.length() - 5);
+      // return new StringBuffer().append(s).append(c).append(".log").toString();
 
     }
   }

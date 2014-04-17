@@ -8,7 +8,6 @@ import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.UnknownHostException;
 import java.nio.file.Files;
-import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -21,6 +20,7 @@ import org.vertx.java.platform.Verticle;
 
 import com.m3958.visitrank.Utils.AppUtils;
 import com.m3958.visitrank.Utils.IndexBuilder;
+import com.m3958.visitrank.Utils.LogItemTransformer;
 import com.m3958.visitrank.Utils.PartialUtil;
 import com.m3958.visitrank.Utils.WriteConcernParser;
 import com.m3958.visitrank.logger.AppLogger;
@@ -51,7 +51,7 @@ public class LogProcessorWorkVerticle extends Verticle {
     public static String REPLY = "reply";
     public static String LOGITEM_POOL_SIZE = "logitempoolsize";
   }
-
+  
   @Override
   public void start() {
     vertx.eventBus().registerHandler(VERTICLE_ADDRESS, new Handler<Message<JsonObject>>() {
@@ -121,7 +121,7 @@ public class LogProcessorWorkVerticle extends Verticle {
             continue;
           }
           try {
-            dbos.add((DBObject) JSON.parse(line));
+            dbos.add(LogItemTransformer.transformToDb(line));
           } catch (Exception e) {
             AppLogger.error.error("parse exception:" + line);
           }

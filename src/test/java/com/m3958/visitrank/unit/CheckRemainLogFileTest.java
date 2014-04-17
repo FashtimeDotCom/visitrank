@@ -5,6 +5,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -93,7 +98,7 @@ public class CheckRemainLogFileTest {
     Path p1 = Paths.get(logDir, "t-2014-03-03-09.log");
     Files.createFile(p1);
     RemainLogFileFinder rlf = new RemainLogFileFinder(logDir, locker);
-    Assert.assertEquals("t-2014-03-03-0a.log", rlf.nextLogName());
+    Assert.assertEquals("t-2014-03-03-10.log", rlf.nextLogName());
     Files.delete(p1);
     samples(-1);
   }
@@ -113,6 +118,34 @@ public class CheckRemainLogFileTest {
     Assert.assertEquals("2014-03-02-05.log", ss[0]);
     Assert.assertEquals("2014-03-03-01.log", ss[1]);
     Assert.assertEquals("t-2014-03-02-01.log", ss[2]);
+  }
+
+  @Test
+  public void t8() {
+    Pattern incptn = Pattern.compile("(.*\\d{4}-\\d{2}-\\d{2}-)(\\d+)\\.log");
+    Matcher m = incptn.matcher("2014-04-16-1.log");
+    Assert.assertTrue(m.matches());
+    Assert.assertEquals("1", m.group(2));
+    Assert.assertEquals("2014-04-16-", m.group(1));
+
+  }
+
+  @Test
+  public void t9() {
+    List<String> ls = Arrays.asList("2014-04-16-01.log", "2014-04-18.log", "2014-04-19.log");
+    Collections.sort(ls,new Comparator<String>() {
+
+      @Override
+      public int compare(String o1, String o2) {
+        if(o1.length() > o2.length()){
+          return 1;
+        }else if(o1.length() < o2.length()){
+          return -1;
+        }else{
+          return o1.compareTo(o2);
+        }
+      }});
+    Assert.assertEquals("2014-04-16-01.log", ls.get(2));
   }
 
   private void samples(int c) throws IOException {

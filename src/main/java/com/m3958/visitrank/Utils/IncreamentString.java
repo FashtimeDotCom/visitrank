@@ -2,11 +2,29 @@ package com.m3958.visitrank.Utils;
 
 public class IncreamentString {
 
-  public final static char MIN_DIGIT = 'a';
-  public final static char MAX_DIGIT = 'z';
+  public  char MIN_DIGIT = '0';
+  public  char MAX_DIGIT = 'z';
+  
+  private String currentStr;
+  
+  public IncreamentString(){}
+  
+  public IncreamentString(String initValue){
+    currentStr = initValue;
+  }
+  
 
-  public static String incrementedAlpha(String original) {
-    if(original == null || original.isEmpty()){
+  public synchronized String getNext(){
+    currentStr =  getNext(currentStr);
+    return currentStr;
+  }
+  
+  public String getCurrent(){
+    return currentStr;
+  }
+
+  public String getNext(String original) {
+    if (original == null || original.isEmpty()) {
       return String.valueOf(MIN_DIGIT);
     }
     StringBuilder buf = new StringBuilder(original);
@@ -14,6 +32,9 @@ public class IncreamentString {
     while (index >= 0) {
       char c = buf.charAt(index);
       c++;
+      if (c == 57) {
+        c = 97;
+      }
       if (c > MAX_DIGIT) { // overflow, carry one
         buf.setCharAt(index, MIN_DIGIT);
         index--;

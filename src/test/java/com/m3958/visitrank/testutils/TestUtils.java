@@ -26,7 +26,7 @@ import com.m3958.visitrank.AppConstants;
 import com.m3958.visitrank.Utils.AppUtils;
 import com.m3958.visitrank.Utils.FieldNameAbbreviation;
 import com.m3958.visitrank.Utils.IndexBuilder;
-import com.m3958.visitrank.Utils.LogItem;
+import com.m3958.visitrank.Utils.LogItemTransformer;
 import com.m3958.visitrank.uaparser.Parser;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
@@ -39,11 +39,9 @@ public class TestUtils {
 
   public static Pattern dailyDbPtn = Pattern.compile("(.*\\d{4}-\\d{2}-\\d{2})(.*)");
 
-  // public static String[] hostnames = new String[] {"http://www.m3958.com",
-  // "http://www.fh.gov.cn",
-  // "http://www.nb.gov.cn"};
-  public static String[] hostnames = new String[] {"ksisi", "ois80",
-      "oisd9"};
+   public static String[] hostnames = new String[] {"http://www.m3958.com",
+   "http://www.fh.gov.cn",
+   "http://www.nb.gov.cn"};
 
   public static void dropDailyDb(String testlogname) throws UnknownHostException {
     dropDb(AppUtils.getDailyDbName(testlogname, dailyDbPtn));
@@ -80,28 +78,18 @@ public class TestUtils {
     DB db = mongoClient.getDB(dbname);
     DBCollection col = db.getCollection(AppConstants.MongoNames.PAGE_VISIT_COL_NAME);
     col.createIndex(IndexBuilder.getPageVisitColIndexKeys());
-    String sampleItemPre = "{\"url\":\"http://sb.m3958.com";
-    String sampleItemFix =
-        "\",\"ts\":1395291463536,\"headers\":{\"Connection\":\"keep-alive\",\"\":\"\",\"Host\":\"localhost:8333\",\"User-Agent\":\"Apache-HttpClient/4.2.6 (java 1.5)\",\"ip\":\"127.0.0.1\"}}";
-
     List<DBObject> obs = new ArrayList<>();
-    // List<LogItem> logItems = new ArrayList<>();
     for (int i = 1; i <= items; i++) {
-      String s = sampleItemPre + "?article=" + i + sampleItemFix;
-      JsonObject jo = new LogItem(new JsonObject(s)).transform(uaParser);
+      JsonObject jo = LogItemTransformer.transformToLog4j(getRandomJo(), uaParser);
       obs.add((DBObject) JSON.parse(jo.toString()));
       if (i % step == 0) {
-        // obs = new LogItemParser(100).getLogItems(logItems);
         col.insert(obs, new WriteConcern(0, 0, false, journal, true));
-        // logItems.clear();
         obs.clear();
       }
     }
 
     if (obs.size() > 0) {
-      // obs = new LogItemParser(100).getLogItems(logItems);
       col.insert(obs, new WriteConcern(0, 0, false, journal, true));
-      // logItems.clear();
       obs.clear();
     }
     mongoClient.close();
@@ -147,16 +135,12 @@ public class TestUtils {
 
   public static void createSampleLogs(String logDir, String testlogname, long number)
       throws UnsupportedEncodingException, FileNotFoundException {
-    String sampleItemPre = "{\"url\":\"http://sb.m3958.com";
-    String sampleItemFix =
-        "\",\"ts\":1396173397887,\"zh\":\"中文\",\"headers\":{\"Connection\":\"keep-alive\",\"\":\"\",\"Host\":\"localhost:8333\",\"User-Agent\":\"Apache-HttpClient/4.2.6 (java 1.5)\",\"ip\":\"127.0.0.1\"}}";
-
     PrintWriter out =
         new PrintWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(new File(
             logDir, testlogname)), "UTF-8")));
 
     for (int i = 0; i < number; i++) {
-      out.println(sampleItemPre + "?article=" + i + sampleItemFix);
+      out.println(getRandomJo().toString());
     }
     out.close();
   }
@@ -187,7 +171,7 @@ public class TestUtils {
   private static JsonObject getRandomJo() {
     String ht = hostnames[RandomUtils.nextInt(3)];
     JsonObject joraw = new JsonObject();
-    joraw.putString(FieldNameAbbreviation.PageVisit.URL, ht + "?article=" + RandomUtils.nextInt());
+    joraw.putString(FieldNameAbbreviation.PageVisit.URL, ht + "/?article=" + RandomUtils.nextInt());
     joraw.putNumber(FieldNameAbbreviation.PageVisit.TS, new Date().getTime());
     joraw.putObject(
         "headers",
@@ -209,7 +193,7 @@ public class TestUtils {
 
     List<DBObject> obs = new ArrayList<>();
     for (int i = 1; i <= items; i++) {
-      JsonObject jo = new LogItem(getRandomJo()).transform(uaParser);
+      JsonObject jo = LogItemTransformer.transformToLog4j(getRandomJo(), uaParser);
       obs.add((DBObject) JSON.parse(jo.toString()));
       if (i % step == 0) {
         col.insert(obs, new WriteConcern(0, 0, false, journal, true));

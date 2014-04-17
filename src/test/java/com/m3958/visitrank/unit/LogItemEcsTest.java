@@ -15,7 +15,6 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.m3958.visitrank.Utils.LogItem;
 import com.m3958.visitrank.integration.java.TestConstants;
 import com.m3958.visitrank.uaparser.CachingParser;
 import com.m3958.visitrank.uaparser.Parser;

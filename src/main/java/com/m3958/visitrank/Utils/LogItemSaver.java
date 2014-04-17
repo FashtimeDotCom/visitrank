@@ -23,8 +23,7 @@ public class LogItemSaver {
     execPool.execute(new Runnable() {
       @Override
       public void run() {
-        JsonObject jo = new LogItem(item).transform(parser);
-        
+        LogItemTransformer.transformToLog4j(item, parser);
       }
     });
   }

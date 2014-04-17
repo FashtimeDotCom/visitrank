@@ -24,7 +24,7 @@ import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.platform.Verticle;
 
-import com.m3958.visitrank.Utils.LogItem;
+import com.m3958.visitrank.Utils.LogItemTransformer;
 import com.m3958.visitrank.logger.AppLogger;
 import com.m3958.visitrank.uaparser.Parser;
 
@@ -41,7 +41,7 @@ public class LogSaverVerticle extends Verticle {
       eb.registerHandler(RECEIVER_ADDR, new Handler<Message<JsonObject>>() {
         @Override
         public void handle(Message<JsonObject> message) {
-          JsonObject jo = new LogItem(message.body()).transform(uaparser);
+          JsonObject jo = LogItemTransformer.transformToLog4j(message.body(), uaparser);
           AppLogger.urlPersistor.info(jo);
         }
       });

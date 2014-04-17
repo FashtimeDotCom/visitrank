@@ -37,8 +37,10 @@ public class IndexBuilder {
       DB db = mongoClient.getDB(AppConstants.MongoNames.META_DB_NAME);
       DBCollection hostnameCol =
           db.getCollection(AppConstants.MongoNames.HOST_NAME_COLLECTION_NAME);
-      hostnameCol.createIndex(new BasicDBObject(FieldNameAbbreviation.HostName.HOST, 1));
-      hostnameCol.createIndex(new BasicDBObject(FieldNameAbbreviation.HostName.HOST_SHORT, 1));
+      hostnameCol.createIndex(new BasicDBObject(FieldNameAbbreviation.HostName.HOST, 1),
+          new BasicDBObject("unique", true));
+      hostnameCol.createIndex(new BasicDBObject(FieldNameAbbreviation.HostName.HOST_SHORT, 1),
+          new BasicDBObject("unique", true));
     } catch (UnknownHostException e) {}
   }
 }

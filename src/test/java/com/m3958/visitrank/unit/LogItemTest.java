@@ -15,7 +15,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.m3958.visitrank.Utils.FieldNameAbbreviation;
-import com.m3958.visitrank.Utils.LogItem;
 import com.m3958.visitrank.integration.java.TestConstants;
 import com.m3958.visitrank.uaparser.Parser;
 import com.mongodb.DBObject;

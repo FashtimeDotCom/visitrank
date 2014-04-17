@@ -6,31 +6,28 @@ import org.junit.Test;
 import com.m3958.visitrank.Utils.IncreamentString;
 
 public class IncreamentStringTest {
-
+  
   @Test
   public void t1(){
-    String s = "az";
-    Assert.assertEquals("ba", IncreamentString.incrementedAlpha(s));
+    IncreamentString is = new IncreamentString();
+    System.out.println("09AZaz");
+    System.out.println((int)'0');
+    System.out.println((int)'9');
+    System.out.println((int)'A');
+    System.out.println((int)'Z');
+    System.out.println((int)'a');
+    System.out.println((int)'z');
+    Assert.assertEquals("b0", is.getNext("az"));
+    Assert.assertEquals("00000", is.getNext("zzzz"));
+    Assert.assertEquals("ab", is.getNext("aa"));
+    Assert.assertEquals("b", is.getNext("a"));
   }
   
   @Test
   public void t2(){
-    String s = "aa";
-    Assert.assertEquals("ab", IncreamentString.incrementedAlpha(s));
+    IncreamentString is = new IncreamentString("auz");
+    Assert.assertEquals("av0", is.getNext());
+    Assert.assertEquals("av1", is.getNext());
+    Assert.assertEquals("av2", is.getNext());
   }
-  
-  @Test
-  public void t3(){
-    String s = "a";
-    Assert.assertEquals("b", IncreamentString.incrementedAlpha(s));
-  }
-  
-  @Test
-  public void t4(){
-    String s = "zzzz";
-    Assert.assertEquals("aaaaa", IncreamentString.incrementedAlpha(s));
-  }
-
-
-
 }
