@@ -8,7 +8,9 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.m3958.visitrank.AppConstants;
+import com.m3958.visitrank.Utils.FieldNameAbbreviation;
 import com.m3958.visitrank.Utils.IndexBuilder;
+import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
@@ -41,7 +43,12 @@ public class IndexerTest {
         Assert.assertTrue((boolean) dbo.get("unique"));
       }
     }
-    System.out.println(idxes);
+    col.insert(new BasicDBObject(FieldNameAbbreviation.HostName.HOST,"www.m3958.com").append(FieldNameAbbreviation.HostName.HOST_SHORT, "0"));
+    
+    try {
+      col.insert(new BasicDBObject(FieldNameAbbreviation.HostName.HOST,"www.m3958.com").append(FieldNameAbbreviation.HostName.HOST_SHORT, "0"));
+    } catch (Exception e) {
+    }
     mongoClient.close();
   }
 }

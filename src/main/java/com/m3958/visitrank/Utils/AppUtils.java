@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -81,7 +82,8 @@ public class AppUtils {
       jo.putString(key, value);
     }
     headerJo.putString("ip", req.remoteAddress().getAddress().getHostAddress());
-    jo.putNumber(FieldNameAbbreviation.PageVisit.TS, new Date().getTime()).putObject("headers", headerJo);
+    jo.putNumber(FieldNameAbbreviation.PageVisit.TS, new Date().getTime()).putObject("headers",
+        headerJo);
 
     return jo;
   }
@@ -95,7 +97,7 @@ public class AppUtils {
     }
     return false;
   }
-  
+
   public static boolean DbExists(String dbname) throws UnknownHostException {
     MongoClient mongoClient;
     mongoClient = new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
@@ -139,6 +141,21 @@ public class AppUtils {
         LinkOption.NOFOLLOW_LINKS)) {
       Files.delete(Paths.get(logDir, filename + AppConstants.PARTIAL_POSTFIX));
     }
+  }
+
+  public static Comparator<String> longFirstStringComparator() {
+    return new Comparator<String>() {
+      @Override
+      public int compare(String o1, String o2) {
+        if (o1.length() > o2.length()) {
+          return 1;
+        } else if (o1.length() < o2.length()) {
+          return -1;
+        } else {
+          return o1.compareTo(o2);
+        }
+      }
+    };
   }
 
 }

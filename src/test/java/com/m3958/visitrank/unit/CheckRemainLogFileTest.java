@@ -6,7 +6,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -17,6 +16,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.m3958.visitrank.AppConstants;
+import com.m3958.visitrank.Utils.AppUtils;
 import com.m3958.visitrank.Utils.Locker;
 import com.m3958.visitrank.Utils.RemainLogFileFinder;
 import com.m3958.visitrank.testutils.TestUtils;
@@ -133,18 +133,7 @@ public class CheckRemainLogFileTest {
   @Test
   public void t9() {
     List<String> ls = Arrays.asList("2014-04-16-01.log", "2014-04-18.log", "2014-04-19.log");
-    Collections.sort(ls,new Comparator<String>() {
-
-      @Override
-      public int compare(String o1, String o2) {
-        if(o1.length() > o2.length()){
-          return 1;
-        }else if(o1.length() < o2.length()){
-          return -1;
-        }else{
-          return o1.compareTo(o2);
-        }
-      }});
+    Collections.sort(ls,AppUtils.longFirstStringComparator());
     Assert.assertEquals("2014-04-16-01.log", ls.get(2));
   }
 

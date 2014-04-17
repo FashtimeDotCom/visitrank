@@ -23,7 +23,6 @@ public class HttpTimerTest {
     Assert.assertTrue(true);
   }
   
-  @Test
   public void t1() throws IOException {
     List<Metrics> metrics = new ArrayList<>();
     metrics.add(oneUrl("宁波政府站", "http://gtog.ningbo.gov.cn"));

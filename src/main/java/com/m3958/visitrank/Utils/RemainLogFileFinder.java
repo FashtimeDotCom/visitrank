@@ -63,7 +63,7 @@ public class RemainLogFileFinder {
   public String nextLogName() {
     File logDir = new File(logDirStr);
     String[] files = logDir.list();
-    Arrays.sort(files);
+    Arrays.sort(files, AppUtils.longFirstStringComparator());
     String lf = null;
     for (String f : files) {
       Matcher m = fptn.matcher(f);

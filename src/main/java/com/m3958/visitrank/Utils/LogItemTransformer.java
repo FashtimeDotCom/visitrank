@@ -22,7 +22,7 @@ public class LogItemTransformer {
 
   @SuppressWarnings("unchecked")
   private static Map<String, String> cachedHost = new LRUMap(10000);
-  
+
   static {
     try {
       MongoClient mongoClient =
@@ -56,19 +56,31 @@ public class LogItemTransformer {
   }
 
   private static String getShortHostname(String longhostname) {
-    String sh = cachedHost.get(longhostname); 
-    if( sh != null){
+    String sh = cachedHost.get(longhostname);
+    if (sh != null) {
       return sh;
     }
-    
+
     try {
       MongoClient mongoClient =
           new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
       DB db = mongoClient.getDB(AppConstants.MongoNames.META_DB_NAME);
       DBCollection coll = db.getCollection(AppConstants.MongoNames.HOST_NAME_COLLECTION_NAME);
+      DBObject dbo =
+          coll.findOne(new BasicDBObject(FieldNameAbbreviation.HostName.HOST, longhostname));
+      if (dbo != null) {
+        cachedHost.put((String) dbo.get(FieldNameAbbreviation.HostName.HOST),
+            (String) dbo.get(FieldNameAbbreviation.HostName.HOST_SHORT));
+      }
       // hostname.find({},{hs:1}).sort({hs:-1}).limit(1);
-      coll.insert(new BasicDBObject(FieldNameAbbreviation.HostName.HOST, longhostname).append(FieldNameAbbreviation.HostName.HOST_SHORT, incStr.getNext()));
-      sh = incStr.getCurrent();
+      try {
+        coll.insert(new BasicDBObject(FieldNameAbbreviation.HostName.HOST, longhostname).append(
+            FieldNameAbbreviation.HostName.HOST_SHORT, incStr.getNext()));
+        sh = incStr.getCurrent();
+      } catch (Exception e) {
+        mongoClient.close();
+        return getShortHostname(longhostname);
+      }
       cachedHost.put(longhostname, sh);
       mongoClient.close();
       return sh;
