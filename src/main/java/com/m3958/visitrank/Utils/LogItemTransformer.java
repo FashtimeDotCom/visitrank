@@ -1,6 +1,7 @@
 package com.m3958.visitrank.Utils;
 
 import java.net.UnknownHostException;
+import java.sql.Date;
 import java.util.Map;
 
 import org.apache.commons.collections.map.LRUMap;
@@ -54,6 +55,7 @@ public class LogItemTransformer {
     String url = (String) dbo.get(FieldNameAbbreviation.PageVisit.URL);
     dbo.put(FieldNameAbbreviation.PageVisit.HOST, getShortHostname(HostExtractor.getHost(url)));
     dbo.put(FieldNameAbbreviation.PageVisit.URL, HostExtractor.getUri(url));
+    dbo.put(FieldNameAbbreviation.PageVisit.TS, new Date((long) dbo.get(FieldNameAbbreviation.PageVisit.TS)));
     return dbo;
   }
 
