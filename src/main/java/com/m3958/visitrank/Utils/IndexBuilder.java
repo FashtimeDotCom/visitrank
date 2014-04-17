@@ -36,7 +36,7 @@ public class IndexBuilder {
       mongoClient = new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
       DB db = mongoClient.getDB(dbname);
       DBCollection hostnameCol;
-      if(AppUtils.colExist(mongoClient, db, dbname)){
+      if(AppUtils.colExist(mongoClient, db, AppConstants.MongoNames.HOST_NAME_COLLECTION_NAME)){
         hostnameCol = db.getCollection(AppConstants.MongoNames.HOST_NAME_COLLECTION_NAME);
       }else{
         hostnameCol = db.createCollection(AppConstants.MongoNames.HOST_NAME_COLLECTION_NAME,new BasicDBObject());
@@ -44,6 +44,7 @@ public class IndexBuilder {
       
       hostnameCol.ensureIndex(new BasicDBObject(FieldNameAbbreviation.HostName.HOST, 1), null, true);
       hostnameCol.ensureIndex(new BasicDBObject(FieldNameAbbreviation.HostName.HOST_SHORT, 1), null, true);
+      mongoClient.close();
     } catch (UnknownHostException e) {}
 
   }
