@@ -54,21 +54,6 @@ public class TestUtils {
     mongoClient.close();
   }
 
-  public static boolean DbExists(String dbname) throws UnknownHostException {
-    MongoClient mongoClient;
-    mongoClient = new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
-    List<String> dbns = mongoClient.getDatabaseNames();
-    boolean exist = false;
-    for (String db : dbns) {
-      if (db.equals(dbname)) {
-        exist = true;
-        break;
-      }
-    }
-    mongoClient.close();
-    return exist;
-  }
-
   public static void createSampleDb(String dbname, int items, boolean journal, int step)
       throws IOException {
     long start = System.currentTimeMillis();

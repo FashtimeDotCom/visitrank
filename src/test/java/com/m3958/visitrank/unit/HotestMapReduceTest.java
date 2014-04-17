@@ -6,6 +6,7 @@ import java.net.UnknownHostException;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.m3958.visitrank.Utils.AppUtils;
 import com.m3958.visitrank.testutils.TestUtils;
 
 public class HotestMapReduceTest {
@@ -23,7 +24,7 @@ public class HotestMapReduceTest {
 
   @Before
   public void setup() throws IOException {
-    if (!TestUtils.DbExists(dbname)) {
+    if (!AppUtils.DbExists(dbname)) {
       TestUtils.createMRSampleDb(dbname, 10000 * 100, true, 10000);
     }
   }

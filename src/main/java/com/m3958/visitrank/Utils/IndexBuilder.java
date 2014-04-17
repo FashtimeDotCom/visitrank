@@ -30,17 +30,25 @@ public class IndexBuilder {
     } catch (UnknownHostException e) {}
   }
 
-  public static void hostNameIndex() {
+  public static void hostNameIndex(String dbname) {
     MongoClient mongoClient;
     try {
       mongoClient = new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
-      DB db = mongoClient.getDB(AppConstants.MongoNames.META_DB_NAME);
-      DBCollection hostnameCol =
-          db.getCollection(AppConstants.MongoNames.HOST_NAME_COLLECTION_NAME);
-      hostnameCol.createIndex(new BasicDBObject(FieldNameAbbreviation.HostName.HOST, 1),
-          new BasicDBObject("unique", true));
-      hostnameCol.createIndex(new BasicDBObject(FieldNameAbbreviation.HostName.HOST_SHORT, 1),
-          new BasicDBObject("unique", true));
+      DB db = mongoClient.getDB(dbname);
+      DBCollection hostnameCol;
+      if(AppUtils.colExist(mongoClient, db, dbname)){
+        hostnameCol = db.getCollection(AppConstants.MongoNames.HOST_NAME_COLLECTION_NAME);
+      }else{
+        hostnameCol = db.createCollection(AppConstants.MongoNames.HOST_NAME_COLLECTION_NAME,new BasicDBObject());
+      }
+      
+      hostnameCol.ensureIndex(new BasicDBObject(FieldNameAbbreviation.HostName.HOST, 1), null, true);
+      hostnameCol.ensureIndex(new BasicDBObject(FieldNameAbbreviation.HostName.HOST_SHORT, 1), null, true);
     } catch (UnknownHostException e) {}
+
+  }
+
+  public static void hostNameIndex() {
+    hostNameIndex(AppConstants.MongoNames.META_DB_NAME);
   }
 }

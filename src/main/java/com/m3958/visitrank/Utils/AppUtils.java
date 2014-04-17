@@ -2,11 +2,13 @@ package com.m3958.visitrank.Utils;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -93,6 +95,22 @@ public class AppUtils {
     }
     return false;
   }
+  
+  public static boolean DbExists(String dbname) throws UnknownHostException {
+    MongoClient mongoClient;
+    mongoClient = new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
+    List<String> dbns = mongoClient.getDatabaseNames();
+    boolean exist = false;
+    for (String db : dbns) {
+      if (db.equals(dbname)) {
+        exist = true;
+        break;
+      }
+    }
+    mongoClient.close();
+    return exist;
+  }
+
 
   public static String toUtf(String wrongs) throws UnsupportedEncodingException {
     char[] buffer = wrongs.toCharArray();
