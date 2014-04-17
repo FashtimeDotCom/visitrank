@@ -19,35 +19,37 @@ import com.mongodb.util.JSON;
 public class LogItemTransformer {
 
   private static IncreamentString incStr;
+  
+  private static boolean inited = false;
 
   @SuppressWarnings("unchecked")
   private static Map<String, String> cachedHost = new LRUMap(10000);
 
-  static {
-    try {
-      MongoClient mongoClient =
-          new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
-      DB db = mongoClient.getDB(AppConstants.MongoNames.META_DB_NAME);
-      DBCollection coll = db.getCollection(AppConstants.MongoNames.HOST_NAME_COLLECTION_NAME);
-      // hostname.find({},{hs:1}).sort({hs:-1}).limit(1);
-      DBCursor dbc =
-          coll.find(new BasicDBObject(),
-              new BasicDBObject(FieldNameAbbreviation.HostName.HOST_SHORT, 1))
-              .sort(new BasicDBObject(FieldNameAbbreviation.HostName.HOST_SHORT, -1)).limit(1);
-      if (dbc.hasNext()) {
-        String s = (String) dbc.next().get(FieldNameAbbreviation.HostName.HOST_SHORT);
-        incStr = new IncreamentString(s);
-      } else {
-        incStr = new IncreamentString();
-      }
-      mongoClient.close();
-    } catch (UnknownHostException e) {
-      e.printStackTrace();
-    }
-  }
-
 
   public static DBObject transformToDb(String line) {
+    if(!inited){
+      try {
+        inited = true;
+        MongoClient mongoClient =
+            new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
+        DB db = mongoClient.getDB(AppConstants.MongoNames.META_DB_NAME);
+        DBCollection coll = db.getCollection(AppConstants.MongoNames.HOST_NAME_COLLECTION_NAME);
+        // hostname.find({},{hs:1}).sort({hs:-1}).limit(1);
+        DBCursor dbc =
+            coll.find(new BasicDBObject(),
+                new BasicDBObject(FieldNameAbbreviation.HostName.HOST_SHORT, 1))
+                .sort(new BasicDBObject(FieldNameAbbreviation.HostName.HOST_SHORT, -1)).limit(1);
+        if (dbc.hasNext()) {
+          String s = (String) dbc.next().get(FieldNameAbbreviation.HostName.HOST_SHORT);
+          incStr = new IncreamentString(s);
+        } else {
+          incStr = new IncreamentString();
+        }
+        mongoClient.close();
+      } catch (UnknownHostException e) {
+        e.printStackTrace();
+      }
+    }
     DBObject dbo = (DBObject) JSON.parse(line);
     String url = (String) dbo.get(FieldNameAbbreviation.PageVisit.URL);
     dbo.put(FieldNameAbbreviation.PageVisit.HOST, getShortHostname(HostExtractor.getHost(url)));

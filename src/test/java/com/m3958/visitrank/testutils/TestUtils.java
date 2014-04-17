@@ -56,6 +56,7 @@ public class TestUtils {
 
   public static void createSampleDb(String dbname, int items, boolean journal, int step)
       throws IOException {
+    AppConstants.MongoNames.META_DB_NAME = "visitrank-meta-test";
     long start = System.currentTimeMillis();
     Parser uaParser = new Parser();
     MongoClient mongoClient;
