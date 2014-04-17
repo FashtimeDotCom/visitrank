@@ -21,9 +21,12 @@ public class LogBatchInsertTestNo {
   private String testlogname = "t-2014-03-27-01.log";
 
   private static int testNumber = 1000 * 10;
+  
+  private String testRepoDb = "t-visitrank";
 
   @Before
   public void setup() throws IOException {
+    AppConstants.MongoNames.REPOSITORY_DB_NAME = testRepoDb;
     TestUtils.deleteDirs(logDir, archiveDir);
     TestUtils.dropDailyDb(testlogname);
     TestUtils.createDirs(logDir, archiveDir);
@@ -33,6 +36,7 @@ public class LogBatchInsertTestNo {
   @After
   public void cleanup() throws IOException {
     TestUtils.deleteDirs(logDir, archiveDir);
+    TestUtils.dropDb(testRepoDb);
     TestUtils.dropDailyDb(testlogname);
   }
 
