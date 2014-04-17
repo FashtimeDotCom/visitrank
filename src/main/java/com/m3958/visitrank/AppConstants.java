@@ -10,11 +10,11 @@ public class AppConstants {
   public static String MOD_MONGO_PERSIST_ADDRESS = "visit_counter.mongodb";
 
   public static String DAILY_PARTIAL_DIR = "dailycopypartial";
-  
+
   public static boolean ONLY_LOG = false;
-  
+
   public static String LINE_SEP = System.getProperty("line.separator");
-  
+
   public static int LOGITEM_POOL_SIZE = 20;
 
   public static int HTTP_PORT = 8333;
@@ -24,7 +24,7 @@ public class AppConstants {
   public static int MONGODB_PORT = 27017;
   public static int MONGODB_INSTANCE = 1;
   public static int SAVETO_MONGO_INSTANCE = 1;
-  
+
   public static int LOG_SAVER_INSTANCE = 10;
 
   public static int DAILY_PROCESSOR_INSTANCE = 1;
@@ -78,11 +78,11 @@ public class AppConstants {
     DAILY_DB_READ_GAP = config.getInteger("dailydbreadgap", DAILY_DB_READ_GAP);
 
     WRITE_CONCERN = config.getString("writeconcern", WRITE_CONCERN);
-    
+
     ONLY_LOG = config.getBoolean("onlylog", ONLY_LOG);
-    
+
     LOGITEM_POOL_SIZE = config.getInteger("logitempoolsize", LOGITEM_POOL_SIZE);
-    
+
     LOG_SAVER_INSTANCE = config.getInteger("logsaverinstance", LOG_SAVER_INSTANCE);
 
   }
@@ -96,10 +96,16 @@ public class AppConstants {
 
     public static String META_DB_NAME = "visitrank-meta";
     public static String HOST_NAME_COLLECTION_NAME = "hostname";
-    
+
     public static String DAILY_JOB_COL_NAME = "dailyjob";
     public static String DAILY_JOB_STATUS_KEY = "status";
   }
-  
+
+  public static class MapReduceFunctionName {
+    public static String MAP = "mapfunc";
+    public static String REDUCE = "reducefunc";
+    public static String FINALIZE = "finalizefunc";
+  }
+
   public static Pattern dailyDbPtn = Pattern.compile(".*(\\d{4}-\\d{2}-\\d{2})(.*)");
 }

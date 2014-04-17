@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -11,6 +12,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.m3958.visitrank.AppConstants;
+import com.m3958.visitrank.Utils.AppUtils;
 import com.m3958.visitrank.testutils.TestUtils;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
@@ -46,15 +48,18 @@ public class MrTest {
     MongoClient mongoClient;
     mongoClient = new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
     DB db = mongoClient.getDB(mrsourcedb);
-    String mapjs =
-        "function mapFunction() {" + "var key = this.url," + "value = {" + "url : this.url,"
-            + "count : 1" + "};" + "emit(key, value);" + "}";
-    String reducejs =
-        "function reduceFunction(key, values) {" + "var reducedObject = {" + "url : key,"
-            + "count : 0" + "};" +
-
-            "values.forEach(function(value) {" + "reducedObject.count += value.count;" + "});"
-            + "return reducedObject;" + "}";
+    Map<String, String> funcmap = AppUtils.getMrFunctions(this.getClass(), "countmr.js");
+    String mapjs = funcmap.get(AppConstants.MapReduceFunctionName.MAP);
+//    String mapjs =
+//        "function mapFunction() {" + "var key = this.url," + "value = {" + "url : this.url,"
+//            + "count : 1" + "};" + "emit(key, value);" + "}";
+//    String reducejs =
+//        "function reduceFunction(key, values) {" + "var reducedObject = {" + "url : key,"
+//            + "count : 0" + "};" +
+//
+//            "values.forEach(function(value) {" + "reducedObject.count += value.count;" + "});"
+//            + "return reducedObject;" + "}";
+    String reducejs = funcmap.get(AppConstants.MapReduceFunctionName.REDUCE);
     execMapReduce(db, mapjs, reducejs);
     
     DBCollection mrCol = db.getCollection(mrResultColName);
@@ -67,6 +72,8 @@ public class MrTest {
     Assert.assertEquals(3, count);
     mongoClient.close();
   }
+  //daily count: {url:"",values:{date:d,count:1}}
+  //db.collection.ensureIndex({"attrs.nested.value": 1}) nest field index.
   
   //twice mapreduce
   @Test
@@ -107,6 +114,7 @@ public class MrTest {
     MapReduceCommand mrc =
         new MapReduceCommand(pagevisitCol, mapjs, reducejs, mrResultColName, OutputType.REDUCE,
             query);
+//    mrc.setOutputDB("");
     db.command(mrc.toDBObject());
     System.out.println("mr costs: " + (System.currentTimeMillis() - start) + "ms");
   }

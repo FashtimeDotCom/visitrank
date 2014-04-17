@@ -1,14 +1,19 @@
 package com.m3958.visitrank.Utils;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -157,5 +162,62 @@ public class AppUtils {
       }
     };
   }
+
+  @SuppressWarnings("rawtypes")
+  public static List<String> resourceLoader(Class clazz, String fileName) {
+    String className = clazz.getName().replace('.', '/');
+    int li = className.lastIndexOf('/');
+    className = className.substring(0, li);
+    List<String> lines = new ArrayList<>();
+    String line;
+
+    try {
+      InputStream is = clazz.getResourceAsStream(new StringBuffer("/").append(className).append("/").append(fileName).toString());
+      BufferedReader reader = new BufferedReader(new InputStreamReader(is, "UTF-8"));
+
+      while ((line = reader.readLine()) != null) {
+        lines.add(line);
+      }
+    } catch (IOException e) {}
+    return lines;
+  }
+
+  @SuppressWarnings("rawtypes")
+  public static Map<String, String> getMrFunctions(Class clazz, String fileName) {
+    List<String> lines = resourceLoader(clazz, fileName);
+    StringBuilder mapfunc = new StringBuilder();
+    StringBuilder reducefunc = new StringBuilder();
+    StringBuilder finalizefunc = new StringBuilder();
+    char s = 0;
+    for (String line : lines) {
+      if ("//mapfunc:".equals(line)) {
+        s = 'm';
+      } else if ("//reducefunc:".equals(line)) {
+        s = 'r';
+      } else if ("//finalizefunc:".equals(line)) {
+        s = 'f';
+      }
+
+      switch (s) {
+        case 'm':
+          mapfunc.append(line).append(System.lineSeparator());
+          break;
+        case 'r':
+          reducefunc.append(line).append(System.lineSeparator());
+          break;
+        case 'f':
+          finalizefunc.append(line).append(System.lineSeparator());
+          break;
+        default:
+          break;
+      }
+    }
+    Map<String, String> map = new HashMap<String, String>();
+    map.put(AppConstants.MapReduceFunctionName.MAP, mapfunc.toString());
+    map.put(AppConstants.MapReduceFunctionName.REDUCE, reducefunc.toString());
+    map.put(AppConstants.MapReduceFunctionName.FINALIZE, finalizefunc.toString());
+    return map;
+  }
+
 
 }

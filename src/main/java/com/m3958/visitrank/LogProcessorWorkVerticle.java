@@ -29,7 +29,6 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.WriteConcern;
-import com.mongodb.util.JSON;
 
 /**
  * it's a sync worker verticle. First we start a mongodb connection, readlines from logfile,batchly
