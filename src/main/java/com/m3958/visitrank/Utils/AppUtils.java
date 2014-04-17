@@ -172,7 +172,27 @@ public class AppUtils {
     String line;
 
     try {
-      InputStream is = clazz.getResourceAsStream(new StringBuffer("/").append(className).append("/").append(fileName).toString());
+      InputStream is =
+          clazz.getResourceAsStream(new StringBuffer("/").append(className).append("/")
+              .append(fileName).toString());
+      BufferedReader reader = new BufferedReader(new InputStreamReader(is, "UTF-8"));
+
+      while ((line = reader.readLine()) != null) {
+        lines.add(line);
+      }
+    } catch (IOException e) {}
+    return lines;
+  }
+
+  @SuppressWarnings("rawtypes")
+  public static List<String> resourceLoader2(Class clazz, String fullFileName) {
+
+    List<String> lines = new ArrayList<>();
+    String line;
+
+    try {
+      InputStream is =
+          clazz.getResourceAsStream(fullFileName);
       BufferedReader reader = new BufferedReader(new InputStreamReader(is, "UTF-8"));
 
       while ((line = reader.readLine()) != null) {
@@ -185,6 +205,16 @@ public class AppUtils {
   @SuppressWarnings("rawtypes")
   public static Map<String, String> getMrFunctions(Class clazz, String fileName) {
     List<String> lines = resourceLoader(clazz, fileName);
+    return getMrFunctions(lines);
+  }
+  
+  @SuppressWarnings("rawtypes")
+  public static Map<String, String> getMrFunctions2(Class clazz, String fileName) {
+    List<String> lines = resourceLoader2(clazz, fileName);
+    return getMrFunctions(lines);
+  }
+
+  private static Map<String, String> getMrFunctions(List<String> lines) {
     StringBuilder mapfunc = new StringBuilder();
     StringBuilder reducefunc = new StringBuilder();
     StringBuilder finalizefunc = new StringBuilder();
@@ -218,6 +248,7 @@ public class AppUtils {
     map.put(AppConstants.MapReduceFunctionName.FINALIZE, finalizefunc.toString());
     return map;
   }
+
 
 
 }
