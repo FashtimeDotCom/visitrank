@@ -48,7 +48,7 @@ public class MrTest {
     MongoClient mongoClient;
     mongoClient = new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
     DB db = mongoClient.getDB(mrsourcedb);
-    Map<String, String> funcmap = AppUtils.getMrFunctions2(this.getClass(), "/mrfuncs/countmr.js");
+    Map<String, String> funcmap = AppUtils.getMrFunctions(this.getClass(), "/mrfuncs/countmr.js");
     String mapjs = funcmap.get(AppConstants.MapReduceFunctionName.MAP);
 //    String mapjs =
 //        "function mapFunction() {" + "var key = this.url," + "value = {" + "url : this.url,"

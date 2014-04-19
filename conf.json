@@ -1,12 +1,20 @@
 {
-	"httpinstance": 5,
-	"redisinstance": 1,
-	"mongodbinstance":1,
-	"savetomongoverticleinstance": 1,
-    "httpport" : 8333,
-    "redisport" : 6379,
-    "mongodbport" : 27017,
-    "charset" : "UTF-8",
-    "logfilereadgap": 10000,
-    "dailydbreadgap": 10000
+	"mongoInstance":1,
+	"mongoPort": 27017,
+	"mongoAddress":"visit_counter.mongodb",
+	"mongoDbModuleName": "io.vertx~mod-mongo-persistor~2.1.1",
+	"httpInstance":1,
+	"redisInstance":1,
+	"redisModuleName":"io.vertx~mod-redis~1.1.3",
+	"httpPort": 8333,
+	"redisPort": 6379,
+	"charset": "UTF-8",
+	"logFileReadGap":10000,
+	"writeConcern": {
+		"w":0,
+		"wtimeout":0,
+		"fsync":false,
+		"j":true,
+		"continueOnInsertError":true
+	}
 }

@@ -164,17 +164,13 @@ public class AppUtils {
   }
 
   @SuppressWarnings("rawtypes")
-  public static List<String> resourceLoader(Class clazz, String fileName) {
-    String className = clazz.getName().replace('.', '/');
-    int li = className.lastIndexOf('/');
-    className = className.substring(0, li);
+  public static List<String> loadResourceLines(Class clazz, String fullFileName) {
+
     List<String> lines = new ArrayList<>();
     String line;
 
     try {
-      InputStream is =
-          clazz.getResourceAsStream(new StringBuffer("/").append(className).append("/")
-              .append(fileName).toString());
+      InputStream is = clazz.getResourceAsStream(fullFileName);
       BufferedReader reader = new BufferedReader(new InputStreamReader(is, "UTF-8"));
 
       while ((line = reader.readLine()) != null) {
@@ -185,32 +181,18 @@ public class AppUtils {
   }
 
   @SuppressWarnings("rawtypes")
-  public static List<String> resourceLoader2(Class clazz, String fullFileName) {
-
-    List<String> lines = new ArrayList<>();
-    String line;
-
-    try {
-      InputStream is =
-          clazz.getResourceAsStream(fullFileName);
-      BufferedReader reader = new BufferedReader(new InputStreamReader(is, "UTF-8"));
-
-      while ((line = reader.readLine()) != null) {
-        lines.add(line);
-      }
-    } catch (IOException e) {}
-    return lines;
+  public static String loadResourceContent(Class clazz, String fullFileName) {
+    List<String> lines = AppUtils.loadResourceLines(clazz, "conf.json");
+    StringBuilder sb = new StringBuilder();
+    for (String line : lines) {
+      sb.append(line);
+    }
+    return sb.toString();
   }
 
   @SuppressWarnings("rawtypes")
   public static Map<String, String> getMrFunctions(Class clazz, String fileName) {
-    List<String> lines = resourceLoader(clazz, fileName);
-    return getMrFunctions(lines);
-  }
-  
-  @SuppressWarnings("rawtypes")
-  public static Map<String, String> getMrFunctions2(Class clazz, String fileName) {
-    List<String> lines = resourceLoader2(clazz, fileName);
+    List<String> lines = loadResourceLines(clazz, fileName);
     return getMrFunctions(lines);
   }
 

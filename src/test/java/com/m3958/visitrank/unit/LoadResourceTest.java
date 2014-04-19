@@ -12,7 +12,7 @@ public class LoadResourceTest {
 
   @Test
   public void t1() throws IOException {
-    List<String> lines = AppUtils.resourceLoader2(this.getClass(), "/mrfuncs/lr.txt");
+    List<String> lines = AppUtils.loadResourceLines(this.getClass(), "/mrfuncs/lr.txt");
     Assert.assertEquals(1, lines.size());
     Assert.assertEquals("a", lines.get(0));
   }

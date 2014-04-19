@@ -24,33 +24,34 @@ public class MainVerticle extends Verticle {
   public void start() {
     final Logger log = container.logger();
     Path applog = Paths.get("logs", "app.log");
-    
+
     if (Files.exists(applog)) {
       try {
         String np = new RemainLogFileFinder("logs").nextLogName();
         log.info("copy log.app to: " + np);
-        Files.copy(applog, Paths.get("logs",np));
+        Files.copy(applog, Paths.get("logs", np));
       } catch (IOException e) {
         e.printStackTrace();
       }
     }
-    
+
     AppConstants.initConfigConstants(container.config());
-    
+
     log.info("check pagevisit index status ...");
     IndexBuilder.pageVisitIndex();
     log.info("check pagevisit index done");
-    
+
     log.info("check hostname index status ...");
     IndexBuilder.hostNameIndex();
     log.info("check hostname index done");
-    
+
     AppLogger.urlPersistor.trace("loger started");
 
     JsonObject httpCfg = new JsonObject();
     httpCfg.putNumber("port", AppConstants.HTTP_PORT);
-    
-    container.deployVerticle(LogSaverVerticle.VERTICLE_NAME, httpCfg, AppConstants.LOG_SAVER_INSTANCE);
+
+    container.deployVerticle(LogSaverVerticle.VERTICLE_NAME, httpCfg,
+        AppConstants.LOG_SAVER_INSTANCE);
 
     container.deployVerticle(CounterVerticle.VERTICLE_NAME, httpCfg, AppConstants.HTTP_INSTANCE);
 
@@ -74,7 +75,7 @@ public class MainVerticle extends Verticle {
     // deploy mongodb
     if (!AppConstants.ONLY_LOG) {
       JsonObject mongodbCfg = new JsonObject();
-      mongodbCfg.putString("address", AppConstants.MOD_MONGO_PERSIST_ADDRESS)
+      mongodbCfg.putString("address", AppConstants.MONGO_ADDRESS)
           .putString("host", AppConstants.MONGODB_HOST).putString("db_name", "visitrank")
           .putNumber("port", AppConstants.MONGODB_PORT);
 
@@ -93,17 +94,11 @@ public class MainVerticle extends Verticle {
       container.deployVerticle("mapreduce_verticle.js", 1);
 
       JsonObject logCheckCfg =
-          new JsonObject().putNumber("dailyprocessinstance", AppConstants.DAILY_PROCESSOR_INSTANCE)
-              .putNumber("logprocessorinstance", AppConstants.LOG_PROCESSOR_INSTANCE)
-              .putNumber("dailydbreadgap", AppConstants.DAILY_DB_READ_GAP)
+          new JsonObject().putNumber("logprocessorinstance", AppConstants.LOG_PROCESSOR_INSTANCE)
               .putNumber("logfilereadgap", AppConstants.LOGFILE_READ_GAP)
-              .putString("writeconcern", AppConstants.WRITE_CONCERN)
-              .putNumber("logitempoolsize", AppConstants.LOGITEM_POOL_SIZE);
+              .putString("writeconcern", AppConstants.WRITE_CONCERN);
 
       container.deployVerticle(LogCheckVerticle.VERTICLE_NAME, logCheckCfg, 1);
-
-      // container.deployWorkerVerticle(DailyCopyWorkVerticle.VERTICLE_NAME, new JsonObject(),
-      // AppConstants.DAILY_PROCESSOR_INSTANCE, false);
 
       container.deployWorkerVerticle(LogProcessorWorkVerticle.VERTICLE_NAME, new JsonObject(),
           AppConstants.LOG_PROCESSOR_INSTANCE, false);

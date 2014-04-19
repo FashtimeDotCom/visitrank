@@ -39,7 +39,7 @@ public class WholeSiteCountProceesor {
     //when pr is not null,it will only record content,send empty string back;
     if (pr != null) {
       JsonObject pjo = AppUtils.getParamsHeadersOb(req);
-      this.eb.send(LogSaverVerticle.RECEIVER_ADDR, pjo);
+      this.eb.send(LogSaverVerticle.VERTICLE_ADDRESS, pjo);
       req.response().end("");
       return;
     }

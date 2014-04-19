@@ -30,7 +30,7 @@ import com.m3958.visitrank.uaparser.Parser;
 
 public class LogSaverVerticle extends Verticle {
 
-  public static String RECEIVER_ADDR = "log-saver";
+  public static String VERTICLE_ADDRESS = "log-saver";
   
   public static String VERTICLE_NAME = LogSaverVerticle.class.getName();
 
@@ -38,7 +38,7 @@ public class LogSaverVerticle extends Verticle {
     final EventBus eb = vertx.eventBus();
     try {
       final Parser uaparser = new Parser();
-      eb.registerHandler(RECEIVER_ADDR, new Handler<Message<JsonObject>>() {
+      eb.registerHandler(VERTICLE_ADDRESS, new Handler<Message<JsonObject>>() {
         @Override
         public void handle(Message<JsonObject> message) {
           JsonObject jo = LogItemTransformer.transformToLog4j(message.body(), uaparser);

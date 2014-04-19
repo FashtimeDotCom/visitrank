@@ -39,7 +39,7 @@ public class SaveToMongoVerticle extends Verticle {
         JsonObject body = message.body();
         String siteid = body.getString("siteid");
 //        log.info(body);
-        eb.send(AppConstants.MOD_MONGO_PERSIST_ADDRESS, new VisitMongoCmd(body).saveCmd());
+        eb.send(AppConstants.MONGO_ADDRESS, new VisitMongoCmd(body).saveCmd());
         eb.send(AppConstants.MOD_REDIS_ADDRESS, new INCR(siteid).getCmd());
       }
     });

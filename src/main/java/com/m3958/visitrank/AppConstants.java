@@ -7,15 +7,13 @@ import org.vertx.java.core.json.JsonObject;
 public class AppConstants {
   public static String HOTEST_FIX = "~hotest";
   public static String MOD_REDIS_ADDRESS = "visit_counter.redis";
-  public static String MOD_MONGO_PERSIST_ADDRESS = "visit_counter.mongodb";
-
-  public static String DAILY_PARTIAL_DIR = "dailycopypartial";
+  public static String MONGO_ADDRESS = "visit_counter.mongodb";
 
   public static boolean ONLY_LOG = false;
 
-  public static String LINE_SEP = System.getProperty("line.separator");
-
-  public static int LOGITEM_POOL_SIZE = 20;
+  public static String LINE_SEP = System.lineSeparator();
+  
+//  public static int LOGITEM_POOL_SIZE = 20;
 
   public static int HTTP_PORT = 8333;
   public static int HTTP_INSTANCE = 1;
@@ -27,15 +25,11 @@ public class AppConstants {
 
   public static int LOG_SAVER_INSTANCE = 10;
 
-  public static int DAILY_PROCESSOR_INSTANCE = 1;
-
   public static int LOG_PROCESSOR_INSTANCE = 1;
 
   public static String WRITE_CONCERN = "0,0,false,true,true"; // WriteConcern(int w, int wtimeout,
                                                               // boolean fsync, boolean j, boolean
                                                               // continueOnError)
-
-
   public static String REDIS_HOST = "localhost";
 
   public static String MONGODB_HOST = "localhost";
@@ -49,8 +43,6 @@ public class AppConstants {
   public static String PARTIAL_POSTFIX = ".partial";
 
   public static int LOGFILE_READ_GAP = 100;
-
-  public static int DAILY_DB_READ_GAP = 1000;
 
   public static void initConfigConstants(JsonObject config) {
 
@@ -70,35 +62,22 @@ public class AppConstants {
 
     MONGODB_HOST = config.getString("mongodbhost", MONGODB_HOST);
 
-    DAILY_PROCESSOR_INSTANCE = config.getInteger("dailyprocessinstance", DAILY_PROCESSOR_INSTANCE);
-
-    LOG_PROCESSOR_INSTANCE = config.getInteger("logprocessorinstance", LOG_PROCESSOR_INSTANCE);
 
     LOGFILE_READ_GAP = config.getInteger("logfilereadgap", LOGFILE_READ_GAP);
-    DAILY_DB_READ_GAP = config.getInteger("dailydbreadgap", DAILY_DB_READ_GAP);
 
     WRITE_CONCERN = config.getString("writeconcern", WRITE_CONCERN);
 
     ONLY_LOG = config.getBoolean("onlylog", ONLY_LOG);
-
-    LOGITEM_POOL_SIZE = config.getInteger("logitempoolsize", LOGITEM_POOL_SIZE);
-
-    LOG_SAVER_INSTANCE = config.getInteger("logsaverinstance", LOG_SAVER_INSTANCE);
 
   }
 
   public static class MongoNames {
     public static String REPOSITORY_DB_NAME = "visitrank";
     public static String PAGE_VISIT_COL_NAME = "pagevisit";
-    public static String HOURLY_JOB_COL_NAME = "hourlyjob";
-    public static String HOURLY_JOB_NUMBER_KEY = "hournumber";
-    public static String HOURLY_JOB_STATUS_KEY = "status";
 
     public static String META_DB_NAME = "visitrank-meta";
     public static String HOST_NAME_COLLECTION_NAME = "hostname";
 
-    public static String DAILY_JOB_COL_NAME = "dailyjob";
-    public static String DAILY_JOB_STATUS_KEY = "status";
   }
 
   public static class MapReduceFunctionName {
