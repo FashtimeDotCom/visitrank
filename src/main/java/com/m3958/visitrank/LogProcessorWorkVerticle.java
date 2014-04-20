@@ -18,16 +18,16 @@ import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.platform.Verticle;
 
+import com.m3958.visitrank.Utils.AppConfig;
 import com.m3958.visitrank.Utils.AppUtils;
 import com.m3958.visitrank.Utils.IndexBuilder;
 import com.m3958.visitrank.Utils.LogItemTransformer;
 import com.m3958.visitrank.Utils.PartialUtil;
-import com.m3958.visitrank.Utils.WriteConcernParser;
+import com.m3958.visitrank.interf.TestableVerticle;
 import com.m3958.visitrank.logger.AppLogger;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
-import com.mongodb.MongoClient;
 import com.mongodb.WriteConcern;
 
 /**
@@ -38,30 +38,38 @@ import com.mongodb.WriteConcern;
  * @author jianglibo@gmail.com
  * 
  */
-public class LogProcessorWorkVerticle extends Verticle {
+public class LogProcessorWorkVerticle extends Verticle implements TestableVerticle {
 
   public static String VERTICLE_ADDRESS = "logprocessor";
   public static String VERTICLE_NAME = LogProcessorWorkVerticle.class.getName();
 
   public static class LogProcessorWorkMsgKey {
     public static String FILE_NAME = "filename";
-    public static String LOG_DIR = "logDir";
-    public static String ARCHIVE_DIR = "archiveDir";
     public static String REPLY = "reply";
-    public static String LOGITEM_POOL_SIZE = "logitempoolsize";
   }
-  
+
   @Override
   public void start() {
+    if (!AppUtils.deployTestableVerticle(this, container)) {
+      vertx.eventBus().send(AppConfigVerticle.VERTICLE_ADDRESS, new JsonObject(),
+          new Handler<Message<JsonObject>>() {
+            @Override
+            public void handle(Message<JsonObject> msg) {
+              final AppConfig gcfg = new AppConfig(msg.body());
+              deployMe(gcfg);
+            }
+          });
+    }
+  }
+
+  public void deployMe(final AppConfig appConfig) {
     vertx.eventBus().registerHandler(VERTICLE_ADDRESS, new Handler<Message<JsonObject>>() {
       @Override
       public void handle(Message<JsonObject> message) {
         final JsonObject body = message.body();
         final String filename = body.getString(LogProcessorWorkMsgKey.FILE_NAME);
-        final String logDir = body.getString(LogProcessorWorkMsgKey.LOG_DIR, "logs");
-        final String archiveDir = body.getString(LogProcessorWorkMsgKey.ARCHIVE_DIR, "archives");
-        final int logitemPoolSize = body.getInteger(LogProcessorWorkMsgKey.LOGITEM_POOL_SIZE, 100);
-        new LogProcessor(logDir, archiveDir, filename, body, logitemPoolSize).process();
+        LogItemTransformer logItemTransformer = new LogItemTransformer(appConfig);
+        new LogProcessor(appConfig, logItemTransformer, filename).process();
         message.reply("done");
       }
     });
@@ -69,31 +77,24 @@ public class LogProcessorWorkVerticle extends Verticle {
 
   public static class LogProcessor {
     private String filename;
-    private String logDir;
-    private String archiveDir;
 
-    private long gap;
+    private AppConfig appConfig;
 
-    private JsonObject writeconcern;
+    private LogItemTransformer logItemTransformer;
 
-    public LogProcessor(String logDir, String archiveDir, String filename, JsonObject cfg,
-        int logitemPoolSize) {
-      this.logDir = logDir;
-      this.archiveDir = archiveDir;
+    public LogProcessor(AppConfig appConfig, LogItemTransformer logItemTransformer, String filename) {
+      this.appConfig = appConfig;
+      this.logItemTransformer = logItemTransformer;
       this.filename = filename;
-      this.gap = cfg.getLong("logfilereadgap", 1000);
-      this.writeconcern = cfg.getObject("writeconcern");
     }
 
     public void process() {
       try {
-        WriteConcern wc = WriteConcernParser.getWriteConcern(writeconcern);
-        Path logfilePath = Paths.get(logDir, filename);
-        Path partialLogPath = Paths.get(logDir, filename + AppConstants.PARTIAL_POSTFIX);
-
-        MongoClient mongoClient =
-            new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
-        DB db = mongoClient.getDB(AppConstants.MongoNames.REPOSITORY_DB_NAME);
+        WriteConcern wc = appConfig.getWriteConcern();
+        Path logfilePath = Paths.get(appConfig.getLogDir(), filename);
+        Path partialLogPath =
+            Paths.get(appConfig.getLogDir(), filename + AppConstants.PARTIAL_POSTFIX);
+        DB db = appConfig.getMongoClient().getDB(appConfig.getRepoDbName());
         DBCollection coll = db.getCollection(AppConstants.MongoNames.PAGE_VISIT_COL_NAME);
 
         coll.createIndex(IndexBuilder.getPageVisitColIndexKeys());
@@ -105,7 +106,7 @@ public class LogProcessorWorkVerticle extends Verticle {
 
         long start = 0;
         if (Files.exists(partialLogPath)) {
-          start = PartialUtil.findLastProcessDbObject(logfilePath);
+          start = PartialUtil.findLastProcessDbObject(appConfig, logfilePath);
         } else {
           Files.createFile(partialLogPath);
         }
@@ -120,12 +121,12 @@ public class LogProcessorWorkVerticle extends Verticle {
             continue;
           }
           try {
-            dbos.add(LogItemTransformer.transformToDb(line));
+            dbos.add(logItemTransformer.transformToDb(line));
           } catch (Exception e) {
             AppLogger.error.error("parse exception:" + line);
           }
           counter++;
-          if (counter % gap == 0) {
+          if (counter % appConfig.getLogFileReadGap() == 0) {
             if (wc == null) {
               coll.insert(dbos);
             } else {
@@ -146,9 +147,8 @@ public class LogProcessorWorkVerticle extends Verticle {
 
         Files.delete(partialLogPath);
 
-        mongoClient.close();
-
-        AppUtils.moveLogFiles(logDir, archiveDir, filename, logfilePath);
+        AppUtils.moveLogFiles(appConfig.getLogDir(), appConfig.getArchiveDir(), filename,
+            logfilePath);
       } catch (UnsupportedEncodingException | FileNotFoundException e) {
         AppLogger.error.error("cann't create reader from file: " + filename);
       } catch (UnknownHostException e1) {

@@ -16,13 +16,13 @@ import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.regex.Pattern;
 
 import org.apache.commons.lang.math.RandomUtils;
 import org.junit.Assert;
 import org.vertx.java.core.json.JsonObject;
 
 import com.m3958.visitrank.AppConstants;
+import com.m3958.visitrank.Utils.AppConfig;
 import com.m3958.visitrank.Utils.AppUtils;
 import com.m3958.visitrank.Utils.FieldNameAbbreviation;
 import com.m3958.visitrank.Utils.IndexBuilder;
@@ -31,42 +31,34 @@ import com.m3958.visitrank.uaparser.Parser;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
-import com.mongodb.MongoClient;
 import com.mongodb.WriteConcern;
 import com.mongodb.util.JSON;
 
 public class TestUtils {
 
-  public static Pattern dailyDbPtn = Pattern.compile("(.*\\d{4}-\\d{2}-\\d{2})(.*)");
+  public static String[] hostnames = new String[] {"http://www.m3958.com", "http://www.fh.gov.cn",
+      "http://www.nb.gov.cn"};
 
-   public static String[] hostnames = new String[] {"http://www.m3958.com",
-   "http://www.fh.gov.cn",
-   "http://www.nb.gov.cn"};
-
-  public static void dropDailyDb(String testlogname) throws UnknownHostException {
-    dropDb(AppUtils.getDailyDbName(testlogname, dailyDbPtn));
+  public static void dropDailyDb(AppConfig appConfig, String testlogname)
+      throws UnknownHostException {
+    dropDb(appConfig, AppUtils.getDailyDbName(testlogname, appConfig.getDailyDbPtn()));
   }
 
-  public static void dropDb(String dbname) throws UnknownHostException {
-    MongoClient mongoClient;
-    mongoClient = new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
-    mongoClient.dropDatabase(dbname);
-    mongoClient.close();
+  public static void dropDb(AppConfig appConfig, String dbname) throws UnknownHostException {
+    appConfig.getMongoClient().dropDatabase(dbname);
   }
 
-  public static void createSampleDb(String dbname, int items, boolean journal, int step)
-      throws IOException {
-    AppConstants.MongoNames.META_DB_NAME = "visitrank-meta-test";
+  public static void createSampleDb(AppConfig appConfig, String dbname, int items, boolean journal,
+      int step) throws IOException {
     long start = System.currentTimeMillis();
     Parser uaParser = new Parser();
-    MongoClient mongoClient;
-    mongoClient = new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
-    DB db = mongoClient.getDB(dbname);
+    LogItemTransformer logItemTransformer = new LogItemTransformer(appConfig);
+    DB db = appConfig.getMongoClient().getDB(dbname);
     DBCollection col = db.getCollection(AppConstants.MongoNames.PAGE_VISIT_COL_NAME);
     col.createIndex(IndexBuilder.getPageVisitColIndexKeys());
     List<DBObject> obs = new ArrayList<>();
     for (int i = 1; i <= items; i++) {
-      JsonObject jo = LogItemTransformer.transformToLog4j(getRandomJo(), uaParser);
+      JsonObject jo = logItemTransformer.transformToLog4j(getRandomJo(), uaParser);
       obs.add((DBObject) JSON.parse(jo.toString()));
       if (i % step == 0) {
         col.insert(obs, new WriteConcern(0, 0, false, journal, true));
@@ -78,24 +70,21 @@ public class TestUtils {
       col.insert(obs, new WriteConcern(0, 0, false, journal, true));
       obs.clear();
     }
-    mongoClient.close();
     System.out.print(System.currentTimeMillis() - start);
     System.out.println(" ms, create sampledb.");
   }
 
-  public static void createSampleDb(String dbname, List<DBObject> dbos) throws UnknownHostException {
-    MongoClient mongoClient;
-    mongoClient = new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
-    DB db = mongoClient.getDB(dbname);
+  public static void createSampleDb(AppConfig appConfig, String dbname, List<DBObject> dbos)
+      throws UnknownHostException {
+    DB db = appConfig.getMongoClient().getDB(dbname);
     DBCollection col = db.getCollection(AppConstants.MongoNames.PAGE_VISIT_COL_NAME);
     col.insert(dbos, new WriteConcern(0, 0, false, true, true));
-    mongoClient.close();
   }
 
-  public static void createSampleDb(String dbname, int items, int repeat, boolean journal)
-      throws IOException {
+  public static void createSampleDb(AppConfig appConfig, String dbname, int items, int repeat,
+      boolean journal) throws IOException {
     for (int i = 0; i < repeat; i++) {
-      createSampleDb(dbname, items, journal, 5000);
+      createSampleDb(appConfig, dbname, items, journal, 5000);
     }
   }
 
@@ -142,16 +131,18 @@ public class TestUtils {
         Charset.forName("UTF-8"), StandardOpenOption.CREATE_NEW);
   }
 
-  public static void assertDailyDbItemEqual(String testlogname) throws UnknownHostException {
-    assertDbItemEqual(AppUtils.getDailyDbName(testlogname, dailyDbPtn), 1000l);
+  public static void assertDailyDbItemEqual(AppConfig appConfig, String testlogname)
+      throws UnknownHostException {
+    assertDbItemEqual(appConfig, AppUtils.getDailyDbName(testlogname, appConfig.getDailyDbPtn()),
+        1000l);
   }
 
-  public static void assertDbItemEqual(String dbname, long itemnumber) throws UnknownHostException {
-    MongoClient mongoClient = new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
-    DB db = mongoClient.getDB(dbname);
+  public static void assertDbItemEqual(AppConfig appConfig, String dbname, long itemnumber)
+      throws UnknownHostException {
+    DB db = appConfig.getMongoClient().getDB(dbname);
     DBCollection coll = db.getCollection(AppConstants.MongoNames.PAGE_VISIT_COL_NAME);
     Assert.assertEquals(itemnumber, coll.getCount());
-    mongoClient.close();
+
   }
 
   private static JsonObject getRandomJo() {
@@ -167,19 +158,17 @@ public class TestUtils {
     return joraw;
   }
 
-  public static void createMRSampleDb(String dbname, int items, boolean journal, int step)
+  public static void createMRSampleDb(AppConfig appConfig, String dbname, int items, boolean journal, int step)
       throws IOException {
     long start = System.currentTimeMillis();
     Parser uaParser = new Parser();
-    MongoClient mongoClient;
-    mongoClient = new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
-    DB db = mongoClient.getDB(dbname);
+    DB db = appConfig.getMongoClient().getDB(dbname);
     DBCollection col = db.getCollection(AppConstants.MongoNames.PAGE_VISIT_COL_NAME);
     col.createIndex(IndexBuilder.getPageVisitColIndexKeys());
-
+    LogItemTransformer logItemTransformer = new LogItemTransformer(appConfig);
     List<DBObject> obs = new ArrayList<>();
     for (int i = 1; i <= items; i++) {
-      JsonObject jo = LogItemTransformer.transformToLog4j(getRandomJo(), uaParser);
+      JsonObject jo = logItemTransformer.transformToLog4j(getRandomJo(), uaParser);
       obs.add((DBObject) JSON.parse(jo.toString()));
       if (i % step == 0) {
         col.insert(obs, new WriteConcern(0, 0, false, journal, true));
@@ -191,7 +180,6 @@ public class TestUtils {
       col.insert(obs, new WriteConcern(0, 0, false, journal, true));
       obs.clear();
     }
-    mongoClient.close();
     System.out.print(System.currentTimeMillis() - start);
     System.out.println(" ms, create sampledb.");
   }

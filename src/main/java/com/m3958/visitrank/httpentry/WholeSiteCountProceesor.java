@@ -7,9 +7,9 @@ import org.vertx.java.core.http.HttpServerRequest;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.core.logging.Logger;
 
-import com.m3958.visitrank.AppConstants;
 import com.m3958.visitrank.LogSaverVerticle;
 import com.m3958.visitrank.ResponseGenerator;
+import com.m3958.visitrank.Utils.AppConfig;
 import com.m3958.visitrank.Utils.AppUtils;
 import com.m3958.visitrank.Utils.HostExtractor;
 import com.m3958.visitrank.rediscmd.INCR;
@@ -24,7 +24,11 @@ public class WholeSiteCountProceesor {
 
   private String referer;
 
-  public WholeSiteCountProceesor(EventBus eb, HttpServerRequest req, Logger log, String referer) {
+  private AppConfig appConfig;
+
+  public WholeSiteCountProceesor(AppConfig appConfig, EventBus eb, HttpServerRequest req,
+      Logger log, String referer) {
+    this.appConfig = appConfig;
     this.eb = eb;
     this.req = req;
     this.log = log;
@@ -35,19 +39,19 @@ public class WholeSiteCountProceesor {
 
     String host = HostExtractor.getHost(referer);
     String pr = req.params().get("pr");
-    
-    //when pr is not null,it will only record content,send empty string back;
+
+    // when pr is not null,it will only record content,send empty string back;
     if (pr != null) {
       JsonObject pjo = AppUtils.getParamsHeadersOb(req);
       this.eb.send(LogSaverVerticle.VERTICLE_ADDRESS, pjo);
       req.response().end("");
       return;
     }
-    
+
     JsonObject wholeSiteCountCmd;
     wholeSiteCountCmd = new INCR(host).getCmd();
 
-    this.eb.send(AppConstants.MOD_REDIS_ADDRESS, wholeSiteCountCmd,
+    this.eb.send(appConfig.getRedisAddress(), wholeSiteCountCmd,
         new Handler<Message<JsonObject>>() {
           public void handle(Message<JsonObject> message) {
             JsonObject redisResultBody = message.body();

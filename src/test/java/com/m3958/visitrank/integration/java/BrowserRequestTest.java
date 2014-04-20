@@ -18,20 +18,23 @@ import org.vertx.testtools.VertxAssert;
 
 import com.m3958.visitrank.AppConstants;
 import com.m3958.visitrank.CounterVerticle;
+import com.m3958.visitrank.Utils.AppConfig;
+import com.m3958.visitrank.Utils.AppUtils;
 
 public class BrowserRequestTest extends TestVerticle {
-  
+
   private String callbackPtnStr = "^abc\\(\\d+\\);$";
-  
+
   private String whholeSiteCallbackPtnStr = "^abc\\(\\d+\\);\\(func.*";
-  
+
   private String dwPtnStr = "document.write\\(\\d+\\);$";
 
+  private AppConfig appConfig;
+
   @Test
-  public void t() {
-    AppConstants.HTTP_PORT = 8334;
+  public void t1() {
     HttpClient client =
-        vertx.createHttpClient().setHost("localhost").setPort(AppConstants.HTTP_PORT);
+        vertx.createHttpClient().setHost("localhost").setPort(appConfig.getHttpPort());
 
     HttpClientRequest request =
         client.get("/?record=true&silent=true", new Handler<HttpClientResponse>() {
@@ -50,12 +53,11 @@ public class BrowserRequestTest extends TestVerticle {
     request.putHeader("referer", "http://www.example.com/");
     request.end();
   }
-  
+
   @Test
-  public void t1() {
-    AppConstants.HTTP_PORT = 8334;
+  public void t2() {
     HttpClient client =
-        vertx.createHttpClient().setHost("localhost").setPort(AppConstants.HTTP_PORT);
+        vertx.createHttpClient().setHost("localhost").setPort(appConfig.getHttpPort());
 
     HttpClientRequest request =
         client.get("/?&out=wholesite&callback=abc", new Handler<HttpClientResponse>() {
@@ -74,27 +76,25 @@ public class BrowserRequestTest extends TestVerticle {
     request.putHeader("referer", "http://www.example.com");
     request.end();
   }
-  
+
   @Test
   public void t3() {
-    AppConstants.HTTP_PORT = 8334;
     HttpClient client =
-        vertx.createHttpClient().setHost("localhost").setPort(AppConstants.HTTP_PORT);
+        vertx.createHttpClient().setHost("localhost").setPort(appConfig.getHttpPort());
 
-    HttpClientRequest request =
-        client.get("/", new Handler<HttpClientResponse>() {
+    HttpClientRequest request = client.get("/", new Handler<HttpClientResponse>() {
+      @Override
+      public void handle(HttpClientResponse resp) {
+        assertEquals(200, resp.statusCode());
+        resp.bodyHandler(new Handler<Buffer>() {
           @Override
-          public void handle(HttpClientResponse resp) {
-            assertEquals(200, resp.statusCode());
-            resp.bodyHandler(new Handler<Buffer>() {
-              @Override
-              public void handle(Buffer respStr) {
-                assertTrue(respStr.toString().matches(dwPtnStr));
-                VertxAssert.testComplete();
-              }
-            });
+          public void handle(Buffer respStr) {
+            assertTrue(respStr.toString().matches(dwPtnStr));
+            VertxAssert.testComplete();
           }
         });
+      }
+    });
     request.putHeader("referer", "http://www.example.com");
     request.end();
   }
@@ -102,34 +102,33 @@ public class BrowserRequestTest extends TestVerticle {
   @Override
   public void start() {
     initialize();
-    startTests();
-    AppConstants.HTTP_INSTANCE = 1;
-    AppConstants.HTTP_PORT = 8334;
-    container.deployVerticle(CounterVerticle.VERTICLE_NAME, new AsyncResultHandler<String>() {
-      @Override
-      public void handle(AsyncResult<String> asyncResult) {
-        assertTrue(asyncResult.succeeded());
-        assertNotNull("deploymentID should not be null", asyncResult.result());
-        // If deployed correctly then start the tests!
-        container.logger().info("startTests()");
-        
-        JsonObject redisCfg = new JsonObject();
-        redisCfg.putString("address", AppConstants.MOD_REDIS_ADDRESS)
-            .putString("host", AppConstants.REDIS_HOST).putString("encode", "UTF-8")
-            .putNumber("port", AppConstants.REDIS_PORT);
+    appConfig = new AppConfig(AppUtils.loadJsonResourceContent(this.getClass(), "testconf.json"));
+    container.deployVerticle(CounterVerticle.VERTICLE_NAME, new JsonObject().putObject(AppConstants.TEST_CONF_KEY, appConfig.getConfJson()),
+        new AsyncResultHandler<String>() {
+          @Override
+          public void handle(AsyncResult<String> asyncResult) {
+            assertTrue(asyncResult.succeeded());
+            assertNotNull("deploymentID should not be null", asyncResult.result());
+            // If deployed correctly then start the tests!
+            container.logger().info("startTests()");
 
-        container.deployModule(AppConstants.REDIS_MODULE_NAME, redisCfg, AppConstants.REDIS_INSTANCE,
-            new AsyncResultHandler<String>() {
-              @Override
-              public void handle(AsyncResult<String> asyncResult) {
-                if (asyncResult.succeeded()) {
-                  startTests();
-                } else {
-                }
-              }
-            });
-      }
-    });
+            JsonObject redisCfg = new JsonObject();
+            redisCfg.putString("address", appConfig.getRedisAddress())
+                .putString("host", appConfig.getRedisHost())
+                .putString("encode", appConfig.getCharset())
+                .putNumber("port", appConfig.getRedisPort());
+
+            container.deployModule(appConfig.getRedisModuleName(), redisCfg,
+                appConfig.getRedisInstance(), new AsyncResultHandler<String>() {
+                  @Override
+                  public void handle(AsyncResult<String> asyncResult) {
+                    if (asyncResult.succeeded()) {
+                      startTests();
+                    } else {}
+                  }
+                });
+          }
+        });
   }
 }
 

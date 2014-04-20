@@ -7,45 +7,59 @@ import java.nio.file.LinkOption;
 import java.nio.file.Paths;
 
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
-import org.vertx.java.core.json.JsonObject;
 
 import com.m3958.visitrank.AppConstants;
 import com.m3958.visitrank.LogProcessorWorkVerticle;
+import com.m3958.visitrank.Utils.AppConfig;
+import com.m3958.visitrank.Utils.AppUtils;
+import com.m3958.visitrank.Utils.LogItemTransformer;
 import com.m3958.visitrank.testutils.TestUtils;
 
 public class LogProcessorTest {
 
   private String testlogname = "t-2014-03-02-01.log";
-  private String logDir = "testlogs";
-  private String archiveDir = "tarchives";
-  private String testRepoDb = "t-visitrank";
+
+  private static AppConfig appConfig;
+
+  @BeforeClass
+  public static void sss() throws IOException {
+    appConfig =
+        new AppConfig(AppUtils.loadJsonResourceContent(BatchCopyTestNo.class, "testconf.json"));
+  }
+
+  @AfterClass
+  public static void ccc() throws UnknownHostException {
+    appConfig.closeMongoClient();
+  }
 
   @Before
   public void setup() throws IOException {
-    if(!Files.exists(Paths.get(logDir,testlogname + AppConstants.PARTIAL_POSTFIX))){
-      TestUtils.deleteDirs(logDir, archiveDir);
-      TestUtils.dropDb(testRepoDb);
-      TestUtils.createDirs(logDir, archiveDir);
-      TestUtils.createSampleLogs(logDir, testlogname, 1000);
+    if (!Files.exists(Paths.get(appConfig.getLogDir(), testlogname + AppConstants.PARTIAL_POSTFIX))) {
+      TestUtils.deleteDirs(appConfig.getLogDir(), appConfig.getArchiveDir());
+      TestUtils.dropDb(appConfig, appConfig.getRepoDbName());
+      TestUtils.createDirs(appConfig.getLogDir(), appConfig.getArchiveDir());
+      TestUtils.createSampleLogs(appConfig.getLogDir(), testlogname, 1000);
     }
   }
 
   @After
   public void cleanup() throws IOException {
-    TestUtils.deleteDirs(logDir, archiveDir);
-    TestUtils.dropDb(testRepoDb);
+    TestUtils.deleteDirs(appConfig.getLogDir(), appConfig.getArchiveDir());
+    TestUtils.dropDb(appConfig, appConfig.getRepoDbName());
   }
 
   @Test
   public void t() throws UnknownHostException {
-    AppConstants.MongoNames.REPOSITORY_DB_NAME = "t-visitrank";
-    new LogProcessorWorkVerticle.LogProcessor(logDir, archiveDir, testlogname,
-        new JsonObject().putNumber("logfilereadgap", 100), 100).process();
-    Assert.assertTrue(Files.exists(Paths.get(archiveDir), LinkOption.NOFOLLOW_LINKS));
-    Assert.assertTrue(Files.exists(Paths.get(archiveDir, testlogname), LinkOption.NOFOLLOW_LINKS));
-    TestUtils.assertDbItemEqual(testRepoDb,1000);
+    LogItemTransformer logItemTransformer = new LogItemTransformer(appConfig);
+    new LogProcessorWorkVerticle.LogProcessor(appConfig, logItemTransformer, testlogname).process();
+    Assert.assertTrue(Files.exists(appConfig.getLogPath()));
+    Assert.assertTrue(Files.exists(Paths.get(appConfig.getArchiveDir(), testlogname),
+        LinkOption.NOFOLLOW_LINKS));
+    TestUtils.assertDbItemEqual(appConfig, appConfig.getRepoDbName(), 1000);
   }
 }

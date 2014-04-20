@@ -16,13 +16,12 @@ import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
-import com.mongodb.MongoClient;
 
 public class PartialUtil {
 
-  public static FindLineResult findLastPosition(Path logfile) throws IOException {
-    MongoClient mongoClient = new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
-    DB db = mongoClient.getDB(AppConstants.MongoNames.REPOSITORY_DB_NAME);
+  public static FindLineResult findLastPosition(AppConfig appConfig, Path logfile)
+      throws IOException {
+    DB db = appConfig.getMongoClient().getDB(appConfig.getRepoDbName());
     DBCollection coll = db.getCollection(AppConstants.MongoNames.PAGE_VISIT_COL_NAME);
     DBObject query = new BasicDBObject();
     query.put("$natural", -1);
@@ -34,13 +33,11 @@ public class PartialUtil {
       Date d = (Date) dbo.get(FieldNameAbbreviation.PageVisit.TS);
       return flr.getLogItem((String) dbo.get(FieldNameAbbreviation.PageVisit.URL), d.getTime());
     }
-    mongoClient.close();
     return null;
   }
 
-  public static long findLastProcessDbObject(Path logfile) throws IOException {
-    MongoClient mongoClient = new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
-    DB db = mongoClient.getDB(AppConstants.MongoNames.REPOSITORY_DB_NAME);
+  public static long findLastProcessDbObject(AppConfig appConfig, Path logfile) throws IOException {
+    DB db = appConfig.getMongoClient().getDB(appConfig.getRepoDbName());
     DBCollection coll = db.getCollection(AppConstants.MongoNames.PAGE_VISIT_COL_NAME);
     DBObject query = new BasicDBObject();
     query.put("$natural", -1);
@@ -66,8 +63,6 @@ public class PartialUtil {
       }
       reader.close();
     }
-    
-    mongoClient.close();
     return count;
   }
 

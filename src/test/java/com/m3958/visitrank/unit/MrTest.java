@@ -7,11 +7,14 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.m3958.visitrank.AppConstants;
+import com.m3958.visitrank.Utils.AppConfig;
 import com.m3958.visitrank.Utils.AppUtils;
 import com.m3958.visitrank.testutils.TestUtils;
 import com.mongodb.BasicDBObject;
@@ -21,7 +24,6 @@ import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.MapReduceCommand;
 import com.mongodb.MapReduceCommand.OutputType;
-import com.mongodb.MongoClient;
 
 public class MrTest {
 
@@ -29,39 +31,50 @@ public class MrTest {
 
   private static String mrResultColName = "mrresult";
 
+  private static AppConfig appConfig;
+
+  @BeforeClass
+  public static void sss() throws IOException {
+    appConfig =
+        new AppConfig(AppUtils.loadJsonResourceContent(BatchCopyTestNo.class, "testconf.json"));
+  }
+
+  @AfterClass
+  public static void ccc() throws UnknownHostException {
+    appConfig.closeMongoClient();
+  }
+
   @Before
   public void setup() throws IOException {
-    TestUtils.dropDb(mrsourcedb);
+    TestUtils.dropDb(appConfig, mrsourcedb);
   }
 
   @After
   public void cleanup() throws IOException {
-    TestUtils.dropDb(mrsourcedb);
+    TestUtils.dropDb(appConfig, mrsourcedb);
   }
 
-  //after reduce,result is sort by _id ASC;
+  // after reduce,result is sort by _id ASC;
   @Test
   public void t2() throws UnknownHostException, InterruptedException {
     List<DBObject> obs =
         getDboList(1396587525833L, 1000 * 60 * 15, 3, "www.m3958.com", "www.fhsafety.gov.cn");
-    TestUtils.createSampleDb(mrsourcedb, obs);
-    MongoClient mongoClient;
-    mongoClient = new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
-    DB db = mongoClient.getDB(mrsourcedb);
+    TestUtils.createSampleDb(appConfig, mrsourcedb, obs);
+    DB db = appConfig.getMongoClient().getDB(mrsourcedb);
     Map<String, String> funcmap = AppUtils.getMrFunctions(this.getClass(), "/mrfuncs/countmr.js");
     String mapjs = funcmap.get(AppConstants.MapReduceFunctionName.MAP);
-//    String mapjs =
-//        "function mapFunction() {" + "var key = this.url," + "value = {" + "url : this.url,"
-//            + "count : 1" + "};" + "emit(key, value);" + "}";
-//    String reducejs =
-//        "function reduceFunction(key, values) {" + "var reducedObject = {" + "url : key,"
-//            + "count : 0" + "};" +
-//
-//            "values.forEach(function(value) {" + "reducedObject.count += value.count;" + "});"
-//            + "return reducedObject;" + "}";
+    // String mapjs =
+    // "function mapFunction() {" + "var key = this.url," + "value = {" + "url : this.url,"
+    // + "count : 1" + "};" + "emit(key, value);" + "}";
+    // String reducejs =
+    // "function reduceFunction(key, values) {" + "var reducedObject = {" + "url : key,"
+    // + "count : 0" + "};" +
+    //
+    // "values.forEach(function(value) {" + "reducedObject.count += value.count;" + "});"
+    // + "return reducedObject;" + "}";
     String reducejs = funcmap.get(AppConstants.MapReduceFunctionName.REDUCE);
     execMapReduce(db, mapjs, reducejs);
-    
+
     DBCollection mrCol = db.getCollection(mrResultColName);
     DBCursor cur = mrCol.find().limit(1).skip(0);
     Assert.assertTrue(cur.hasNext());
@@ -70,20 +83,18 @@ public class MrTest {
         + "/article.ftl?article=111891&ms=84224&section=84153", dbo.get("_id"));
     long count = ((Double) ((DBObject) dbo.get("value")).get("count")).longValue();
     Assert.assertEquals(3, count);
-    mongoClient.close();
   }
-  //daily count: {url:"",values:{date:d,count:1}}
-  //db.collection.ensureIndex({"attrs.nested.value": 1}) nest field index.
-  
-  //twice mapreduce
+
+  // daily count: {url:"",values:{date:d,count:1}}
+  // db.collection.ensureIndex({"attrs.nested.value": 1}) nest field index.
+
+  // twice mapreduce
   @Test
   public void t3() throws UnknownHostException, InterruptedException {
     List<DBObject> obs =
         getDboList(1396587525833L, 1000 * 60 * 15, 3, "www.m3958.com", "www.fhsafety.gov.cn");
-    TestUtils.createSampleDb(mrsourcedb, obs);
-    MongoClient mongoClient;
-    mongoClient = new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
-    DB db = mongoClient.getDB(mrsourcedb);
+    TestUtils.createSampleDb(appConfig, mrsourcedb, obs);
+    DB db = appConfig.getMongoClient().getDB(mrsourcedb);
     String mapjs =
         "function mapFunction() {" + "var key = this.url," + "value = {" + "url : this.url,"
             + "count : 1" + "};" + "emit(key, value);" + "}";
@@ -103,7 +114,6 @@ public class MrTest {
         + "/article.ftl?article=111891&ms=84224&section=84153", dbo.get("_id"));
     long count = ((Double) ((DBObject) dbo.get("value")).get("count")).longValue();
     Assert.assertEquals(6, count);
-    mongoClient.close();
   }
 
   private void execMapReduce(DB db, String mapjs, String reducejs) {
@@ -114,7 +124,7 @@ public class MrTest {
     MapReduceCommand mrc =
         new MapReduceCommand(pagevisitCol, mapjs, reducejs, mrResultColName, OutputType.REDUCE,
             query);
-//    mrc.setOutputDB("");
+    // mrc.setOutputDB("");
     db.command(mrc.toDBObject());
     System.out.println("mr costs: " + (System.currentTimeMillis() - start) + "ms");
   }

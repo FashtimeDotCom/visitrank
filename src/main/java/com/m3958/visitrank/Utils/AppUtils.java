@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.UnknownHostException;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
@@ -22,10 +23,12 @@ import java.util.regex.Pattern;
 
 import org.vertx.java.core.http.HttpServerRequest;
 import org.vertx.java.core.json.JsonObject;
+import org.vertx.java.core.logging.Logger;
+import org.vertx.java.platform.Container;
 
 import com.m3958.visitrank.AppConstants;
+import com.m3958.visitrank.interf.TestableVerticle;
 import com.mongodb.DB;
-import com.mongodb.MongoClient;
 
 public class AppUtils {
 
@@ -47,18 +50,18 @@ public class AppUtils {
     }
   }
 
-  public static long getLastPartialPosition(Path partialLogPath) {
-    String[] lines = new FileLineReader(partialLogPath.toString()).getLastLines(1);
-    if (lines.length == 1) {
-      String[] ss = lines[0].split(",");
-      if (ss.length == 2) { // 1000,1000 means 1000 has write to mongodb.
-        return Long.parseLong(ss[0], 10);
-      } else { // 1000, means 1000 - gap to 1000 has not write to mongodb.
-        return Long.parseLong(ss[0], 10) - AppConstants.LOGFILE_READ_GAP;
-      }
-    }
-    return 0;
-  }
+  // public static long getLastPartialPosition(Path partialLogPath) {
+  // String[] lines = new FileLineReader(partialLogPath.toString()).getLastLines(1);
+  // if (lines.length == 1) {
+  // String[] ss = lines[0].split(",");
+  // if (ss.length == 2) { // 1000,1000 means 1000 has write to mongodb.
+  // return Long.parseLong(ss[0], 10);
+  // } else { // 1000, means 1000 - gap to 1000 has not write to mongodb.
+  // return Long.parseLong(ss[0], 10) - AppConstants.LOGFILE_READ_GAP;
+  // }
+  // }
+  // return 0;
+  // }
 
   /**
    * this method record everything from client.
@@ -93,7 +96,8 @@ public class AppUtils {
     return jo;
   }
 
-  public static boolean colExist(MongoClient mongoClient, DB db, String colname) {
+  public static boolean colExist(AppConfig appConfig, String dbname, String colname) {
+    DB db = appConfig.getMongoClient().getDB(dbname);
     Set<String> cols = db.getCollectionNames();
     for (String c : cols) {
       if (colname.equals(c)) {
@@ -103,10 +107,9 @@ public class AppUtils {
     return false;
   }
 
-  public static boolean DbExists(String dbname) throws UnknownHostException {
-    MongoClient mongoClient;
-    mongoClient = new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
-    List<String> dbns = mongoClient.getDatabaseNames();
+  public static boolean DbExists(AppConfig appConfig, String dbname)
+      throws UnknownHostException {
+    List<String> dbns = appConfig.getMongoClient().getDatabaseNames();
     boolean exist = false;
     for (String db : dbns) {
       if (db.equals(dbname)) {
@@ -114,7 +117,6 @@ public class AppUtils {
         break;
       }
     }
-    mongoClient.close();
     return exist;
   }
 
@@ -164,13 +166,15 @@ public class AppUtils {
   }
 
   @SuppressWarnings("rawtypes")
-  public static List<String> loadResourceLines(Class clazz, String fullFileName) {
-
+  public static List<String> loadResourceLines(Class clazz, String fn) {
+    if(!fn.startsWith("/")){
+      fn = "/" + fn;
+    }
     List<String> lines = new ArrayList<>();
     String line;
 
     try {
-      InputStream is = clazz.getResourceAsStream(fullFileName);
+      InputStream is = clazz.getResourceAsStream(fn);
       BufferedReader reader = new BufferedReader(new InputStreamReader(is, "UTF-8"));
 
       while ((line = reader.readLine()) != null) {
@@ -181,13 +185,34 @@ public class AppUtils {
   }
 
   @SuppressWarnings("rawtypes")
-  public static String loadResourceContent(Class clazz, String fullFileName) {
-    List<String> lines = AppUtils.loadResourceLines(clazz, "conf.json");
+  public static String loadResourceContent(Class clazz, String fn) {
+    List<String> lines = AppUtils.loadResourceLines(clazz, fn);
     StringBuilder sb = new StringBuilder();
     for (String line : lines) {
       sb.append(line);
     }
     return sb.toString();
+  }
+
+  @SuppressWarnings("rawtypes")
+  public static JsonObject loadJsonResourceContent(Class clazz, String fn) {
+    List<String> lines;
+    Path p = Paths.get(fn);
+    if (Files.exists(p)) {
+      try {
+        lines = Files.readAllLines(p, Charset.forName("UTF-8"));
+      } catch (IOException e) {
+        lines = new ArrayList<>();
+      }
+    } else {
+      lines = AppUtils.loadResourceLines(clazz, fn);
+    }
+
+    StringBuilder sb = new StringBuilder();
+    for (String line : lines) {
+      sb.append(line);
+    }
+    return new JsonObject(sb.toString());
   }
 
   @SuppressWarnings("rawtypes")
@@ -231,6 +256,21 @@ public class AppUtils {
     return map;
   }
 
-
+  public static void logMongoDbConnectionError(Logger log){
+    log.error("mongodb connection failure.");
+  }
+  
+  public static boolean deployTestableVerticle(TestableVerticle tv,Container c){
+    JsonObject testConfig = c.config();
+    final Logger log = c.logger();
+    if (testConfig.containsField(AppConstants.TEST_CONF_KEY)) {
+      final AppConfig gcfg = new AppConfig(testConfig.getObject(AppConstants.TEST_CONF_KEY));
+      tv.deployMe(gcfg);
+      log.info("use test conf.");
+      return true;
+    } else {
+      return false;
+    }
+  }
 
 }

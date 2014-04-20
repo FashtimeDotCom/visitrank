@@ -1,21 +1,27 @@
 package com.m3958.visitrank;
 
+
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.MultiMap;
 import org.vertx.java.core.eventbus.EventBus;
+import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.http.HttpServerRequest;
+import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.core.logging.Logger;
 import org.vertx.java.platform.Verticle;
 
+import com.m3958.visitrank.Utils.AppConfig;
+import com.m3958.visitrank.Utils.AppUtils;
 import com.m3958.visitrank.httpentry.SinglePageProceesor;
 import com.m3958.visitrank.httpentry.WholeSiteCountProceesor;
+import com.m3958.visitrank.interf.TestableVerticle;
 
 /**
  * 
  * @author jianglibo@gmail.com
  * 
  */
-public class CounterVerticle extends Verticle {
+public class CounterVerticle extends Verticle implements TestableVerticle {
 
   public static String VERTICLE_NAME = CounterVerticle.class.getName();
 
@@ -23,6 +29,20 @@ public class CounterVerticle extends Verticle {
    * 如果默认是referer的主机名，那么siteid将不再是必须，反而可以引入sitegroup概念，从而增加系统的灵活性。
    */
   public void start() {
+    if (!AppUtils.deployTestableVerticle(this, container)) {
+      vertx.eventBus().send(AppConfigVerticle.VERTICLE_ADDRESS, new JsonObject(),
+          new Handler<Message<JsonObject>>() {
+            @Override
+            public void handle(Message<JsonObject> msg) {
+              AppConfig gcfg = new AppConfig(msg.body());
+              deployMe(gcfg);
+            }
+          });
+      container.logger().info("CounterVerticle started");
+    }
+  }
+
+  public void deployMe(final AppConfig appconfig) {
     vertx.createHttpServer().requestHandler(new Handler<HttpServerRequest>() {
       public void handle(final HttpServerRequest req) {
         MultiMap mm = req.params();
@@ -38,20 +58,18 @@ public class CounterVerticle extends Verticle {
           if (noReferer) {
             new ResponseGenerator(req, "0").sendResponse();
           } else {
-            new WholeSiteCountProceesor(eb, req, log, referer).process();
+            new WholeSiteCountProceesor(appconfig, eb, req, log, referer).process();
           }
         } else {
           if (noReferer) {
             new ResponseGenerator(req, "0").sendResponse();
             return;
           } else {
-            new SinglePageProceesor(eb, req, log, referer).process();
+            new SinglePageProceesor(appconfig, eb, req, log, referer).process();
           }
         }
       }
-    }).listen(AppConstants.HTTP_PORT);
-
-    container.logger().info("CounterVerticle started");
+    }).listen(appconfig.getHttpPort());
   }
 }
 

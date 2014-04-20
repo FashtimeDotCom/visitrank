@@ -8,8 +8,8 @@ import org.vertx.java.core.http.HttpServerRequest;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.core.logging.Logger;
 
-import com.m3958.visitrank.AppConstants;
 import com.m3958.visitrank.ResponseGenerator;
+import com.m3958.visitrank.Utils.AppConfig;
 import com.m3958.visitrank.rediscmd.INCR;
 
 /**
@@ -26,11 +26,14 @@ public class SinglePageProceesor {
   private Logger log;
 
   private EventBus eb;
+  
+  private AppConfig appConfig;
 
 
   private String referer;
 
-  public SinglePageProceesor(EventBus eb, HttpServerRequest req, Logger log, String referer) {
+  public SinglePageProceesor(AppConfig appConfig,EventBus eb, HttpServerRequest req, Logger log, String referer) {
+    this.appConfig = appConfig;
     this.eb = eb;
     this.req = req;
     this.log = log;
@@ -42,7 +45,7 @@ public class SinglePageProceesor {
     JsonObject cmd;
     cmd = new INCR(referermd5).getCmd();
 
-    this.eb.send(AppConstants.MOD_REDIS_ADDRESS, cmd, new Handler<Message<JsonObject>>() {
+    this.eb.send(appConfig.getRedisAddress(), cmd, new Handler<Message<JsonObject>>() {
       public void handle(Message<JsonObject> message) {
         JsonObject redisResultBody = message.body();
         if ("ok".equals(redisResultBody.getString("status"))) {

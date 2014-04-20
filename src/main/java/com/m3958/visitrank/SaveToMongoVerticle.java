@@ -22,6 +22,7 @@ import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.platform.Verticle;
 
+import com.m3958.visitrank.Utils.AppConfig;
 import com.m3958.visitrank.mongocmd.VisitMongoCmd;
 import com.m3958.visitrank.rediscmd.INCR;
 
@@ -30,19 +31,30 @@ public class SaveToMongoVerticle extends Verticle {
   public static String RECEIVER_ADDR = "visitrank-mongo-receiver";
 
   public void start() {
+    
     final EventBus eb = vertx.eventBus();
-//    final Logger log = container.logger();
+    
+    eb.send(AppConfigVerticle.VERTICLE_ADDRESS, new JsonObject(),
+      new Handler<Message<JsonObject>>() {
+        @Override
+        public void handle(Message<JsonObject> msg) {
+          final AppConfig gcfg = new AppConfig(msg.body());
+          
+          eb.registerHandler(RECEIVER_ADDR, new Handler<Message<JsonObject>>() {
+            @Override
+            public void handle(Message<JsonObject> message) {
+              JsonObject body = message.body();
+              String siteid = body.getString("siteid");
+              eb.send(gcfg.getMongoAddress(), new VisitMongoCmd(body).saveCmd());
+              eb.send(gcfg.getRedisAddress(), new INCR(siteid).getCmd());
+            }
+          });
+        }
+      });
+    
+    
 
-    eb.registerHandler(RECEIVER_ADDR, new Handler<Message<JsonObject>>() {
-      @Override
-      public void handle(Message<JsonObject> message) {
-        JsonObject body = message.body();
-        String siteid = body.getString("siteid");
-//        log.info(body);
-        eb.send(AppConstants.MONGO_ADDRESS, new VisitMongoCmd(body).saveCmd());
-        eb.send(AppConstants.MOD_REDIS_ADDRESS, new INCR(siteid).getCmd());
-      }
-    });
+
     container.logger().info("SaveToMongoVerticle started");
 
   }

@@ -1,23 +1,33 @@
 package com.m3958.visitrank.unit;
 
+import java.io.IOException;
 import java.net.UnknownHostException;
 
+import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.m3958.visitrank.AppConstants;
+import com.m3958.visitrank.Utils.AppConfig;
 import com.m3958.visitrank.Utils.AppUtils;
-import com.mongodb.DB;
-import com.mongodb.MongoClient;
 
 public class DbCollectionTest {
+  
+  private static AppConfig appConfig;
+  
+  @BeforeClass
+  public static void sss() throws IOException {
+    appConfig =
+        new AppConfig(AppUtils.loadJsonResourceContent(BatchCopyTestNo.class, "testconf.json"));
+  }
+
+  @AfterClass
+  public static void ccc() throws UnknownHostException {
+    appConfig.closeMongoClient();
+  }
 
   @Test
   public void t1() throws UnknownHostException {
-    MongoClient mongoClient;
-    mongoClient = new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
-    DB db = mongoClient.getDB("not-exist-db");
-    Assert.assertFalse(AppUtils.colExist(mongoClient, db, "not-exist-col"));
-    mongoClient.close();
+    Assert.assertFalse(AppUtils.colExist(appConfig, "not-exist-db", "not-exist-col"));
   }
 }

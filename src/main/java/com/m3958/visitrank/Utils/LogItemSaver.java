@@ -19,13 +19,13 @@ public class LogItemSaver {
     parser = new Parser();
   }
   
-  public void save(final JsonObject item){
-    execPool.execute(new Runnable() {
-      @Override
-      public void run() {
-        LogItemTransformer.transformToLog4j(item, parser);
-      }
-    });
-  }
+//  public void save(final JsonObject item){
+//    execPool.execute(new Runnable() {
+//      @Override
+//      public void run() {
+//        LogItemTransformer.transformToLog4j(item, parser);
+//      }
+//    });
+//  }
 
 }

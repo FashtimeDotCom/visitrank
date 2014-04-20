@@ -19,7 +19,6 @@ package com.m3958.visitrank.integration.java;
 import static org.vertx.testtools.VertxAssert.assertTrue;
 
 import java.io.IOException;
-import java.util.regex.Pattern;
 
 import org.junit.Test;
 import org.vertx.java.core.AsyncResult;
@@ -33,6 +32,8 @@ import org.vertx.testtools.VertxAssert;
 import com.m3958.visitrank.AppConstants;
 import com.m3958.visitrank.LogProcessorWorkVerticle;
 import com.m3958.visitrank.LogProcessorWorkVerticle.LogProcessorWorkMsgKey;
+import com.m3958.visitrank.Utils.AppConfig;
+import com.m3958.visitrank.Utils.AppUtils;
 import com.m3958.visitrank.testutils.TestUtils;
 
 
@@ -47,44 +48,37 @@ import com.m3958.visitrank.testutils.TestUtils;
 public class LogProcessorWorkTest extends TestVerticle {
 
   private String testlogname = "t-2014-03-02-01.log";
-  private String logDir = "testlogs";
-  private String archiveDir = "tarchives";
-  
-  private String repoDbName = "t-visitrank";
 
+  private AppConfig appConfig;
 
   @Test
   public void t() throws IOException {
-    TestUtils.assertDbItemEqual(repoDbName,1000);
+    TestUtils.assertDbItemEqual(appConfig, appConfig.getRepoDbName(), 1000);
 
-    TestUtils.deleteDirs(logDir, archiveDir);
-    TestUtils.dropDb(repoDbName);
+    TestUtils.deleteDirs(appConfig.getLogDir(), appConfig.getArchiveDir());
+    TestUtils.dropDb(appConfig, appConfig.getRepoDbName());
     VertxAssert.testComplete();
   }
 
   @Override
   public void start() {
     initialize();
+    appConfig = new AppConfig(AppUtils.loadJsonResourceContent(this.getClass(), "testconf.json"));
     try {
-      TestUtils.deleteDirs(logDir, archiveDir);
-      TestUtils.dropDb(repoDbName);
-      TestUtils.createDirs(logDir, archiveDir);
-      TestUtils.createSampleLogs(logDir, testlogname, 1000);
+      TestUtils.deleteDirs(appConfig.getLogDir(), appConfig.getArchiveDir());
+      TestUtils.dropDb(appConfig, appConfig.getRepoDbName());
+      TestUtils.createDirs(appConfig.getLogDir(), appConfig.getArchiveDir());
+      TestUtils.createSampleLogs(appConfig.getLogDir(), testlogname, 1000);
     } catch (IOException e) {
       e.printStackTrace();
     }
-    
-    AppConstants.dailyDbPtn = Pattern.compile("(.*\\d{4}-\\d{2}-\\d{2})(.*)");
-    AppConstants.MongoNames.REPOSITORY_DB_NAME = repoDbName;
 
     final JsonObject body =
-        new JsonObject().putString(LogProcessorWorkMsgKey.FILE_NAME, testlogname)
-            .putString(LogProcessorWorkMsgKey.LOG_DIR, logDir)
-            .putString(LogProcessorWorkMsgKey.ARCHIVE_DIR, archiveDir)
-            .putBoolean(LogProcessorWorkMsgKey.REPLY, true);
+        new JsonObject().putString(LogProcessorWorkMsgKey.FILE_NAME, testlogname);
 
-    container.deployWorkerVerticle(LogProcessorWorkVerticle.VERTICLE_NAME, new JsonObject(), 1,
-        false, new AsyncResultHandler<String>() {
+    container.deployWorkerVerticle(LogProcessorWorkVerticle.VERTICLE_NAME,
+        new JsonObject().putObject(AppConstants.TEST_CONF_KEY, appConfig.getConfJson()), 1, false,
+        new AsyncResultHandler<String>() {
           @Override
           public void handle(AsyncResult<String> asyncResult) {
             assertTrue(asyncResult.succeeded());

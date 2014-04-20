@@ -11,10 +11,13 @@ import java.nio.file.Paths;
 
 import org.vertx.java.core.AsyncResult;
 import org.vertx.java.core.AsyncResultHandler;
+import org.vertx.java.core.Handler;
+import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.core.logging.Logger;
 import org.vertx.java.platform.Verticle;
 
+import com.m3958.visitrank.Utils.AppConfig;
 import com.m3958.visitrank.Utils.IndexBuilder;
 import com.m3958.visitrank.Utils.RemainLogFileFinder;
 import com.m3958.visitrank.logger.AppLogger;
@@ -23,45 +26,64 @@ public class MainVerticle extends Verticle {
 
   public void start() {
     final Logger log = container.logger();
-    Path applog = Paths.get("logs", "app.log");
+
+    container.deployVerticle(AppConfigVerticle.VERTICLE_NAME,
+        new JsonObject().putString("address", AppConfigVerticle.VERTICLE_ADDRESS), 1,
+        new AsyncResultHandler<String>() {
+          @Override
+          public void handle(AsyncResult<String> asyncResult) {
+            if (asyncResult.succeeded()) {
+              log.info("appconfig verticle has successly deployed:" + asyncResult.result());
+              vertx.eventBus().send(AppConfigVerticle.VERTICLE_ADDRESS, new JsonObject(),
+                  new Handler<Message<JsonObject>>() {
+                    @Override
+                    public void handle(Message<JsonObject> message) {
+                      AppConfig appConfig = new AppConfig(message.body());
+                      deployAll(appConfig, log);
+                    }
+                  });
+            } else {
+              log.info("appconfig verticle deploy failure.");
+            }
+          }
+        });
+  }
+
+  protected void deployAll(AppConfig appConfig, final Logger log) {
+
+    Path applog = Paths.get(appConfig.getLogDir(), "app.log");
 
     if (Files.exists(applog)) {
       try {
-        String np = new RemainLogFileFinder("logs").nextLogName();
+        String np = new RemainLogFileFinder(appConfig.getLogDir()).nextLogName();
         log.info("copy log.app to: " + np);
-        Files.copy(applog, Paths.get("logs", np));
+        Files.copy(applog, Paths.get(appConfig.getLogDir(), np));
       } catch (IOException e) {
         e.printStackTrace();
       }
     }
 
-    AppConstants.initConfigConstants(container.config());
-
     log.info("check pagevisit index status ...");
-    IndexBuilder.pageVisitIndex();
+    IndexBuilder.pageVisitIndex(appConfig);
     log.info("check pagevisit index done");
 
     log.info("check hostname index status ...");
-    IndexBuilder.hostNameIndex();
+    IndexBuilder.hostNameIndex(appConfig);
     log.info("check hostname index done");
 
     AppLogger.urlPersistor.trace("loger started");
 
-    JsonObject httpCfg = new JsonObject();
-    httpCfg.putNumber("port", AppConstants.HTTP_PORT);
+    container.deployVerticle(LogSaverVerticle.VERTICLE_NAME, appConfig.getLogSaverInstance());
 
-    container.deployVerticle(LogSaverVerticle.VERTICLE_NAME, httpCfg,
-        AppConstants.LOG_SAVER_INSTANCE);
-
-    container.deployVerticle(CounterVerticle.VERTICLE_NAME, httpCfg, AppConstants.HTTP_INSTANCE);
+    container.deployVerticle(CounterVerticle.VERTICLE_NAME, appConfig.getHttpInstance());
 
     // deploy redis
     JsonObject redisCfg = new JsonObject();
-    redisCfg.putString("address", AppConstants.MOD_REDIS_ADDRESS)
-        .putString("host", AppConstants.REDIS_HOST).putString("encode", "UTF-8")
-        .putNumber("port", AppConstants.REDIS_PORT);
+    redisCfg.putString("address", appConfig.getRedisAddress())
+        .putString("host", appConfig.getRedisHost()).putString("encode", appConfig.getCharset())
+        .putNumber("port", appConfig.getRedisPort());
 
-    container.deployModule(AppConstants.REDIS_MODULE_NAME, redisCfg, AppConstants.REDIS_INSTANCE,
+    container.deployModule(appConfig.getRedisModuleName(), redisCfg, appConfig.getRedisInstance(),
         new AsyncResultHandler<String>() {
           @Override
           public void handle(AsyncResult<String> asyncResult) {
@@ -73,14 +95,14 @@ public class MainVerticle extends Verticle {
           }
         });
     // deploy mongodb
-    if (!AppConstants.ONLY_LOG) {
+    if (!appConfig.isOnlyLog()) {
       JsonObject mongodbCfg = new JsonObject();
-      mongodbCfg.putString("address", AppConstants.MONGO_ADDRESS)
-          .putString("host", AppConstants.MONGODB_HOST).putString("db_name", "visitrank")
-          .putNumber("port", AppConstants.MONGODB_PORT);
+      mongodbCfg.putString("address", appConfig.getMongoAddress())
+          .putString("host", appConfig.getMongoHost()).putString("db_name", "visitrank")
+          .putNumber("port", appConfig.getMongoPort());
 
-      container.deployModule(AppConstants.MONGODB_MODULE_NAME, mongodbCfg,
-          AppConstants.MONGODB_INSTANCE, new AsyncResultHandler<String>() {
+      container.deployModule(appConfig.getMongoModuleName(), mongodbCfg,
+          appConfig.getMongoInstance(), new AsyncResultHandler<String>() {
             @Override
             public void handle(AsyncResult<String> asyncResult) {
               if (asyncResult.succeeded()) {
@@ -93,15 +115,10 @@ public class MainVerticle extends Verticle {
 
       container.deployVerticle("mapreduce_verticle.js", 1);
 
-      JsonObject logCheckCfg =
-          new JsonObject().putNumber("logprocessorinstance", AppConstants.LOG_PROCESSOR_INSTANCE)
-              .putNumber("logfilereadgap", AppConstants.LOGFILE_READ_GAP)
-              .putString("writeconcern", AppConstants.WRITE_CONCERN);
+      container.deployVerticle(LogCheckVerticle.VERTICLE_NAME, 1);
 
-      container.deployVerticle(LogCheckVerticle.VERTICLE_NAME, logCheckCfg, 1);
-
-      container.deployWorkerVerticle(LogProcessorWorkVerticle.VERTICLE_NAME, new JsonObject(),
-          AppConstants.LOG_PROCESSOR_INSTANCE, false);
+      container.deployWorkerVerticle(LogProcessorWorkVerticle.VERTICLE_NAME, new JsonObject(), 1,
+          false);
     }
   }
 }

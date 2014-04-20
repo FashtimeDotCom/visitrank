@@ -1,11 +1,10 @@
 package com.m3958.visitrank;
 
 import org.vertx.java.core.Handler;
-import org.vertx.java.core.buffer.Buffer;
 import org.vertx.java.core.eventbus.EventBus;
 import org.vertx.java.core.eventbus.Message;
-import org.vertx.java.core.file.FileSystem;
 import org.vertx.java.core.json.JsonObject;
+import org.vertx.java.core.logging.Logger;
 import org.vertx.java.platform.Verticle;
 
 import com.m3958.visitrank.Utils.AppUtils;
@@ -16,11 +15,12 @@ public class AppConfigVerticle extends Verticle {
 
   public static String VERTICLE_ADDRESS = "app-config";
 
-  public JsonObject appConfig;
-
+  public JsonObject appConfigJson;
 
   @Override
   public void start() {
+    Logger log = container.logger();
+    appConfigJson = AppUtils.loadJsonResourceContent(this.getClass(), "conf.json");
     final EventBus eb = vertx.eventBus();
     eb.registerHandler(VERTICLE_ADDRESS, new Handler<Message<JsonObject>>() {
       @Override
@@ -29,25 +29,11 @@ public class AppConfigVerticle extends Verticle {
         String action = body.getString("action", "");
 
         if (action.isEmpty()) {
-          if (appConfig == null) {
-            initConfig();
-          }
-          message.reply(appConfig);
+          message.reply(appConfigJson);
         }
 
       }
     });
-    container.logger().info("LogSaverVerticle started");
-
-  }
-
-  private synchronized void initConfig() {
-    FileSystem fs = vertx.fileSystem();
-    if (fs.existsSync("conf.json")) {
-      Buffer bf = fs.readFileSync("conf.json");
-      appConfig = new JsonObject(bf.toString("UTF-8"));
-    } else {
-      appConfig = new JsonObject(AppUtils.loadResourceContent(this.getClass(), "conf.json"));
-    }
+    log.info("AppConfigVerticle started");
   }
 }

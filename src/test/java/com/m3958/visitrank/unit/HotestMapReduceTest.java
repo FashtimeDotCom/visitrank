@@ -3,9 +3,12 @@ package com.m3958.visitrank.unit;
 import java.io.IOException;
 import java.net.UnknownHostException;
 
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.m3958.visitrank.Utils.AppConfig;
 import com.m3958.visitrank.Utils.AppUtils;
 import com.m3958.visitrank.testutils.TestUtils;
 
@@ -18,19 +21,30 @@ public class HotestMapReduceTest {
   // 1,"ts":-1}).limit(100).explain()
   // after delete sort ts:-1,still return IndexOnly:true.
   // h,u,t
-  
 
-  public String dbname = "mr-visitrank";
+  private static AppConfig appConfig;
+
+  @BeforeClass
+  public static void sss() throws IOException {
+    appConfig =
+        new AppConfig(AppUtils.loadJsonResourceContent(BatchCopyTestNo.class, "testconf.json"));
+  }
+
+  @AfterClass
+  public static void ccc() throws UnknownHostException {
+    appConfig.closeMongoClient();
+  }
+
 
   @Before
   public void setup() throws IOException {
-    if (!AppUtils.DbExists(dbname)) {
-      TestUtils.createMRSampleDb(dbname, 10000 * 100, true, 10000);
+    if (!AppUtils.DbExists(appConfig, appConfig.getMrDbName())) {
+      TestUtils.createMRSampleDb(appConfig, appConfig.getMrDbName(), 10000 * 100, true, 10000);
     }
   }
 
   @Test
   public void t1() throws UnknownHostException {
-    TestUtils.assertDbItemEqual(dbname, 10000 * 100);
+    TestUtils.assertDbItemEqual(appConfig, appConfig.getMrDbName(), 10000 * 100);
   }
 }

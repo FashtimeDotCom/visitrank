@@ -7,10 +7,10 @@ import org.vertx.java.core.logging.Logger;
 import org.vertx.java.platform.Verticle;
 
 import com.m3958.visitrank.LogProcessorWorkVerticle.LogProcessorWorkMsgKey;
+import com.m3958.visitrank.Utils.AppConfig;
 import com.m3958.visitrank.Utils.Locker;
 import com.m3958.visitrank.Utils.RemainLogFileFinder;
 import com.m3958.visitrank.Utils.RemainsCounter;
-import com.m3958.visitrank.Utils.WriteConcernParser;
 import com.m3958.visitrank.logger.AppLogger;
 
 /**
@@ -22,40 +22,40 @@ import com.m3958.visitrank.logger.AppLogger;
 public class LogCheckVerticle extends Verticle {
 
   private Locker locker = new Locker();
-  
+
   public static String VERTICLE_NAME = LogCheckVerticle.class.getName();
 
   @Override
   public void start() {
     final Logger log = container.logger();
-    JsonObject jo = container.config();
-    final String logDir = jo.getString(LogProcessorWorkMsgKey.LOG_DIR, "logs");
-    final String archiveDir = jo.getString(LogProcessorWorkMsgKey.ARCHIVE_DIR, "archives");
+    vertx.eventBus().send(AppConfigVerticle.VERTICLE_ADDRESS, new JsonObject(),
+        new Handler<Message<JsonObject>>() {
+          @Override
+          public void handle(Message<JsonObject> msg) {
+            final AppConfig gcfg = new AppConfig(msg.body());
+            deployMe(gcfg, log);
+          }
+        });
+  }
 
-    final Long logfilereadgap = jo.getLong("logfilereadgap");
+  private void deployMe(final AppConfig appConfig,Logger log) {
 
-    int logProcessorInstance = jo.getInteger("logprocessorinstance", 5);
-    
-    log.info("logProcessorInstance: " + logProcessorInstance);
-    
-    log.info("logfilereadgap: " + logfilereadgap);
-    
-    final JsonObject writeConcern = new WriteConcernParser(jo.getString("writeconcern","")).parse();
-    log.info(writeConcern);
+    log.info("logProcessorInstance: " + 1);
 
-    final RemainsCounter logProcessorCounter = new RemainsCounter(logProcessorInstance);
+    log.info("logfilereadgap: " + appConfig.getLogFileReadGap());
+
+    log.info(appConfig.getWriteConcern());
+
+    final RemainsCounter logProcessorCounter = new RemainsCounter(1);
     vertx.setPeriodic(30000, new Handler<Long>() {
       public void handle(Long timerID) {
         // logger file check.
         if (logProcessorCounter.remainsGetSet(0) > 0) {
-          final String logfilename = new RemainLogFileFinder(logDir, locker).findOne();
+          final String logfilename = new RemainLogFileFinder(appConfig.getLogDir(), locker).findOne();
           if (logfilename != null) {
             JsonObject body =
-                new JsonObject().putString(LogProcessorWorkMsgKey.LOG_DIR, logDir)
-                    .putString(LogProcessorWorkMsgKey.FILE_NAME, logfilename)
-                    .putString(LogProcessorWorkMsgKey.ARCHIVE_DIR, archiveDir)
-                    .putNumber("logfilereadgap", logfilereadgap)
-                    .putObject("writeconcern", writeConcern);
+                new JsonObject()
+                    .putString(LogProcessorWorkMsgKey.FILE_NAME, logfilename);
             logProcessorCounter.remainsGetSet(1);
             AppLogger.processLogger.info("process " + logfilename
                 + " starting. remain LogProcessorInstancs: " + logProcessorCounter.remainsGetSet(0));
@@ -74,7 +74,5 @@ public class LogCheckVerticle extends Verticle {
         }
       }
     });
-    log.info("First this is printed");
   }
-
 }

@@ -19,11 +19,11 @@ package com.m3958.visitrank;
 import java.io.IOException;
 
 import org.vertx.java.core.Handler;
-import org.vertx.java.core.eventbus.EventBus;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.platform.Verticle;
 
+import com.m3958.visitrank.Utils.AppConfig;
 import com.m3958.visitrank.Utils.LogItemTransformer;
 import com.m3958.visitrank.logger.AppLogger;
 import com.m3958.visitrank.uaparser.Parser;
@@ -35,13 +35,23 @@ public class LogSaverVerticle extends Verticle {
   public static String VERTICLE_NAME = LogSaverVerticle.class.getName();
 
   public void start() {
-    final EventBus eb = vertx.eventBus();
+    vertx.eventBus().send(AppConfigVerticle.VERTICLE_ADDRESS, new JsonObject(),
+      new Handler<Message<JsonObject>>() {
+        @Override
+        public void handle(Message<JsonObject> msg) {
+          final AppConfig gcfg = new AppConfig(msg.body());
+          deployMe(gcfg);
+        }
+      });
+  }
+
+  private void deployMe(final AppConfig appConfig) {
     try {
       final Parser uaparser = new Parser();
-      eb.registerHandler(VERTICLE_ADDRESS, new Handler<Message<JsonObject>>() {
+      vertx.eventBus().registerHandler(VERTICLE_ADDRESS, new Handler<Message<JsonObject>>() {
         @Override
         public void handle(Message<JsonObject> message) {
-          JsonObject jo = LogItemTransformer.transformToLog4j(message.body(), uaparser);
+          JsonObject jo = new LogItemTransformer(appConfig).transformToLog4j(message.body(), uaparser);
           AppLogger.urlPersistor.info(jo);
         }
       });

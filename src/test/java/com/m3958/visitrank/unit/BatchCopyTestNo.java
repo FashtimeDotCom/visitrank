@@ -12,6 +12,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.m3958.visitrank.AppConstants;
+import com.m3958.visitrank.Utils.AppConfig;
 import com.m3958.visitrank.Utils.AppUtils;
 import com.m3958.visitrank.Utils.IndexBuilder;
 import com.m3958.visitrank.testutils.TestUtils;
@@ -20,57 +21,57 @@ import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
-import com.mongodb.MongoClient;
 import com.mongodb.WriteConcern;
 
 public class BatchCopyTestNo {
 
-  private String logDir = "testlogs";
-  private String archiveDir = "testarchive";
-
   private static String testlogname = "t-2014-03-27-01.log";
-
-  private static String repositoryDbName = "t-visitrank";
 
   private static int testNumber = 1000 * 10;
 
+  private static AppConfig appConfig;
+
   @Before
   public void setup() throws IOException {
-    TestUtils.deleteDirs(logDir, archiveDir);
-    TestUtils.createDirs(logDir, archiveDir);
-    TestUtils.dropDb(repositoryDbName);
+    TestUtils.deleteDirs(appConfig.getLogDir(), appConfig.getArchiveDir());
+    TestUtils.createDirs(appConfig.getLogDir(), appConfig.getArchiveDir());
+    TestUtils.dropDb(appConfig, appConfig.getRepoDbName());
   }
 
   @After
   public void cleanup() throws IOException {
-    TestUtils.deleteDirs(logDir, archiveDir);
-    TestUtils.dropDb(repositoryDbName);
+    TestUtils.deleteDirs(appConfig.getLogDir(), appConfig.getArchiveDir());
+    TestUtils.dropDb(appConfig, appConfig.getRepoDbName());
+
   }
 
   @BeforeClass
   public static void sss() throws IOException {
-    TestUtils.dropDailyDb(testlogname);
-    TestUtils.createSampleDb(AppUtils.getDailyDbName(testlogname, TestUtils.dailyDbPtn),
-        testNumber, false, 500);
+    appConfig =
+        new AppConfig(AppUtils.loadJsonResourceContent(BatchCopyTestNo.class, "testconf.json"));
+    TestUtils.dropDailyDb(appConfig, testlogname);
+    TestUtils.createSampleDb(appConfig,
+        AppUtils.getDailyDbName(testlogname, appConfig.getDailyDbPtn()), testNumber, false, 500);
   }
 
   @AfterClass
   public static void ccc() throws UnknownHostException {
-    TestUtils.dropDailyDb(testlogname);
+    TestUtils.dropDailyDb(appConfig, testlogname);
+    appConfig.closeMongoClient();
   }
 
   @Test
   public void t1() throws UnknownHostException, InterruptedException {
     new Ttt(10000, -1, true).start();
     Thread.sleep(1000);
-    TestUtils.assertDbItemEqual(repositoryDbName, testNumber);
+    TestUtils.assertDbItemEqual(appConfig, appConfig.getRepoDbName(), testNumber);
   }
 
   @Test
   public void t2() throws UnknownHostException, InterruptedException {
     new Ttt(10000, -1, false).start();
     Thread.sleep(1000);
-    TestUtils.assertDbItemEqual(repositoryDbName, testNumber);
+    TestUtils.assertDbItemEqual(appConfig, appConfig.getRepoDbName(), testNumber);
   }
 
 
@@ -78,14 +79,14 @@ public class BatchCopyTestNo {
   public void t3() throws UnknownHostException, InterruptedException {
     new Ttt(10000, 10000, true).start();
     Thread.sleep(1000);
-    TestUtils.assertDbItemEqual(repositoryDbName, testNumber);
+    TestUtils.assertDbItemEqual(appConfig, appConfig.getRepoDbName(), testNumber);
   }
 
   @Test
   public void t4() throws UnknownHostException, InterruptedException {
     new Ttt(10000, 10000, false).start();
     Thread.sleep(1000);
-    TestUtils.assertDbItemEqual(repositoryDbName, testNumber);
+    TestUtils.assertDbItemEqual(appConfig, appConfig.getRepoDbName(), testNumber);
   }
 
 
@@ -103,13 +104,11 @@ public class BatchCopyTestNo {
     }
 
     public void start() throws UnknownHostException {
-      MongoClient mongoClient;
-      mongoClient = new MongoClient(AppConstants.MONGODB_HOST, AppConstants.MONGODB_PORT);
 
-      DB dailyDb = mongoClient.getDB(AppUtils.getDailyDbName(testlogname, TestUtils.dailyDbPtn));
+      DB dailyDb = appConfig.getMongoClient().getDB(AppUtils.getDailyDbName(testlogname, appConfig.getDailyDbPtn()));
       DBCollection dailyColl = dailyDb.getCollection(AppConstants.MongoNames.PAGE_VISIT_COL_NAME);
 
-      DB repositoryDb = mongoClient.getDB(repositoryDbName);
+      DB repositoryDb = appConfig.getMongoClient().getDB(appConfig.getRepoDbName());
       DBCollection repositoryCol =
           repositoryDb.createCollection(AppConstants.MongoNames.PAGE_VISIT_COL_NAME,
               new BasicDBObject());
@@ -139,8 +138,6 @@ public class BatchCopyTestNo {
         repositoryCol.insert(obs, wc);
       }
       obs.clear();
-      mongoClient.close();
     }
-
   }
 }
