@@ -48,7 +48,8 @@ public class BatchCopyTestNo {
   @BeforeClass
   public static void sss() throws IOException {
     appConfig =
-        new AppConfig(AppUtils.loadJsonResourceContent(BatchCopyTestNo.class, "testconf.json"));
+        new AppConfig(AppUtils.loadJsonResourceContent(BatchCopyTestNo.class, "testconf.json"),
+            true);
     TestUtils.dropDailyDb(appConfig, testlogname);
     TestUtils.createSampleDb(appConfig,
         AppUtils.getDailyDbName(testlogname, appConfig.getDailyDbPtn()), testNumber, false, 500);
@@ -105,7 +106,9 @@ public class BatchCopyTestNo {
 
     public void start() throws UnknownHostException {
 
-      DB dailyDb = appConfig.getMongoClient().getDB(AppUtils.getDailyDbName(testlogname, appConfig.getDailyDbPtn()));
+      DB dailyDb =
+          appConfig.getMongoClient().getDB(
+              AppUtils.getDailyDbName(testlogname, appConfig.getDailyDbPtn()));
       DBCollection dailyColl = dailyDb.getCollection(AppConstants.MongoNames.PAGE_VISIT_COL_NAME);
 
       DB repositoryDb = appConfig.getMongoClient().getDB(appConfig.getRepoDbName());

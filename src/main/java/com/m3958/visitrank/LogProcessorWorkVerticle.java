@@ -55,7 +55,7 @@ public class LogProcessorWorkVerticle extends Verticle implements TestableVertic
           new Handler<Message<JsonObject>>() {
             @Override
             public void handle(Message<JsonObject> msg) {
-              final AppConfig gcfg = new AppConfig(msg.body());
+              final AppConfig gcfg = new AppConfig(msg.body(), true);
               deployMe(gcfg);
             }
           });

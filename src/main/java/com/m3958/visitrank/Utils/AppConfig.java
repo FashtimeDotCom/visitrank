@@ -67,7 +67,7 @@ public class AppConfig {
   
   private String mrDbName;
 
-  public AppConfig(JsonObject jo) {
+  public AppConfig(JsonObject jo,boolean createMongoClient) {
     setConfJson(jo);
     setArchiveDir(jo.getString("archiveDir"));
     setCharset(jo.getString("charset"));

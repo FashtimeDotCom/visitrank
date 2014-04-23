@@ -31,28 +31,27 @@ public class SaveToMongoVerticle extends Verticle {
   public static String RECEIVER_ADDR = "visitrank-mongo-receiver";
 
   public void start() {
-    
+
     final EventBus eb = vertx.eventBus();
-    
+
     eb.send(AppConfigVerticle.VERTICLE_ADDRESS, new JsonObject(),
-      new Handler<Message<JsonObject>>() {
-        @Override
-        public void handle(Message<JsonObject> msg) {
-          final AppConfig gcfg = new AppConfig(msg.body());
-          
-          eb.registerHandler(RECEIVER_ADDR, new Handler<Message<JsonObject>>() {
-            @Override
-            public void handle(Message<JsonObject> message) {
-              JsonObject body = message.body();
-              String siteid = body.getString("siteid");
-              eb.send(gcfg.getMongoAddress(), new VisitMongoCmd(body).saveCmd());
-              eb.send(gcfg.getRedisAddress(), new INCR(siteid).getCmd());
-            }
-          });
-        }
-      });
-    
-    
+        new Handler<Message<JsonObject>>() {
+          @Override
+          public void handle(Message<JsonObject> msg) {
+            final AppConfig gcfg = new AppConfig(msg.body(), true);
+
+            eb.registerHandler(RECEIVER_ADDR, new Handler<Message<JsonObject>>() {
+              @Override
+              public void handle(Message<JsonObject> message) {
+                JsonObject body = message.body();
+                String siteid = body.getString("siteid");
+                eb.send(gcfg.getMongoAddress(), new VisitMongoCmd(body).saveCmd());
+                eb.send(gcfg.getRedisAddress(), new INCR(siteid).getCmd());
+              }
+            });
+          }
+        });
+
 
 
     container.logger().info("SaveToMongoVerticle started");

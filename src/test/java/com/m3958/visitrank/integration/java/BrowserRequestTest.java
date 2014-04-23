@@ -102,8 +102,10 @@ public class BrowserRequestTest extends TestVerticle {
   @Override
   public void start() {
     initialize();
-    appConfig = new AppConfig(AppUtils.loadJsonResourceContent(this.getClass(), "testconf.json"));
-    container.deployVerticle(CounterVerticle.VERTICLE_NAME, new JsonObject().putObject(AppConstants.TEST_CONF_KEY, appConfig.getConfJson()),
+    appConfig =
+        new AppConfig(AppUtils.loadJsonResourceContent(this.getClass(), "testconf.json"), true);
+    container.deployVerticle(CounterVerticle.VERTICLE_NAME,
+        new JsonObject().putObject(AppConstants.TEST_CONF_KEY, appConfig.getConfJson()),
         new AsyncResultHandler<String>() {
           @Override
           public void handle(AsyncResult<String> asyncResult) {

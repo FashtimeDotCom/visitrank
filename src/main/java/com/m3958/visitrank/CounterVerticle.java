@@ -34,7 +34,7 @@ public class CounterVerticle extends Verticle implements TestableVerticle {
           new Handler<Message<JsonObject>>() {
             @Override
             public void handle(Message<JsonObject> msg) {
-              AppConfig gcfg = new AppConfig(msg.body());
+              AppConfig gcfg = new AppConfig(msg.body(), true);
               deployMe(gcfg);
             }
           });

@@ -63,7 +63,8 @@ public class LogProcessorWorkTest extends TestVerticle {
   @Override
   public void start() {
     initialize();
-    appConfig = new AppConfig(AppUtils.loadJsonResourceContent(this.getClass(), "testconf.json"));
+    appConfig =
+        new AppConfig(AppUtils.loadJsonResourceContent(this.getClass(), "testconf.json"), true);
     try {
       TestUtils.deleteDirs(appConfig.getLogDir(), appConfig.getArchiveDir());
       TestUtils.dropDb(appConfig, appConfig.getRepoDbName());

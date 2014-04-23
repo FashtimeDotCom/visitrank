@@ -32,13 +32,13 @@ public class LogCheckVerticle extends Verticle {
         new Handler<Message<JsonObject>>() {
           @Override
           public void handle(Message<JsonObject> msg) {
-            final AppConfig gcfg = new AppConfig(msg.body());
+            final AppConfig gcfg = new AppConfig(msg.body(), true);
             deployMe(gcfg, log);
           }
         });
   }
 
-  private void deployMe(final AppConfig appConfig,Logger log) {
+  private void deployMe(final AppConfig appConfig, Logger log) {
 
     log.info("logProcessorInstance: " + 1);
 
@@ -51,11 +51,11 @@ public class LogCheckVerticle extends Verticle {
       public void handle(Long timerID) {
         // logger file check.
         if (logProcessorCounter.remainsGetSet(0) > 0) {
-          final String logfilename = new RemainLogFileFinder(appConfig.getLogDir(), locker).findOne();
+          final String logfilename =
+              new RemainLogFileFinder(appConfig.getLogDir(), locker).findOne();
           if (logfilename != null) {
             JsonObject body =
-                new JsonObject()
-                    .putString(LogProcessorWorkMsgKey.FILE_NAME, logfilename);
+                new JsonObject().putString(LogProcessorWorkMsgKey.FILE_NAME, logfilename);
             logProcessorCounter.remainsGetSet(1);
             AppLogger.processLogger.info("process " + logfilename
                 + " starting. remain LogProcessorInstancs: " + logProcessorCounter.remainsGetSet(0));

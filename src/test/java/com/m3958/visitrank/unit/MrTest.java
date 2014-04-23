@@ -36,7 +36,8 @@ public class MrTest {
   @BeforeClass
   public static void sss() throws IOException {
     appConfig =
-        new AppConfig(AppUtils.loadJsonResourceContent(BatchCopyTestNo.class, "testconf.json"));
+        new AppConfig(AppUtils.loadJsonResourceContent(BatchCopyTestNo.class, "testconf.json"),
+            true);
   }
 
   @AfterClass

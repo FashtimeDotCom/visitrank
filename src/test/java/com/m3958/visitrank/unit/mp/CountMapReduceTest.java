@@ -1,4 +1,4 @@
-package com.m3958.visitrank.unit;
+package com.m3958.visitrank.unit.mp;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
@@ -11,8 +11,9 @@ import org.junit.Test;
 import com.m3958.visitrank.Utils.AppConfig;
 import com.m3958.visitrank.Utils.AppUtils;
 import com.m3958.visitrank.testutils.TestUtils;
+import com.m3958.visitrank.unit.BatchCopyTestNo;
 
-public class HotestMapReduceTest {
+public class CountMapReduceTest {
   // An index covers a query, a covered query, when:
 
   // all the fields in the query are part of that index, and
@@ -27,7 +28,8 @@ public class HotestMapReduceTest {
   @BeforeClass
   public static void sss() throws IOException {
     appConfig =
-        new AppConfig(AppUtils.loadJsonResourceContent(BatchCopyTestNo.class, "testconf.json"));
+        new AppConfig(AppUtils.loadJsonResourceContent(BatchCopyTestNo.class, "testconf.json"),
+            true);
   }
 
   @AfterClass

@@ -107,8 +107,7 @@ public class AppUtils {
     return false;
   }
 
-  public static boolean DbExists(AppConfig appConfig, String dbname)
-      throws UnknownHostException {
+  public static boolean DbExists(AppConfig appConfig, String dbname) throws UnknownHostException {
     List<String> dbns = appConfig.getMongoClient().getDatabaseNames();
     boolean exist = false;
     for (String db : dbns) {
@@ -167,7 +166,7 @@ public class AppUtils {
 
   @SuppressWarnings("rawtypes")
   public static List<String> loadResourceLines(Class clazz, String fn) {
-    if(!fn.startsWith("/")){
+    if (!fn.startsWith("/")) {
       fn = "/" + fn;
     }
     List<String> lines = new ArrayList<>();
@@ -256,15 +255,15 @@ public class AppUtils {
     return map;
   }
 
-  public static void logMongoDbConnectionError(Logger log){
+  public static void logMongoDbConnectionError(Logger log) {
     log.error("mongodb connection failure.");
   }
-  
-  public static boolean deployTestableVerticle(TestableVerticle tv,Container c){
+
+  public static boolean deployTestableVerticle(TestableVerticle tv, Container c) {
     JsonObject testConfig = c.config();
     final Logger log = c.logger();
     if (testConfig.containsField(AppConstants.TEST_CONF_KEY)) {
-      final AppConfig gcfg = new AppConfig(testConfig.getObject(AppConstants.TEST_CONF_KEY));
+      final AppConfig gcfg = new AppConfig(testConfig.getObject(AppConstants.TEST_CONF_KEY), true);
       tv.deployMe(gcfg);
       log.info("use test conf.");
       return true;

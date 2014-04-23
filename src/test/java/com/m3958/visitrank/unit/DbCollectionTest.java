@@ -12,13 +12,14 @@ import com.m3958.visitrank.Utils.AppConfig;
 import com.m3958.visitrank.Utils.AppUtils;
 
 public class DbCollectionTest {
-  
+
   private static AppConfig appConfig;
-  
+
   @BeforeClass
   public static void sss() throws IOException {
     appConfig =
-        new AppConfig(AppUtils.loadJsonResourceContent(BatchCopyTestNo.class, "testconf.json"));
+        new AppConfig(AppUtils.loadJsonResourceContent(BatchCopyTestNo.class, "testconf.json"),
+            true);
   }
 
   @AfterClass

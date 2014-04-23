@@ -14,7 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
-import java.util.Date;
+import java.util.Calendar;
 import java.util.List;
 
 import org.apache.commons.lang.math.RandomUtils;
@@ -58,7 +58,7 @@ public class TestUtils {
     col.createIndex(IndexBuilder.getPageVisitColIndexKeys());
     List<DBObject> obs = new ArrayList<>();
     for (int i = 1; i <= items; i++) {
-      JsonObject jo = logItemTransformer.transformToLog4j(getRandomJo(), uaParser);
+      JsonObject jo = logItemTransformer.transformToLog4j(getRandomJo(i), uaParser);
       obs.add((DBObject) JSON.parse(jo.toString()));
       if (i % step == 0) {
         col.insert(obs, new WriteConcern(0, 0, false, journal, true));
@@ -115,7 +115,7 @@ public class TestUtils {
             logDir, testlogname)), "UTF-8")));
 
     for (int i = 0; i < number; i++) {
-      out.println(getRandomJo().toString());
+      out.println(getRandomJo(i).toString());
     }
     out.close();
   }
@@ -145,21 +145,47 @@ public class TestUtils {
 
   }
 
-  private static JsonObject getRandomJo() {
+  private static JsonObject getRandomJo(int i) {
     String ht = hostnames[RandomUtils.nextInt(3)];
     JsonObject joraw = new JsonObject();
     joraw.putString(FieldNameAbbreviation.PageVisit.URL, ht + "/?article=" + RandomUtils.nextInt());
-    joraw.putNumber(FieldNameAbbreviation.PageVisit.TS, new Date().getTime());
+    joraw.putNumber(FieldNameAbbreviation.PageVisit.TS, getDate(i));
     joraw.putObject(
         "headers",
         new JsonObject().putString("Connection", "keep-alive").putString("Host", "localhost:8333")
             .putString("User-Agent", "Apache-HttpClient/4.2.6 (java 1.5")
-            .putString("ip", "127.0.0.1"));
+            .putString("ip", getIp(i)));
     return joraw;
   }
+  
+  private static String getIp(int i){
+    return "127.0.0." + (i % 10);
+  }
 
-  public static void createMRSampleDb(AppConfig appConfig, String dbname, int items, boolean journal, int step)
-      throws IOException {
+  /**
+   * possible year,2013,2014 month is 0-11 date is 1-31 hour_of_day 0-23
+   * 
+   * @param i
+   * @return
+   */
+  private static long getDate(int i) {
+    Calendar c = Calendar.getInstance();
+    if (i % 2 == 0) {
+      c.set(Calendar.YEAR, 2014);
+    } else {
+      c.set(Calendar.YEAR, 2013);
+    }
+    c.set(Calendar.MONTH, i % 11);
+    c.set(Calendar.DATE, i % 28);
+    c.set(Calendar.HOUR_OF_DAY, i % 23);
+    c.set(Calendar.MINUTE, i % 59);
+    c.set(Calendar.SECOND, i % 59);
+    c.set(Calendar.MILLISECOND, i % 999);
+    return c.getTimeInMillis();
+  }
+
+  public static void createMRSampleDb(AppConfig appConfig, String dbname, int items,
+      boolean journal, int step) throws IOException {
     long start = System.currentTimeMillis();
     Parser uaParser = new Parser();
     DB db = appConfig.getMongoClient().getDB(dbname);
@@ -168,7 +194,7 @@ public class TestUtils {
     LogItemTransformer logItemTransformer = new LogItemTransformer(appConfig);
     List<DBObject> obs = new ArrayList<>();
     for (int i = 1; i <= items; i++) {
-      JsonObject jo = logItemTransformer.transformToLog4j(getRandomJo(), uaParser);
+      JsonObject jo = logItemTransformer.transformToLog4j(getRandomJo(i), uaParser);
       obs.add((DBObject) JSON.parse(jo.toString()));
       if (i % step == 0) {
         col.insert(obs, new WriteConcern(0, 0, false, journal, true));

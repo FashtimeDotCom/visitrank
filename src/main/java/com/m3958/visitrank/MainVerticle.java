@@ -38,7 +38,7 @@ public class MainVerticle extends Verticle {
                   new Handler<Message<JsonObject>>() {
                     @Override
                     public void handle(Message<JsonObject> message) {
-                      AppConfig appConfig = new AppConfig(message.body());
+                      AppConfig appConfig = new AppConfig(message.body(), true);
                       deployAll(appConfig, log);
                     }
                   });

@@ -31,18 +31,18 @@ import com.m3958.visitrank.uaparser.Parser;
 public class LogSaverVerticle extends Verticle {
 
   public static String VERTICLE_ADDRESS = "log-saver";
-  
+
   public static String VERTICLE_NAME = LogSaverVerticle.class.getName();
 
   public void start() {
     vertx.eventBus().send(AppConfigVerticle.VERTICLE_ADDRESS, new JsonObject(),
-      new Handler<Message<JsonObject>>() {
-        @Override
-        public void handle(Message<JsonObject> msg) {
-          final AppConfig gcfg = new AppConfig(msg.body());
-          deployMe(gcfg);
-        }
-      });
+        new Handler<Message<JsonObject>>() {
+          @Override
+          public void handle(Message<JsonObject> msg) {
+            final AppConfig gcfg = new AppConfig(msg.body(), true);
+            deployMe(gcfg);
+          }
+        });
   }
 
   private void deployMe(final AppConfig appConfig) {
@@ -51,7 +51,8 @@ public class LogSaverVerticle extends Verticle {
       vertx.eventBus().registerHandler(VERTICLE_ADDRESS, new Handler<Message<JsonObject>>() {
         @Override
         public void handle(Message<JsonObject> message) {
-          JsonObject jo = new LogItemTransformer(appConfig).transformToLog4j(message.body(), uaparser);
+          JsonObject jo =
+              new LogItemTransformer(appConfig).transformToLog4j(message.body(), uaparser);
           AppLogger.urlPersistor.info(jo);
         }
       });

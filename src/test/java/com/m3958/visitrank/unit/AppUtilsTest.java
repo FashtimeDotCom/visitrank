@@ -11,12 +11,13 @@ import com.m3958.visitrank.Utils.AppConfig;
 import com.m3958.visitrank.Utils.AppUtils;
 
 public class AppUtilsTest {
-  
+
   private AppConfig appConfig;
 
   @Before
   public void setup() throws UnknownHostException {
-    appConfig = new AppConfig(AppUtils.loadJsonResourceContent(this.getClass(), "testconf.json"));
+    appConfig =
+        new AppConfig(AppUtils.loadJsonResourceContent(this.getClass(), "testconf.json"), true);
   }
 
   @After
@@ -38,7 +39,8 @@ public class AppUtilsTest {
 
   @Test
   public void t3() {
-    Assert.assertEquals("-05.log", AppUtils.getHour("2014-03-03-05.log", appConfig.getDailyDbPtn()));
+    Assert
+        .assertEquals("-05.log", AppUtils.getHour("2014-03-03-05.log", appConfig.getDailyDbPtn()));
   }
 
   @Test
