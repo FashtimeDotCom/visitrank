@@ -150,15 +150,17 @@ public class TestUtils {
     JsonObject joraw = new JsonObject();
     joraw.putString(FieldNameAbbreviation.PageVisit.URL, ht + "/?article=" + RandomUtils.nextInt());
     joraw.putNumber(FieldNameAbbreviation.PageVisit.TS, getDate(i));
-    joraw.putObject(
-        "headers",
-        new JsonObject().putString("Connection", "keep-alive").putString("Host", "localhost:8333")
-            .putString("User-Agent", "Apache-HttpClient/4.2.6 (java 1.5")
-            .putString("ip", getIp(i)));
+    joraw
+        .putObject(
+            "headers",
+            new JsonObject().putString("Connection", "keep-alive")
+                .putString("Host", "localhost:8333")
+                .putString("User-Agent", "Apache-HttpClient/4.2.6 (java 1.5")
+                .putString("ip", getIp(i)));
     return joraw;
   }
-  
-  private static String getIp(int i){
+
+  private static String getIp(int i) {
     return "127.0.0." + (i % 10);
   }
 
@@ -186,6 +188,9 @@ public class TestUtils {
 
   public static void createMRSampleDb(AppConfig appConfig, String dbname, int items,
       boolean journal, int step) throws IOException {
+    if (AppUtils.DbExists(appConfig, dbname)) {
+      return;
+    }
     long start = System.currentTimeMillis();
     Parser uaParser = new Parser();
     DB db = appConfig.getMongoClient().getDB(dbname);

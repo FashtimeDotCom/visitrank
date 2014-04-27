@@ -28,14 +28,8 @@ public class LogCheckVerticle extends Verticle {
   @Override
   public void start() {
     final Logger log = container.logger();
-    vertx.eventBus().send(AppConfigVerticle.VERTICLE_ADDRESS, new JsonObject(),
-        new Handler<Message<JsonObject>>() {
-          @Override
-          public void handle(Message<JsonObject> msg) {
-            final AppConfig gcfg = new AppConfig(msg.body(), true);
-            deployMe(gcfg, log);
-          }
-        });
+    final AppConfig appConfig = new AppConfig(container.config(), false);
+    deployMe(appConfig, log);
   }
 
   private void deployMe(final AppConfig appConfig, Logger log) {

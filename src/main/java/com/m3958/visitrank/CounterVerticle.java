@@ -4,9 +4,7 @@ package com.m3958.visitrank;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.MultiMap;
 import org.vertx.java.core.eventbus.EventBus;
-import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.http.HttpServerRequest;
-import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.core.logging.Logger;
 import org.vertx.java.platform.Verticle;
 
@@ -30,19 +28,14 @@ public class CounterVerticle extends Verticle implements TestableVerticle {
    */
   public void start() {
     if (!AppUtils.deployTestableVerticle(this, container)) {
-      vertx.eventBus().send(AppConfigVerticle.VERTICLE_ADDRESS, new JsonObject(),
-          new Handler<Message<JsonObject>>() {
-            @Override
-            public void handle(Message<JsonObject> msg) {
-              AppConfig gcfg = new AppConfig(msg.body(), true);
-              deployMe(gcfg);
-            }
-          });
+      final Logger log = container.logger();
+      final AppConfig appConfig = new AppConfig(container.config(), false);
+      deployMe(appConfig, log);
       container.logger().info("CounterVerticle started");
     }
   }
 
-  public void deployMe(final AppConfig appconfig) {
+  public void deployMe(final AppConfig appconfig,Logger log) {
     vertx.createHttpServer().requestHandler(new Handler<HttpServerRequest>() {
       public void handle(final HttpServerRequest req) {
         MultiMap mm = req.params();

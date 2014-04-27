@@ -169,23 +169,37 @@ public class AppUtils {
     if (!fn.startsWith("/")) {
       fn = "/" + fn;
     }
-    List<String> lines = new ArrayList<>();
-    String line;
-
     try {
       InputStream is = clazz.getResourceAsStream(fn);
       BufferedReader reader = new BufferedReader(new InputStreamReader(is, "UTF-8"));
-
+      List<String> lines = new ArrayList<>();
+      String line;
       while ((line = reader.readLine()) != null) {
         lines.add(line);
       }
+      return lines;
     } catch (IOException e) {}
-    return lines;
+    return null;
+  }
+
+  public static List<String> loadFileLines(String fn) {
+    return loadFileLines(Paths.get(fn));
+  }
+
+  public static List<String> loadFileLines(Path p) {
+    try {
+      return Files.readAllLines(p, Charset.forName("UTF-8"));
+    } catch (IOException e) {
+      return null;
+    }
   }
 
   @SuppressWarnings("rawtypes")
   public static String loadResourceContent(Class clazz, String fn) {
     List<String> lines = AppUtils.loadResourceLines(clazz, fn);
+    if (lines == null) {
+      return "";
+    }
     StringBuilder sb = new StringBuilder();
     for (String line : lines) {
       sb.append(line);
@@ -195,18 +209,10 @@ public class AppUtils {
 
   @SuppressWarnings("rawtypes")
   public static JsonObject loadJsonResourceContent(Class clazz, String fn) {
-    List<String> lines;
-    Path p = Paths.get(fn);
-    if (Files.exists(p)) {
-      try {
-        lines = Files.readAllLines(p, Charset.forName("UTF-8"));
-      } catch (IOException e) {
-        lines = new ArrayList<>();
-      }
-    } else {
+    List<String> lines = loadFileLines(fn);
+    if (lines == null) {
       lines = AppUtils.loadResourceLines(clazz, fn);
     }
-
     StringBuilder sb = new StringBuilder();
     for (String line : lines) {
       sb.append(line);
@@ -215,8 +221,17 @@ public class AppUtils {
   }
 
   @SuppressWarnings("rawtypes")
-  public static Map<String, String> getMrFunctions(Class clazz, String fileName) {
-    List<String> lines = loadResourceLines(clazz, fileName);
+  public static Map<String, String> getMrFunctions(AppConfig appConfig, Class clazz, String fn) {
+    Path p = Paths.get(appConfig.getMrFuncFolder(), fn);
+    List<String> lines = loadFileLines(p);
+    if (lines == null) {
+      lines = loadResourceLines(clazz, fn);
+    }
+    try {
+      lines = Files.readAllLines(p, Charset.forName("UTF-8"));
+    } catch (IOException e) {
+      lines = new ArrayList<>();
+    }
     return getMrFunctions(lines);
   }
 
@@ -264,7 +279,7 @@ public class AppUtils {
     final Logger log = c.logger();
     if (testConfig.containsField(AppConstants.TEST_CONF_KEY)) {
       final AppConfig gcfg = new AppConfig(testConfig.getObject(AppConstants.TEST_CONF_KEY), true);
-      tv.deployMe(gcfg);
+      tv.deployMe(gcfg, log);
       log.info("use test conf.");
       return true;
     } else {

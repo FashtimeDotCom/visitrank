@@ -27,5 +27,6 @@
 	"repoDbName" : "visitrank",
 	"dailyDbPtn" : ".*(\\d{4}-\\d{2}-\\d{2})(.*)",
 	"metaDbName" : "visitrank-meta",
-	"mrDbName": "visitrank-mr"
+	"mrDbName": "visitrank-mr",
+	"mrFuncFolder": "mrfuncs"
 }

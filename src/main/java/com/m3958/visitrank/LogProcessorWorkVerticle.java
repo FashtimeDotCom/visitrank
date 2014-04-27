@@ -16,6 +16,7 @@ import java.util.List;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonObject;
+import org.vertx.java.core.logging.Logger;
 import org.vertx.java.platform.Verticle;
 
 import com.m3958.visitrank.Utils.AppConfig;
@@ -50,19 +51,15 @@ public class LogProcessorWorkVerticle extends Verticle implements TestableVertic
 
   @Override
   public void start() {
+    
     if (!AppUtils.deployTestableVerticle(this, container)) {
-      vertx.eventBus().send(AppConfigVerticle.VERTICLE_ADDRESS, new JsonObject(),
-          new Handler<Message<JsonObject>>() {
-            @Override
-            public void handle(Message<JsonObject> msg) {
-              final AppConfig gcfg = new AppConfig(msg.body(), true);
-              deployMe(gcfg);
-            }
-          });
+      final Logger log = container.logger();
+      final AppConfig appConfig = new AppConfig(container.config(), false);
+      deployMe(appConfig, log);
     }
   }
 
-  public void deployMe(final AppConfig appConfig) {
+  public void deployMe(final AppConfig appConfig,Logger log) {
     vertx.eventBus().registerHandler(VERTICLE_ADDRESS, new Handler<Message<JsonObject>>() {
       @Override
       public void handle(Message<JsonObject> message) {

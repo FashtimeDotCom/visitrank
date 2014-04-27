@@ -12,8 +12,7 @@ public class LoadResourceTest {
 
   @Test
   public void t1() throws IOException {
-    List<String> lines = AppUtils.loadResourceLines(this.getClass(), "/mrfuncs/lr.txt");
-    Assert.assertEquals(1, lines.size());
-    Assert.assertEquals("a", lines.get(0));
+    List<String> lines = AppUtils.loadResourceLines(this.getClass(), "/mrfuncs/count10m.js");
+    Assert.assertEquals("//mapfunc:", lines.get(0));
   }
 }

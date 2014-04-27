@@ -62,12 +62,16 @@ public class AppConfig {
   private JsonObject confJson;
 
   private MongoClient mongoClient;
-  
+
   private String metaDbName;
-  
+
   private String mrDbName;
 
-  public AppConfig(JsonObject jo,boolean createMongoClient) {
+  private String mrFuncFolder;
+  
+  private String mrSrcDbName;
+
+  public AppConfig(JsonObject jo, boolean createMongoClient) {
     setConfJson(jo);
     setArchiveDir(jo.getString("archiveDir"));
     setCharset(jo.getString("charset"));
@@ -90,13 +94,17 @@ public class AppConfig {
     setWriteConcern(WriteConcernParser.getWriteConcern(jo.getObject("writeConcern")));
     setRepoDbName(jo.getString("repoDbName"));
     setDailyDbPtn(Pattern.compile(jo.getString("dailyDbPtn")));
-    try {
-      setMongoClient(new MongoClient(getMongoHost(), getMongoPort()));
-    } catch (Exception e) {
-      e.printStackTrace();
+    if (createMongoClient) {
+      try {
+        setMongoClient(new MongoClient(getMongoHost(), getMongoPort()));
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
     }
     setMetaDbName(jo.getString("metaDbName"));
     setMrDbName(jo.getString("mrDbName"));
+    setMrFuncFolder(jo.getString("mrFuncFolder"));
+    setMrSrcDbName(jo.getString("mrSrcDbName"));
   }
 
   public String getMongoHost() {
@@ -230,7 +238,7 @@ public class AppConfig {
   public String getLogDir() {
     return logDir;
   }
-  
+
   public Path getLogPath() {
     return Paths.get(logDir);
   }
@@ -243,7 +251,7 @@ public class AppConfig {
   public String getArchiveDir() {
     return archiveDir;
   }
-  
+
   public Path getArchivePath() {
     return Paths.get(archiveDir);
   }
@@ -312,5 +320,21 @@ public class AppConfig {
 
   public void setMrDbName(String mrDbName) {
     this.mrDbName = mrDbName;
+  }
+
+  public String getMrFuncFolder() {
+    return mrFuncFolder;
+  }
+
+  public void setMrFuncFolder(String mrFuncFolder) {
+    this.mrFuncFolder = mrFuncFolder;
+  }
+
+  public String getMrSrcDbName() {
+    return mrSrcDbName;
+  }
+
+  public void setMrSrcDbName(String mrSrcDbName) {
+    this.mrSrcDbName = mrSrcDbName;
   }
 }

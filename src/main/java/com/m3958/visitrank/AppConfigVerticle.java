@@ -22,6 +22,8 @@ public class AppConfigVerticle extends Verticle {
     Logger log = container.logger();
     appConfigJson = AppUtils.loadJsonResourceContent(this.getClass(), "conf.json");
     final EventBus eb = vertx.eventBus();
+    
+    eb.send(SecondStartVerticle.VERTICLE_ADDRESS, appConfigJson);
     eb.registerHandler(VERTICLE_ADDRESS, new Handler<Message<JsonObject>>() {
       @Override
       public void handle(Message<JsonObject> message) {
@@ -31,7 +33,6 @@ public class AppConfigVerticle extends Verticle {
         if (action.isEmpty()) {
           message.reply(appConfigJson);
         }
-
       }
     });
     log.info("AppConfigVerticle started");
