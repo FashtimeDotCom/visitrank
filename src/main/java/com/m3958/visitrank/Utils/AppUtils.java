@@ -18,12 +18,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.vertx.java.core.http.HttpServerRequest;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.core.logging.Logger;
+import org.vertx.java.core.shareddata.SharedData;
 import org.vertx.java.platform.Container;
 
 import com.m3958.visitrank.AppConstants;
@@ -285,6 +287,16 @@ public class AppUtils {
     } else {
       return false;
     }
+  }
+  
+  public static void recordDeployed(SharedData sd,String name,String id){
+    ConcurrentMap<String,String> deployedMap = sd.getMap(AppConstants.DEPLOYED_SHARED_MAP);
+    String ids = deployedMap.get(name);
+    if(ids == null){
+      ids = "";
+    }
+    ids = ids.length() > 0 ? ids + "," + id : id;
+    deployedMap.put(name, ids);
   }
 
 }

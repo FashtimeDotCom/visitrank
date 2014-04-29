@@ -303,6 +303,7 @@ public class AppConfig {
   public void closeMongoClient() {
     if (getMongoClient() != null) {
       getMongoClient().close();
+      setMongoClient(null);
     }
   }
 

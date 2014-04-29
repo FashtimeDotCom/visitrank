@@ -51,10 +51,9 @@ public class LogProcessorWorkVerticle extends Verticle implements TestableVertic
 
   @Override
   public void start() {
-    
     if (!AppUtils.deployTestableVerticle(this, container)) {
       final Logger log = container.logger();
-      final AppConfig appConfig = new AppConfig(container.config(), false);
+      final AppConfig appConfig = new AppConfig(container.config(), true);
       deployMe(appConfig, log);
     }
   }

@@ -18,14 +18,15 @@ import org.vertx.java.core.logging.Logger;
 import org.vertx.java.platform.Verticle;
 
 import com.m3958.visitrank.Utils.AppConfig;
+import com.m3958.visitrank.Utils.AppUtils;
 import com.m3958.visitrank.Utils.IndexBuilder;
 import com.m3958.visitrank.Utils.RemainLogFileFinder;
 import com.m3958.visitrank.logger.AppLogger;
 
 public class SecondStartVerticle extends Verticle {
-  
+
   public static String VERTICLE_ADDRESS = "second-start-verticle";
-  
+
   public static String VERTICLE_NAME = SecondStartVerticle.class.getName();
 
   public void start() {
@@ -35,12 +36,12 @@ public class SecondStartVerticle extends Verticle {
       public void handle(Message<JsonObject> message) {
         final JsonObject body = message.body();
         final AppConfig appConfig = new AppConfig(body, true);
-        deployAll(appConfig,body, log);
+        deployAll(appConfig, body, log);
       }
     });
   }
 
-  protected void deployAll(AppConfig appConfig,JsonObject configJson, final Logger log) {
+  protected void deployAll(AppConfig appConfig, JsonObject configJson, final Logger log) {
 
     Path applog = Paths.get(appConfig.getLogDir(), "app.log");
 
@@ -64,10 +65,6 @@ public class SecondStartVerticle extends Verticle {
 
     AppLogger.urlPersistor.trace("loger started");
 
-    container.deployVerticle(LogSaverVerticle.VERTICLE_NAME,configJson, appConfig.getLogSaverInstance());
-
-    container.deployVerticle(CounterVerticle.VERTICLE_NAME,configJson, appConfig.getHttpInstance());
-
     // deploy redis
     JsonObject redisCfg = new JsonObject();
     redisCfg.putString("address", appConfig.getRedisAddress())
@@ -79,17 +76,49 @@ public class SecondStartVerticle extends Verticle {
           @Override
           public void handle(AsyncResult<String> asyncResult) {
             if (asyncResult.succeeded()) {
+              AppUtils.recordDeployed(vertx.sharedData(), "redis", asyncResult.result());
               log.info("redis module has successly deployed:" + asyncResult.result());
             } else {
               log.info("redis module deploy failure.");
             }
           }
         });
+
+
+    container.deployVerticle(LogSaverVerticle.VERTICLE_NAME, configJson,
+        appConfig.getLogSaverInstance(), new AsyncResultHandler<String>() {
+          @Override
+          public void handle(AsyncResult<String> asyncResult) {
+            if (asyncResult.succeeded()) {
+              AppUtils.recordDeployed(vertx.sharedData(), LogSaverVerticle.VERTICLE_NAME,
+                  asyncResult.result());
+              log.info("loggersaver verticle has successly deployed:" + asyncResult.result());
+            } else {
+              log.info("loggersaver verticle deploy failure.");
+            }
+          }
+        });
+
+    container.deployVerticle(CounterVerticle.VERTICLE_NAME, configJson,
+        appConfig.getHttpInstance(), new AsyncResultHandler<String>() {
+          @Override
+          public void handle(AsyncResult<String> asyncResult) {
+            if (asyncResult.succeeded()) {
+              AppUtils.recordDeployed(vertx.sharedData(), CounterVerticle.VERTICLE_NAME,
+                  asyncResult.result());
+              log.info("counter verticle has successly deployed:" + asyncResult.result());
+            } else {
+              log.info("counter verticle deploy failure.");
+            }
+          }
+        });
+
+
     // deploy mongodb
     if (!appConfig.isOnlyLog()) {
       JsonObject mongodbCfg = new JsonObject();
       mongodbCfg.putString("address", appConfig.getMongoAddress())
-          .putString("host", appConfig.getMongoHost()).putString("db_name", "visitrank")
+          .putString("host", appConfig.getMongoHost()).putString("db_name", appConfig.getRepoDbName())
           .putNumber("port", appConfig.getMongoPort());
 
       container.deployModule(appConfig.getMongoModuleName(), mongodbCfg,
@@ -97,6 +126,7 @@ public class SecondStartVerticle extends Verticle {
             @Override
             public void handle(AsyncResult<String> asyncResult) {
               if (asyncResult.succeeded()) {
+                AppUtils.recordDeployed(vertx.sharedData(), "mongo-persistor", asyncResult.result());
                 log.info("mongo-persistor module has successly deployed:" + asyncResult.result());
               } else {
                 log.info("mongo-persistor module deploy failure.");
@@ -104,12 +134,37 @@ public class SecondStartVerticle extends Verticle {
             }
           });
 
+      appConfig.closeMongoClient();
+
       container.deployVerticle("mapreduce_verticle.js", 1);
 
-      container.deployVerticle(LogCheckVerticle.VERTICLE_NAME,configJson, 1);
+      container.deployVerticle(LogCheckVerticle.VERTICLE_NAME, configJson, 1,
+          new AsyncResultHandler<String>() {
+            @Override
+            public void handle(AsyncResult<String> asyncResult) {
+              if (asyncResult.succeeded()) {
+                AppUtils.recordDeployed(vertx.sharedData(), LogCheckVerticle.VERTICLE_NAME,
+                    asyncResult.result());
+                log.info("logchecker verticle has successly deployed:" + asyncResult.result());
+              } else {
+                log.info("logchecker verticle deploy failure.");
+              }
+            }
+          });
 
-      container.deployWorkerVerticle(LogProcessorWorkVerticle.VERTICLE_NAME, configJson, 1,
-          false);
+      container.deployWorkerVerticle(LogProcessorWorkVerticle.VERTICLE_NAME, configJson, 1, false,
+          new AsyncResultHandler<String>() {
+            @Override
+            public void handle(AsyncResult<String> asyncResult) {
+              if (asyncResult.succeeded()) {
+                AppUtils.recordDeployed(vertx.sharedData(), LogProcessorWorkVerticle.VERTICLE_NAME,
+                    asyncResult.result());
+                log.info("logprocessor verticle has successly deployed:" + asyncResult.result());
+              } else {
+                log.info("logprocessor verticle deploy failure.");
+              }
+            }
+          });
     }
   }
 }

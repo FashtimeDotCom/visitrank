@@ -2,6 +2,8 @@ package com.m3958.visitrank;
 
 public class AppConstants {
   public static String HOTEST_FIX = "~hotest";
+  
+  public static String DEPLOYED_SHARED_MAP = "deployed.map";
 
   public static String TEST_CONF_KEY = "appConfigJson";
   public static String PARTIAL_POSTFIX = ".partial";
